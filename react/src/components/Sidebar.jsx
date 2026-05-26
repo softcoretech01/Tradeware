@@ -123,6 +123,14 @@ const Sidebar = () => {
         ))}
       </nav>
 
+      {/* Version Badge */}
+      {!collapsed && (
+        <div className="sidebar-version">
+          <span className="version-dot" />
+          <span>v 1.0.0</span>
+        </div>
+      )}
+
       <style jsx="true">{`
         .sidebar {
           width: var(--sidebar-width);
@@ -223,6 +231,31 @@ const Sidebar = () => {
 
         .submenu-item.active {
           border-right: 3px solid var(--primary);
+        }
+
+        .sidebar-version {
+          position: sticky;
+          bottom: 0;
+          padding: 10px 20px;
+          background: rgba(0, 0, 0, 0.25);
+          border-top: 1px solid rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #64748b;
+          letter-spacing: 0.04em;
+          user-select: none;
+        }
+
+        .version-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #3b82f6;
+          flex-shrink: 0;
+          box-shadow: 0 0 5px rgba(59,130,246,0.6);
         }
       `}</style>
     </div>
