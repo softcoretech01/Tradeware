@@ -279,7 +279,7 @@ const PricingManagement = () => {
         grossAmount,
         lineDiscAmount,
         lineTotal,
-        pricingMethod: matchedContract ? 'Project Rate' : `${customerType} Tier`
+        pricingMethod: matchedContract ? 'Project Rate' : `${customerType === 'Builders' ? 'Retailer' : customerType === 'Dealers' ? 'Wholesaler' : customerType === 'Contractors' ? 'Project Based' : customerType} Price`
       };
     });
 
@@ -422,10 +422,9 @@ const PricingManagement = () => {
       'Brand': t.brand,
       'UOM': t.uom,
       'Standard Price (INR)': t.standardPrice || 0,
-      'Builders Tier (INR)': t.buildersPrice || 0,
-      'Dealers Tier (INR)': t.dealersPrice || 0,
-      'Contractors Tier (INR)': t.contractorsPrice || 0,
-      'House Owners Tier (INR)': t.houseOwnersPrice || 0
+      'Retailer Price (INR)': t.buildersPrice || 0,
+      'Wholesaler Price (INR)': t.dealersPrice || 0,
+      'Project Based Price (INR)': t.contractorsPrice || 0
     }));
     exportToExcel(data, `Customer_Tiers_Pricing_${new Date().toISOString().split('T')[0]}`, 'Tiers List');
   };
@@ -435,10 +434,9 @@ const PricingManagement = () => {
       { field: 'id', headerName: 'Code' },
       { field: 'name', headerName: 'Item Name' },
       { field: 'standardPrice', headerName: 'Standard' },
-      { field: 'buildersPrice', headerName: 'Builder' },
-      { field: 'dealersPrice', headerName: 'Dealer' },
-      { field: 'contractorsPrice', headerName: 'Contractor' },
-      { field: 'houseOwnersPrice', headerName: 'House Owner' }
+      { field: 'buildersPrice', headerName: 'Retailer' },
+      { field: 'dealersPrice', headerName: 'Wholesaler' },
+      { field: 'contractorsPrice', headerName: 'Project Based' }
     ];
     exportToPDF(cols, filteredTiers, `Customer_Tiers_Pricing_${new Date().toISOString().split('T')[0]}`, 'Customer Tier Prices');
   };
@@ -712,10 +710,9 @@ const PricingManagement = () => {
                   <th>Category</th>
                   <th>Item Name</th>
                   <th>Standard Price</th>
-                  <th>Builders Tier</th>
-                  <th>Dealers Tier</th>
-                  <th>Contractors Tier</th>
-                  <th>House Owners Tier</th>
+                  <th>Retailer Price</th>
+                  <th>Wholesaler Price</th>
+                  <th>Project Based Price</th>
                   <th className="actions-column">Actions</th>
                 </tr>
               </thead>
@@ -731,7 +728,6 @@ const PricingManagement = () => {
                       <td>₹{t.buildersPrice || 0}</td>
                       <td>₹{t.dealersPrice || 0}</td>
                       <td>₹{t.contractorsPrice || 0}</td>
-                      <td>₹{t.houseOwnersPrice || 0}</td>
                       <td className="actions-cell">
                         <Tooltip title="Edit Customer Tiers">
                           <IconButton
@@ -747,7 +743,7 @@ const PricingManagement = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10} className="table-empty">
+                    <td colSpan={9} className="table-empty">
                       No items matched search filters.
                     </td>
                   </tr>
@@ -1045,9 +1041,12 @@ const PricingManagement = () => {
                           onChange={(e) => { setSimCustomer(e.target.value); setSimProject(''); }}
                         >
                           <MenuItem value="">Select Customer...</MenuItem>
-                          {customers.map(c => (
-                            <MenuItem key={c.id} value={c.id}>{c.name} ({c.type})</MenuItem>
-                          ))}
+                          {customers.map(c => {
+                            const displayType = c.type === 'Builders' ? 'Retailer' : c.type === 'Dealers' ? 'Wholesaler' : c.type === 'Contractors' ? 'Project Based' : c.type;
+                            return (
+                              <MenuItem key={c.id} value={c.id}>{c.name} ({displayType})</MenuItem>
+                            );
+                          })}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -1331,31 +1330,24 @@ const PricingManagement = () => {
           />
           <TextField
             fullWidth
-            label="Builders Tier Price (INR)"
+            label="Retailer Price (INR)"
             type="number"
             value={tierForm.buildersPrice}
             onChange={(e) => setTierForm(prev => ({ ...prev, buildersPrice: e.target.value }))}
           />
           <TextField
             fullWidth
-            label="Dealers Tier Price (INR)"
+            label="Wholesaler Price (INR)"
             type="number"
             value={tierForm.dealersPrice}
             onChange={(e) => setTierForm(prev => ({ ...prev, dealersPrice: e.target.value }))}
           />
           <TextField
             fullWidth
-            label="Contractors Tier Price (INR)"
+            label="Project Based Price (INR)"
             type="number"
             value={tierForm.contractorsPrice}
             onChange={(e) => setTierForm(prev => ({ ...prev, contractorsPrice: e.target.value }))}
-          />
-          <TextField
-            fullWidth
-            label="House Owners Tier Price (INR)"
-            type="number"
-            value={tierForm.houseOwnersPrice}
-            onChange={(e) => setTierForm(prev => ({ ...prev, houseOwnersPrice: e.target.value }))}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

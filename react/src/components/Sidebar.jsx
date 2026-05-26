@@ -3,14 +3,14 @@ import {
   LayoutDashboard, Box, Layers, Globe, ShoppingCart,
   FileText, Tag, Truck, Calculator, BarChart3,
   Users, Paperclip, ChevronDown, ChevronRight,
-  Menu, X, Warehouse
+  Menu, X, Warehouse, HeartHandshake
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [openMenus, setOpenMenus] = useState(['Masters', 'Purchase Management', 'Sales & Orders', 'Delivery & Dispatch', 'User Roles & Approval', 'Document Management']);
+  const [openMenus, setOpenMenus] = useState(['Masters', 'Purchase Management', 'Sales & Orders', 'CRM Module', 'User Roles & Approval', 'Document Management', 'Account Integration']);
   const location = useLocation();
 
   const toggleMenu = (name) => {
@@ -38,12 +38,17 @@ const Sidebar = () => {
     { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Stock Inward', 'Stock Outward', 'Stock Adjustment'] },
     { name: 'Pricing Management', icon: <Calculator size={20} />, to: '/pricing-management' },
     { name: 'Sales & Orders', icon: <FileText size={20} />, subItems: ['Sales Enquiry', 'Quotation Management', 'Customer PO Management', 'Sales Order Management'] },
-    {
-      name: 'Delivery & Dispatch',
-      icon: <Truck size={20} />,
-      subItems: ['Delivery Challan', 'Dispatch Tracking', 'Material Issue Tracking']
+    { 
+      name: 'CRM Module', 
+      icon: <HeartHandshake size={20} />, 
+      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Opportunity Management', 'Complaint Management', 'CRM Reports'] 
     },
-    { name: 'Accounts Integration', icon: <Calculator size={20} /> },
+
+    {
+      name: 'Account Integration',
+      icon: <Calculator size={20} />,
+      subItems: ['AP Book', 'AR Book', 'AR Book DO', 'Bank Book', 'Bank Book Entries', 'Cash Book', 'Cash Book Entry', 'Overdraft', 'PC Book', 'Petty Cash']
+    },
     { 
       name: 'Reports & Dashboards', 
       icon: <BarChart3 size={20} />, 

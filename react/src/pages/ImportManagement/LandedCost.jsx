@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   Button, TextField, Card, CardContent, Grid, Typography, Box,
   Chip, Divider, Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControl, Select, MenuItem, InputLabel, Paper
+  FormControl, Select, MenuItem, InputLabel, Paper, FormControlLabel, Checkbox
 } from '@mui/material';
 import {
   Calculator, CheckCircle, HelpCircle, FileSpreadsheet, FileText,
@@ -28,10 +28,15 @@ const LandedCost = () => {
   // States
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
   
-  // Costing Worksheet Inputs (in LCY/INR)
-  const [customsDuty, setCustomsDuty] = useState('0');
-  const [freightCharges, setFreightCharges] = useState('0');
-  const [handlingCharges, setHandlingCharges] = useState('0');
+  // Advanced India Customs & Freight Costing Inputs
+  const [dutyPercent, setDutyPercent] = useState('15');
+  const [cessPercent, setCessPercent] = useState('10');
+  const [gstPercent, setGstPercent] = useState('18');
+  const [includeGST, setIncludeGST] = useState(false);
+  const [seaFreight, setSeaFreight] = useState('0');
+  const [roadFreight, setRoadFreight] = useState('0');
+  const [localTransport, setLocalTransport] = useState('0');
+  const [linerCharges, setLinerCharges] = useState('0');
   const [insuranceCost, setInsuranceCost] = useState('0');
 
   // Expiry date setting state for posting batches
@@ -47,22 +52,22 @@ const LandedCost = () => {
   // Set default costs when shipment changes
   React.useEffect(() => {
     if (selectedShipment) {
-      setCustomsDuty(String(selectedShipment.customsDuty || 0));
-      setFreightCharges(String(selectedShipment.freightCharges || 0));
-      setHandlingCharges(String(selectedShipment.handlingCharges || 0));
+      setSeaFreight(String(selectedShipment.seaFreight || selectedShipment.freightCharges || 0));
+      setRoadFreight(String(selectedShipment.roadFreight || 0));
+      setLocalTransport(String(selectedShipment.localTransport || 0));
+      setLinerCharges(String(selectedShipment.linerCharges || selectedShipment.handlingCharges || 0));
       setInsuranceCost(String(selectedShipment.insuranceCost || 0));
+      
+      setDutyPercent(String(selectedShipment.dutyPercent || 15));
+      setCessPercent(String(selectedShipment.cessPercent || 10));
+      setGstPercent(String(selectedShipment.gstPercent || 18));
+      setIncludeGST(!!selectedShipment.includeGST);
     }
   }, [selectedShipment]);
 
   // Landed Cost Allocations calculation
   const calculations = useMemo(() => {
     if (!selectedShipment) return null;
-
-    const duty = Number(customsDuty) || 0;
-    const freight = Number(freightCharges) || 0;
-    const handling = Number(handlingCharges) || 0;
-    const ins = Number(insuranceCost) || 0;
-    const totalOverhead = duty + freight + handling + ins;
 
     const exchangeRate = selectedShipment.exchangeRate;
 
@@ -76,6 +81,36 @@ const LandedCost = () => {
     });
 
     const totalFobLCY = itemsWithFobVal.reduce((acc, item) => acc + item.fobValLCY, 0);
+
+    const seaFr = Number(seaFreight) || 0;
+    const insCost = Number(insuranceCost) || 0;
+
+    // Assessable Value = FOB + Sea Freight + Insurance
+    const assessableValue = totalFobLCY + seaFr + insCost;
+
+    // Basic Customs Duty (BCD)
+    const bcdRate = Number(dutyPercent) || 0;
+    const calculatedBCD = assessableValue * (bcdRate / 100);
+
+    // Cess = 10% of BCD (or custom)
+    const cessRate = Number(cessPercent) || 0;
+    const calculatedCess = calculatedBCD * (cessRate / 100);
+
+    // IGST = (Assessable Value + BCD + Cess) * GST%
+    const gstRate = Number(gstPercent) || 0;
+    const calculatedGST = (assessableValue + calculatedBCD + calculatedCess) * (gstRate / 100);
+
+    // Total Customs Charges
+    const totalCustomsDuty = calculatedBCD + calculatedCess + (includeGST ? calculatedGST : 0);
+
+    // Other overheads
+    const roadFr = Number(roadFreight) || 0;
+    const localTr = Number(localTransport) || 0;
+    const linerCh = Number(linerCharges) || 0;
+    const otherOverheads = roadFr + localTr + linerCh;
+
+    // Total Overhead = Sea Freight + Insurance + Total Customs Charges + Other Overheads
+    const totalOverhead = seaFr + insCost + totalCustomsDuty + otherOverheads;
 
     // Allocate overheads based on FOB value ratio
     const allocatedItems = itemsWithFobVal.map(item => {
@@ -94,11 +129,27 @@ const LandedCost = () => {
 
     return {
       totalFobLCY,
+      assessableValue,
+      calculatedBCD,
+      calculatedCess,
+      calculatedGST,
+      totalCustomsDuty,
       totalOverhead,
       totalLandedCostINR: totalFobLCY + totalOverhead,
       items: allocatedItems
     };
-  }, [selectedShipment, customsDuty, freightCharges, handlingCharges, insuranceCost]);
+  }, [
+    selectedShipment,
+    dutyPercent,
+    cessPercent,
+    gstPercent,
+    includeGST,
+    seaFreight,
+    roadFreight,
+    localTransport,
+    linerCharges,
+    insuranceCost
+  ]);
 
   // Handle Generate & Post Batches
   const handlePostBatches = () => {
@@ -107,10 +158,18 @@ const LandedCost = () => {
     // Save Landed costs to shipment
     dispatch(addLandedCosts({
       id: selectedShipment.id,
-      customsDuty: Number(customsDuty),
-      freightCharges: Number(freightCharges),
-      handlingCharges: Number(handlingCharges),
-      insuranceCost: Number(insuranceCost)
+      customsDuty: calculations.totalCustomsDuty,
+      freightCharges: (Number(seaFreight) || 0) + (Number(roadFreight) || 0),
+      handlingCharges: (Number(localTransport) || 0) + (Number(linerCharges) || 0),
+      insuranceCost: Number(insuranceCost) || 0,
+      dutyPercent: Number(dutyPercent),
+      cessPercent: Number(cessPercent),
+      gstPercent: Number(gstPercent),
+      includeGST: includeGST,
+      seaFreight: Number(seaFreight),
+      roadFreight: Number(roadFreight),
+      localTransport: Number(localTransport),
+      linerCharges: Number(linerCharges)
     }));
 
     // Create Batches
@@ -236,63 +295,167 @@ const LandedCost = () => {
       {selectedShipment && calculations && (
         <Grid container spacing={3}>
           {/* OVERHEAD EXPENSES FORM */}
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={5}>
             <Card variant="outlined" sx={{ height: '100%' }}>
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1, backgroundColor: BLUE.bg }}>
                 <Calculator size={18} style={{ color: BLUE.main }} />
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: BLUE.main }}>
-                  Local Overhead Expenses (INR)
+                  India Customs & Import Expenses (INR)
                 </Typography>
               </Box>
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Specify actual invoice expenses incurred at the port of discharge. Overheads will allocate instantly to line items.
+              <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Configure Indian customs duties (BCD + Cess + IGST) and domestic inland transport expenses below.
                 </Typography>
 
-                <TextField
-                  fullWidth
-                  label="Customs Duty (INR)"
-                  type="number"
-                  value={customsDuty}
-                  onChange={(e) => setCustomsDuty(e.target.value)}
-                />
+                {/* Customs Duties Section */}
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                    1. Customs Duty & Cess
+                  </Typography>
+                  <Grid container spacing={1.5}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Basic Duty (BCD %)"
+                        type="number"
+                        value={dutyPercent}
+                        onChange={(e) => setDutyPercent(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Cess (%) on BCD"
+                        type="number"
+                        value={cessPercent}
+                        onChange={(e) => setCessPercent(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="IGST / GST (%)"
+                        type="number"
+                        value={gstPercent}
+                        onChange={(e) => setGstPercent(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sx={{ py: 0 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={includeGST}
+                            onChange={(e) => setIncludeGST(e.target.checked)}
+                          />
+                        }
+                        label={<span style={{ fontSize: '11px' }}>Add GST to Landed Cost (Non-Creditable)</span>}
+                      />
+                    </Grid>
+                  </Grid>
 
-                <TextField
-                  fullWidth
-                  label="Ocean / Inland Freight (INR)"
-                  type="number"
-                  value={freightCharges}
-                  onChange={(e) => setFreightCharges(e.target.value)}
-                />
+                  <Box sx={{ mt: 1.5, p: 1, backgroundColor: '#f8fafc', borderRadius: 1, fontSize: '11px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span>Basic Customs Duty:</span>
+                      <strong>₹{calculations.calculatedBCD?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span>Social Welfare Cess:</span>
+                      <strong>₹{calculations.calculatedCess?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>IGST (GST Amount):</span>
+                      <span style={{ color: includeGST ? 'inherit' : '#94a3b8' }}>
+                        ₹{calculations.calculatedGST?.toLocaleString(undefined, { maximumFractionDigits: 0 })} {!includeGST && '(ITC Claimed)'}
+                      </span>
+                    </div>
+                  </Box>
+                </Box>
 
-                <TextField
-                  fullWidth
-                  label="Port Handling & Cleared Fees (INR)"
-                  type="number"
-                  value={handlingCharges}
-                  onChange={(e) => setHandlingCharges(e.target.value)}
-                />
+                {/* Freight Section */}
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                    2. Freight & Transportation
+                  </Typography>
+                  <Grid container spacing={1.5}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Sea Freight (INR)"
+                        type="number"
+                        value={seaFreight}
+                        onChange={(e) => setSeaFreight(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Road Freight (INR)"
+                        type="number"
+                        value={roadFreight}
+                        onChange={(e) => setRoadFreight(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Local Transport / Cartage (INR)"
+                        type="number"
+                        value={localTransport}
+                        onChange={(e) => setLocalTransport(e.target.value)}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
 
-                <TextField
-                  fullWidth
-                  label="Cargo Transit Insurance (INR)"
-                  type="number"
-                  value={insuranceCost}
-                  onChange={(e) => setInsuranceCost(e.target.value)}
-                />
+                {/* Port & Liner Charges */}
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                    3. Port & Other Charges
+                  </Typography>
+                  <Grid container spacing={1.5}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Liner Charges (INR)"
+                        type="number"
+                        value={linerCharges}
+                        onChange={(e) => setLinerCharges(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Insurance (INR)"
+                        type="number"
+                        value={insuranceCost}
+                        onChange={(e) => setInsuranceCost(e.target.value)}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
 
-                <Divider sx={{ my: 1 }} />
+                <Divider />
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                  <Typography>Total Overhead Expenses:</Typography>
-                  <Typography color="primary.main">₹{calculations.totalOverhead?.toLocaleString()}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, px: 0.5 }}>
+                  <Typography variant="body2">Total Overhead Expenses:</Typography>
+                  <Typography variant="body2" color="primary.main">₹{calculations.totalOverhead?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
           {/* DYNAMIC COST ALLOCATION WORKSHEET */}
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12} md={7}>
             <Card variant="outlined">
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>

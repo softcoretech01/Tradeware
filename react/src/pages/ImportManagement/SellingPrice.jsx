@@ -46,18 +46,39 @@ const SellingPrice = () => {
 
   // Form Fields
   const [inputPrice, setInputPrice] = useState('');
+  const [inputMargin, setInputMargin] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [salesRep, setSalesRep] = useState('Sarah Connor');
   const [remarks, setRemarks] = useState('');
 
-  // Derived margin for edit input
-  const inputMargin = useMemo(() => {
-    if (!selectedBatch || !inputPrice || isNaN(Number(inputPrice))) return 0;
-    const price = Number(inputPrice);
-    const cost = selectedBatch.landedUnitCost;
-    if (price <= 0) return 0;
-    return ((price - cost) / price) * 100;
-  }, [selectedBatch, inputPrice]);
+  const inputMarginNumeric = useMemo(() => {
+    const m = Number(inputMargin);
+    return isNaN(m) ? 0 : m;
+  }, [inputMargin]);
+
+  const handlePriceChange = (val) => {
+    setInputPrice(val);
+    const price = Number(val);
+    const cost = selectedBatch?.landedUnitCost || 0;
+    if (price > 0 && !isNaN(price)) {
+      const margin = ((price - cost) / price) * 100;
+      setInputMargin(margin.toFixed(2));
+    } else {
+      setInputMargin('');
+    }
+  };
+
+  const handleMarginChange = (val) => {
+    setInputMargin(val);
+    const margin = Number(val);
+    const cost = selectedBatch?.landedUnitCost || 0;
+    if (!isNaN(margin) && margin < 100) {
+      const price = cost / (1 - margin / 100);
+      setInputPrice(price > 0 && isFinite(price) ? price.toFixed(2) : '');
+    } else {
+      setInputPrice('');
+    }
+  };
 
   // Dashboard calculations
   const stats = useMemo(() => {
@@ -114,6 +135,10 @@ const SellingPrice = () => {
   const handleOpenEditPrice = (batch) => {
     setSelectedBatch(batch);
     setInputPrice(String(batch.finalSellingPrice));
+    const cost = batch.landedUnitCost;
+    const price = batch.finalSellingPrice;
+    const margin = price > 0 ? ((price - cost) / price) * 100 : 0;
+    setInputMargin(margin.toFixed(2));
     setEditPriceModalOpen(true);
   };
 
@@ -125,7 +150,7 @@ const SellingPrice = () => {
     dispatch(updateBatchPricing({
       batchNo: selectedBatch.batchNo,
       finalSellingPrice: price,
-      marginPercent: inputMargin
+      marginPercent: inputMarginNumeric
     }));
     
     setEditPriceModalOpen(false);
@@ -156,7 +181,7 @@ const SellingPrice = () => {
       itemName: selectedBatch.itemName,
       requestedPrice: Number(inputPrice),
       costPrice: selectedBatch.landedUnitCost,
-      marginPercent: inputMargin,
+      marginPercent: inputMarginNumeric,
       customerName,
       salesRepresentative: salesRep,
       status: 'Pending',
@@ -557,26 +582,36 @@ const SellingPrice = () => {
 
             <TextField
               fullWidth
-              label="New Unit Selling Price (INR)"
+              label="New Unit Selling Price (INR) - Manual"
               type="number"
               value={inputPrice}
-              onChange={(e) => setInputPrice(e.target.value)}
+              onChange={(e) => handlePriceChange(e.target.value)}
+              placeholder="Enter manual price"
+            />
+
+            <TextField
+              fullWidth
+              label="Target Gross Margin Percentage (%)"
+              type="number"
+              value={inputMargin}
+              onChange={(e) => handleMarginChange(e.target.value)}
+              placeholder="Enter margin %"
             />
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="body2" color="text.secondary">Calculated Margin:</Typography>
+              <Typography variant="body2" color="text.secondary">Current Margin Status:</Typography>
               <Typography
                 variant="body1"
                 sx={{
                   fontWeight: 800,
-                  color: inputMargin < MIN_MARGIN_THRESHOLD ? RED.main : GREEN.main
+                  color: inputMarginNumeric < MIN_MARGIN_THRESHOLD ? RED.main : GREEN.main
                 }}
               >
-                {inputMargin.toFixed(2)}%
+                {inputMarginNumeric.toFixed(2)}%
               </Typography>
             </Box>
 
-            {inputMargin < MIN_MARGIN_THRESHOLD && (
+            {inputMarginNumeric < MIN_MARGIN_THRESHOLD && (
               <Alert severity="warning" icon={<AlertTriangle size={18} />} sx={{ py: 0.5 }}>
                 <AlertTitle sx={{ fontSize: '13px', fontWeight: 700 }}>Margin Violation</AlertTitle>
                 Margin falls below the 15% minimum threshold. Direct saving is blocked. You must request authorization.
@@ -588,7 +623,7 @@ const SellingPrice = () => {
           <Button onClick={() => setEditPriceModalOpen(false)} color="inherit">
             Cancel
           </Button>
-          {inputMargin < MIN_MARGIN_THRESHOLD ? (
+          {inputMarginNumeric < MIN_MARGIN_THRESHOLD ? (
             <Button
               onClick={handleOpenApprovalDialog}
               variant="contained"
@@ -632,7 +667,7 @@ const SellingPrice = () => {
                 <Paper variant="outlined" sx={{ p: 1.5, backgroundColor: SLATE.bg }}>
                   <Typography variant="caption" color="text.secondary">Requested Price (Margin):</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: RED.main }}>
-                    ₹{Number(inputPrice)?.toFixed(2)} ({inputMargin.toFixed(1)}%)
+                    ₹{Number(inputPrice)?.toFixed(2)} ({inputMarginNumeric.toFixed(1)}%)
                   </Typography>
                 </Paper>
               </Grid>

@@ -345,8 +345,7 @@ const initialState = {
       'Batch & Lot Management': { read: true, write: true, approve: true },
       'Import Management': { read: true, write: true, approve: true },
       'Pricing Management': { read: true, write: true, approve: true },
-      'Delivery & Dispatch': { read: true, write: true, approve: true },
-      'Accounts Integration': { read: true, write: true, approve: true },
+      'Account Integration': { read: true, write: true, approve: true },
       'Reports & Dashboards': { read: true, write: true, approve: true },
       'User Roles & Approval': { read: true, write: true, approve: true },
       'Document Management': { read: true, write: true, approve: true }
@@ -360,8 +359,7 @@ const initialState = {
       'Batch & Lot Management': { read: true, write: false, approve: false },
       'Import Management': { read: true, write: false, approve: false },
       'Pricing Management': { read: false, write: false, approve: false },
-      'Delivery & Dispatch': { read: false, write: false, approve: false },
-      'Accounts Integration': { read: false, write: false, approve: false },
+      'Account Integration': { read: false, write: false, approve: false },
       'Reports & Dashboards': { read: true, write: false, approve: false },
       'User Roles & Approval': { read: false, write: false, approve: false },
       'Document Management': { read: true, write: true, approve: false }
@@ -375,8 +373,7 @@ const initialState = {
       'Batch & Lot Management': { read: true, write: true, approve: false },
       'Import Management': { read: false, write: false, approve: false },
       'Pricing Management': { read: false, write: false, approve: false },
-      'Delivery & Dispatch': { read: true, write: true, approve: false },
-      'Accounts Integration': { read: false, write: false, approve: false },
+      'Account Integration': { read: false, write: false, approve: false },
       'Reports & Dashboards': { read: true, write: false, approve: false },
       'User Roles & Approval': { read: false, write: false, approve: false },
       'Document Management': { read: true, write: true, approve: false }
@@ -390,8 +387,7 @@ const initialState = {
       'Batch & Lot Management': { read: false, write: false, approve: false },
       'Import Management': { read: false, write: false, approve: false },
       'Pricing Management': { read: true, write: false, approve: false },
-      'Delivery & Dispatch': { read: true, write: false, approve: false },
-      'Accounts Integration': { read: false, write: false, approve: false },
+      'Account Integration': { read: false, write: false, approve: false },
       'Reports & Dashboards': { read: true, write: false, approve: false },
       'User Roles & Approval': { read: false, write: false, approve: false },
       'Document Management': { read: true, write: true, approve: false }
@@ -405,8 +401,7 @@ const initialState = {
       'Batch & Lot Management': { read: false, write: false, approve: false },
       'Import Management': { read: true, write: false, approve: false },
       'Pricing Management': { read: true, write: true, approve: false },
-      'Delivery & Dispatch': { read: false, write: false, approve: false },
-      'Accounts Integration': { read: true, write: true, approve: false },
+      'Account Integration': { read: true, write: true, approve: false },
       'Reports & Dashboards': { read: true, write: false, approve: false },
       'User Roles & Approval': { read: false, write: false, approve: false },
       'Document Management': { read: true, write: true, approve: false }
@@ -420,8 +415,7 @@ const initialState = {
       'Batch & Lot Management': { read: true, write: false, approve: false },
       'Import Management': { read: true, write: false, approve: false },
       'Pricing Management': { read: true, write: false, approve: true },
-      'Delivery & Dispatch': { read: true, write: false, approve: true },
-      'Accounts Integration': { read: true, write: false, approve: true },
+      'Account Integration': { read: true, write: false, approve: true },
       'Reports & Dashboards': { read: true, write: false, approve: false },
       'User Roles & Approval': { read: true, write: false, approve: true },
       'Document Management': { read: true, write: true, approve: true }

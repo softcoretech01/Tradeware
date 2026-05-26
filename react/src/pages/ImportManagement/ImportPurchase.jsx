@@ -56,6 +56,17 @@ const ImportPurchase = () => {
   const [formItems, setFormItems] = useState([
     { itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }
   ]);
+  const [formFreightMode, setFormFreightMode] = useState('None');
+  const [formShippingLine, setFormShippingLine] = useState('');
+  const [formPortOfLoading, setFormPortOfLoading] = useState('');
+  const [formPortOfDischarge, setFormPortOfDischarge] = useState('');
+  const [formContainerNo, setFormContainerNo] = useState('');
+  const [formBlNo, setFormBlNo] = useState('');
+  const [formTransporterName, setFormTransporterName] = useState('');
+  const [formVehicleNo, setFormVehicleNo] = useState('');
+  const [formLrNo, setFormLrNo] = useState('');
+  const [formEwayBillNo, setFormEwayBillNo] = useState('');
+  const [formDispatchRoute, setFormDispatchRoute] = useState('');
 
   // Update default rate when currency changes
   const handleCurrencyChange = (currency) => {
@@ -158,7 +169,18 @@ const ImportPurchase = () => {
       })),
       totalFCY,
       totalLCY,
-      status: 'Ordered'
+      status: 'Ordered',
+      freightMode: formFreightMode,
+      shippingLine: formShippingLine,
+      portOfLoading: formPortOfLoading,
+      portOfDischarge: formPortOfDischarge,
+      containerNo: formContainerNo,
+      blNo: formBlNo,
+      transporterName: formTransporterName,
+      vehicleNo: formVehicleNo,
+      lrNo: formLrNo,
+      ewayBillNo: formEwayBillNo,
+      dispatchRoute: formDispatchRoute
     };
 
     dispatch(addImportPO(newPO));
@@ -169,6 +191,17 @@ const ImportPurchase = () => {
     setFormCurrency('USD');
     setFormExchangeRate(83.5);
     setFormItems([{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
+    setFormFreightMode('None');
+    setFormShippingLine('');
+    setFormPortOfLoading('');
+    setFormPortOfDischarge('');
+    setFormContainerNo('');
+    setFormBlNo('');
+    setFormTransporterName('');
+    setFormVehicleNo('');
+    setFormLrNo('');
+    setFormEwayBillNo('');
+    setFormDispatchRoute('');
   };
 
   const handleOpenDetails = (po) => {
@@ -296,7 +329,7 @@ const ImportPurchase = () => {
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">Total PO Transactions</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>{stats.totalOrders} Contracts</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>{stats.totalOrders} Orders</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -414,7 +447,7 @@ const ImportPurchase = () => {
       {/* CREATE IMPORT PO DIALOG */}
       <Dialog open={createModalOpen} onClose={() => setCreateModalOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          Create New Import Purchase Contract
+          Create New Import Purchase Order
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
@@ -468,7 +501,7 @@ const ImportPurchase = () => {
               <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
-                  label="PO Contract Date"
+                  label="PO Date"
                   type="date"
                   InputLabelProps={{ shrink: true }}
                   value={formDate}
@@ -476,6 +509,134 @@ const ImportPurchase = () => {
                 />
               </Grid>
             </Grid>
+
+            {/* Freight Details Section */}
+            <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 2, backgroundColor: '#f8fafc' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+                Freight & Inland Transport Details
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="freight-mode-select-label">Freight Mode</InputLabel>
+                    <Select
+                      labelId="freight-mode-select-label"
+                      value={formFreightMode}
+                      label="Freight Mode"
+                      onChange={(e) => setFormFreightMode(e.target.value)}
+                    >
+                      <MenuItem value="None">None / Self Pickup</MenuItem>
+                      <MenuItem value="Road Freight">Road Freight (Domestic / Inland)</MenuItem>
+                      <MenuItem value="Sea Freight">Sea Freight (International / Coastal)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {formFreightMode === 'Sea Freight' && (
+                  <>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Shipping Line / Ocean Carrier"
+                        value={formShippingLine}
+                        onChange={(e) => setFormShippingLine(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Container Number"
+                        placeholder="e.g. MSKU9981240"
+                        value={formContainerNo}
+                        onChange={(e) => setFormContainerNo(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Bill of Lading (B/L) No"
+                        value={formBlNo}
+                        onChange={(e) => setFormBlNo(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Port of Loading (POL)"
+                        value={formPortOfLoading}
+                        onChange={(e) => setFormPortOfLoading(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Port of Discharge (POD)"
+                        value={formPortOfDischarge}
+                        onChange={(e) => setFormPortOfDischarge(e.target.value)}
+                      />
+                    </Grid>
+                  </>
+                )}
+
+                {formFreightMode === 'Road Freight' && (
+                  <>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Transporter Name"
+                        value={formTransporterName}
+                        onChange={(e) => setFormTransporterName(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Vehicle Number"
+                        placeholder="e.g. MH-12-PQ-1234"
+                        value={formVehicleNo}
+                        onChange={(e) => setFormVehicleNo(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Lorry Receipt (LR) No"
+                        value={formLrNo}
+                        onChange={(e) => setFormLrNo(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="E-Way Bill Number"
+                        placeholder="Mandatory if value > ₹50,000"
+                        value={formEwayBillNo}
+                        onChange={(e) => setFormEwayBillNo(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={8}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Dispatch Route"
+                        placeholder="e.g. Mumbai to Pune"
+                        value={formDispatchRoute}
+                        onChange={(e) => setFormDispatchRoute(e.target.value)}
+                      />
+                    </Grid>
+                  </>
+                )}
+              </Grid>
+            </Box>
 
             {/* Line Items Section */}
             <Box>
@@ -584,7 +745,7 @@ const ImportPurchase = () => {
             Cancel
           </Button>
           <Button onClick={handleSavePO} variant="contained" sx={{ backgroundColor: BLUE.main }}>
-            Create Contract
+            Create Order
           </Button>
         </DialogActions>
       </Dialog>
@@ -625,8 +786,55 @@ const ImportPurchase = () => {
                 </Grid>
               </Grid>
 
+              {selectedPO.freightMode && selectedPO.freightMode !== 'None' && (
+                <Box sx={{ mb: 3, p: 2, border: '1px solid #e2e8f0', borderRadius: 1, backgroundColor: '#f8fafc' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                    Freight & India Inland Transport Details ({selectedPO.freightMode})
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {selectedPO.freightMode === 'Sea Freight' ? (
+                      <>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>Shipping Line:</strong> {selectedPO.shippingLine || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>Container No:</strong> {selectedPO.containerNo || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>B/L No:</strong> {selectedPO.blNo || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={6}>
+                          <Typography variant="body2"><strong>Port of Loading:</strong> {selectedPO.portOfLoading || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={6}>
+                          <Typography variant="body2"><strong>Port of Discharge:</strong> {selectedPO.portOfDischarge || '—'}</Typography>
+                        </Grid>
+                      </>
+                    ) : (
+                      <>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>Transporter:</strong> {selectedPO.transporterName || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>Vehicle No:</strong> {selectedPO.vehicleNo || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={4}>
+                          <Typography variant="body2"><strong>Lorry Receipt (LR) No:</strong> {selectedPO.lrNo || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={6}>
+                          <Typography variant="body2"><strong>E-Way Bill Number:</strong> {selectedPO.ewayBillNo || '—'}</Typography>
+                        </Grid>
+                        <Grid item xs={6} md={6}>
+                          <Typography variant="body2"><strong>Dispatch Route:</strong> {selectedPO.dispatchRoute || '—'}</Typography>
+                        </Grid>
+                      </>
+                    )}
+                  </Grid>
+                </Box>
+              )}
+
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                PO Contract Item Specifications
+                PO Item Specifications
               </Typography>
               <div className="detail-table">
                 <table>

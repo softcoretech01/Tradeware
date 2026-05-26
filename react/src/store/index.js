@@ -10,6 +10,8 @@ import stockAdjustmentReducer from './stockAdjustmentSlice'
 import erpReducer from './erpSlice'
 import qcReducer from './qcSlice'
 import batchImportReducer from './batchImportSlice'
+import crmReducer from './crmSlice'
+import financeReducer from './financeSlice'
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +26,7 @@ export const store = configureStore({
     erp: erpReducer,
     qc: qcReducer,
     batchImport: batchImportReducer,
+    crm: crmReducer,
+    finance: financeReducer,
   },
 })

@@ -177,10 +177,9 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
               <div className="form-group">
                 <label>Customer Type *</label>
                 <select name="type" value={formData.type} onChange={handleChange} required>
-                  <option value="Builders">Builders</option>
-                  <option value="Dealers">Dealers</option>
-                  <option value="House Owners">House Owners</option>
-                  <option value="Contractors">Contractors</option>
+                  <option value="Builders">Retailer</option>
+                  <option value="Dealers">Wholesaler</option>
+                  <option value="Contractors">Project Based</option>
                 </select>
               </div>
               <div className="form-group">

@@ -158,8 +158,7 @@ const RolesPermissions = () => {
     'Inventory Management',
     'Pricing Management',
     'Sales & Orders',
-    'Delivery & Dispatch',
-    'Accounts Integration',
+    'Account Integration',
     'Reports & Dashboards',
     'User Roles & Approval',
     'Document Management'

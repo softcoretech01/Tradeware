@@ -24,9 +24,7 @@ import SalesEnquiry from './pages/SalesManagement/SalesEnquiry';
 import QuotationManagement from './pages/SalesManagement/QuotationManagement';
 import CustomerPO from './pages/SalesManagement/CustomerPO';
 import SalesOrder from './pages/SalesManagement/SalesOrder';
-import DeliveryChallan from './pages/DeliveryDispatch/DeliveryChallan';
-import DispatchTracking from './pages/DeliveryDispatch/DispatchTracking';
-import MaterialIssueTracking from './pages/DeliveryDispatch/MaterialIssueTracking';
+
 
 // Security and Doc management pages
 import RolesPermissions from './pages/UserRoles/RolesPermissions';
@@ -49,6 +47,28 @@ import InventoryReports from './pages/Reports/InventoryReports';
 import PurchaseReports from './pages/Reports/PurchaseReports';
 import SalesReports from './pages/Reports/SalesReports';
 import ImportReports from './pages/Reports/ImportReports';
+
+// CRM Pages
+import CRMDashboard from './pages/CRM/CRMDashboard';
+import LeadManagement from './pages/CRM/LeadManagement';
+import CustomerManagement from './pages/CRM/CustomerManagement';
+import FollowUpTracking from './pages/CRM/FollowUpTracking';
+import CRMSalesEnquiry from './pages/CRM/CRMSalesEnquiry';
+import OpportunityManagement from './pages/CRM/OpportunityManagement';
+import ComplaintManagement from './pages/CRM/ComplaintManagement';
+import CRMReports from './pages/CRM/CRMReports';
+
+// Account Integration Pages
+import APBook from './pages/Finance/APBook';
+import ARBook from './pages/Finance/ARBook';
+import ARBookDO from './pages/Finance/ARBookDO';
+import BankBook from './pages/Finance/BankBook';
+import BankBookEntries from './pages/Finance/BankBookEntries';
+import CashBook from './pages/Finance/CashBook';
+import CashBookEntry from './pages/Finance/CashBookEntry';
+import Overdraft from './pages/Finance/Overdraft';
+import PCBook from './pages/Finance/PCBook';
+import PettyCash from './pages/Finance/PettyCash';
 
 const App = () => {
   const currentUser = useSelector(state => state.erp.currentUser);
@@ -103,10 +123,17 @@ const App = () => {
                 <Route path="/sales-orders/customer-po-management" element={<CustomerPO />} />
                 <Route path="/sales-orders/sales-order-management" element={<SalesOrder />} />
 
-                {/* Delivery & Dispatch */}
-                <Route path="/delivery-dispatch/delivery-challan" element={<DeliveryChallan />} />
-                <Route path="/delivery-dispatch/dispatch-tracking" element={<DispatchTracking />} />
-                <Route path="/delivery-dispatch/material-issue-tracking" element={<MaterialIssueTracking />} />
+                {/* CRM Module Routes */}
+                <Route path="/crm-module/crm-dashboard" element={<CRMDashboard />} />
+                <Route path="/crm-module/lead-management" element={<LeadManagement />} />
+                <Route path="/crm-module/customer-management" element={<CustomerManagement />} />
+                <Route path="/crm-module/follow-up-tracking" element={<FollowUpTracking />} />
+                <Route path="/crm-module/sales-enquiry" element={<CRMSalesEnquiry />} />
+                <Route path="/crm-module/opportunity-management" element={<OpportunityManagement />} />
+                <Route path="/crm-module/complaint-management" element={<ComplaintManagement />} />
+                <Route path="/crm-module/crm-reports" element={<CRMReports />} />
+
+
 
                 {/* Batch & Lot Management */}
                 <Route path="/batch-lot-management/batch-maintenance" element={<BatchMaintenance />} />
@@ -135,6 +162,18 @@ const App = () => {
 
                 {/* Documents */}
                 <Route path="/document-management/document-management" element={<DocumentManagement />} />
+
+                {/* Account Integration Routes */}
+                <Route path="/account-integration/ap-book" element={<APBook />} />
+                <Route path="/account-integration/ar-book" element={<ARBook />} />
+                <Route path="/account-integration/ar-book-do" element={<ARBookDO />} />
+                <Route path="/account-integration/bank-book" element={<BankBook />} />
+                <Route path="/account-integration/bank-book-entries" element={<BankBookEntries />} />
+                <Route path="/account-integration/cash-book" element={<CashBook />} />
+                <Route path="/account-integration/cash-book-entry" element={<CashBookEntry />} />
+                <Route path="/account-integration/overdraft" element={<Overdraft />} />
+                <Route path="/account-integration/pc-book" element={<PCBook />} />
+                <Route path="/account-integration/petty-cash" element={<PettyCash />} />
 
                 <Route path="*" element={<div className="placeholder">Coming Soon</div>} />
               </Routes>
