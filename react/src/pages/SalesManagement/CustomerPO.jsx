@@ -285,12 +285,22 @@ const CustomerPO = () => {
               InputLabelProps={{ shrink: true }}
             />
 
-            <TextField
-              label="Payment Terms"
-              value={formData.paymentTerms}
-              onChange={(e) => setFormData(prev => ({ ...prev, paymentTerms: e.target.value }))}
-              fullWidth
-            />
+            <FormControl fullWidth>
+              <InputLabel id="payment-terms-label">Payment Terms</InputLabel>
+              <Select
+                labelId="payment-terms-label"
+                value={formData.paymentTerms}
+                label="Payment Terms"
+                onChange={(e) => setFormData(prev => ({ ...prev, paymentTerms: e.target.value }))}
+              >
+                <MenuItem value="COD">COD (Cash on Delivery)</MenuItem>
+                <MenuItem value="Cash">Cash</MenuItem>
+                <MenuItem value="Net 15">Net 15 Days</MenuItem>
+                <MenuItem value="Net 30">Net 30 Days</MenuItem>
+                <MenuItem value="Net 60">Net 60 Days</MenuItem>
+                <MenuItem value="Net 90">Net 90 Days</MenuItem>
+              </Select>
+            </FormControl>
           </div>
 
           <div className="dialog-grid" style={{ marginTop: '16px' }}>

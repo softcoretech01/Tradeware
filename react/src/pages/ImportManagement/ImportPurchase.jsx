@@ -67,11 +67,25 @@ const ImportPurchase = () => {
   const [formLrNo, setFormLrNo] = useState('');
   const [formEwayBillNo, setFormEwayBillNo] = useState('');
   const [formDispatchRoute, setFormDispatchRoute] = useState('');
+  const [formPaymentTerms, setFormPaymentTerms] = useState('Net 30');
 
   // Update default rate when currency changes
   const handleCurrencyChange = (currency) => {
     setFormCurrency(currency);
     setFormExchangeRate(DEFAULT_RATES[currency] || 83.5);
+  };
+
+  const handleSupplierChange = (supId) => {
+    setFormSupplierId(supId);
+    const sup = suppliers.find(s => s.id === supId);
+    if (sup) {
+      if (sup.paymentTerms) {
+        setFormPaymentTerms(sup.paymentTerms);
+      }
+      if (sup.currency) {
+        handleCurrencyChange(sup.currency);
+      }
+    }
   };
 
   // Dashboard Stats
@@ -170,6 +184,7 @@ const ImportPurchase = () => {
       totalFCY,
       totalLCY,
       status: 'Ordered',
+      paymentTerms: formPaymentTerms,
       freightMode: formFreightMode,
       shippingLine: formShippingLine,
       portOfLoading: formPortOfLoading,
@@ -202,6 +217,7 @@ const ImportPurchase = () => {
     setFormLrNo('');
     setFormEwayBillNo('');
     setFormDispatchRoute('');
+    setFormPaymentTerms('Net 30');
   };
 
   const handleOpenDetails = (po) => {
@@ -453,14 +469,14 @@ const ImportPurchase = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
             
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={3}>
                 <FormControl fullWidth>
                   <InputLabel id="supplier-select-label">Overseas Supplier</InputLabel>
                   <Select
                     labelId="supplier-select-label"
                     value={formSupplierId}
                     label="Overseas Supplier"
-                    onChange={(e) => setFormSupplierId(e.target.value)}
+                    onChange={(e) => handleSupplierChange(e.target.value)}
                   >
                     {suppliers.filter(s => s.type !== 'Local suppliers').map(s => (
                       <MenuItem key={s.id} value={s.id}>{s.name} ({s.currency})</MenuItem>
@@ -487,7 +503,7 @@ const ImportPurchase = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={3}>
+              <Grid item xs={12} sm={2}>
                 <TextField
                   fullWidth
                   label="Exchange Rate (to INR)"
@@ -499,6 +515,25 @@ const ImportPurchase = () => {
               </Grid>
 
               <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel id="payment-terms-label">Payment Terms</InputLabel>
+                  <Select
+                    labelId="payment-terms-label"
+                    value={formPaymentTerms}
+                    label="Payment Terms"
+                    onChange={(e) => setFormPaymentTerms(e.target.value)}
+                  >
+                    <MenuItem value="COD">COD (Cash on Delivery)</MenuItem>
+                    <MenuItem value="Cash">Cash</MenuItem>
+                    <MenuItem value="Net 15">Net 15 Days</MenuItem>
+                    <MenuItem value="Net 30">Net 30 Days</MenuItem>
+                    <MenuItem value="Net 60">Net 60 Days</MenuItem>
+                    <MenuItem value="Net 90">Net 90 Days</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={2}>
                 <TextField
                   fullWidth
                   label="PO Date"
@@ -760,25 +795,31 @@ const ImportPurchase = () => {
           {selectedPO && (
             <div className="view-detail-body">
               <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={2.4}>
                   <div className="view-detail-row">
                     <strong>Supplier:</strong>
                     <span>{selectedPO.supplierName}</span>
                   </div>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={2.4}>
                   <div className="view-detail-row">
                     <strong>Order Date:</strong>
                     <span>{selectedPO.date}</span>
                   </div>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={2.4}>
                   <div className="view-detail-row">
                     <strong>Currency / Exchange:</strong>
                     <span>{selectedPO.currency} @ ₹{selectedPO.exchangeRate?.toFixed(2)}</span>
                   </div>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={2.4}>
+                  <div className="view-detail-row">
+                    <strong>Payment Terms:</strong>
+                    <span>{selectedPO.paymentTerms || 'Net 30'}</span>
+                  </div>
+                </Grid>
+                <Grid item xs={6} md={2.4}>
                   <div className="view-detail-row">
                     <strong>Total Value (INR):</strong>
                     <span>₹{selectedPO.totalLCY?.toLocaleString()}</span>

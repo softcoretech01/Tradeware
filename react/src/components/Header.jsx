@@ -13,7 +13,7 @@ const Header = ({ onLogout }) => {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -25,7 +25,7 @@ const Header = ({ onLogout }) => {
     dispatch(setCurrentUser(selectedUser));
     handleClose();
   };
-  
+
   // Dynamic Breadcrumbs Formatter
   const formatBreadcrumb = (str) => {
     if (!str) return '';
@@ -36,7 +36,7 @@ const Header = ({ onLogout }) => {
   };
 
   const pathParts = location.pathname.split('/').filter(Boolean);
-  
+
   let parentName = 'Master';
   let activeName = 'Items';
 
@@ -52,7 +52,10 @@ const Header = ({ onLogout }) => {
 
   return (
     <header className="header">
-      <div className="header-left">
+      <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', borderRadius: '6px', padding: '3px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <img src="/logo.png" alt="TradeWare Logo" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+        </div>
         <div className="breadcrumbs">
           <span className="breadcrumb-item">{parentName}</span>
           <span className="breadcrumb-separator">/</span>
@@ -100,8 +103,8 @@ const Header = ({ onLogout }) => {
             </span>
           </div>
           {users.map((u) => (
-            <MenuItem 
-              key={u.id} 
+            <MenuItem
+              key={u.id}
               selected={u.role === currentUser?.role}
               onClick={() => handleRoleSelect(u)}
               style={{
@@ -116,10 +119,10 @@ const Header = ({ onLogout }) => {
               <span style={{ fontSize: '12px', color: 'var(--primary)' }}>{u.role}</span>
             </MenuItem>
           ))}
-          <MenuItem 
-            onClick={() => { handleClose(); onLogout(); }} 
-            style={{ 
-              borderTop: '1px solid #eee', 
+          <MenuItem
+            onClick={() => { handleClose(); onLogout(); }}
+            style={{
+              borderTop: '1px solid #eee',
               color: '#d32f2f',
               padding: '12px 16px',
               fontWeight: 600,

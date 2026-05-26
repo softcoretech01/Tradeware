@@ -38,21 +38,21 @@ const Sidebar = () => {
     { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Stock Inward', 'Stock Outward', 'Stock Adjustment'] },
     { name: 'Pricing Management', icon: <Calculator size={20} />, to: '/pricing-management' },
     { name: 'Sales & Orders', icon: <FileText size={20} />, subItems: ['Sales Enquiry', 'Quotation Management', 'Customer PO Management', 'Sales Order Management'] },
-    { 
-      name: 'CRM Module', 
-      icon: <HeartHandshake size={20} />, 
-      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Opportunity Management', 'Complaint Management', 'CRM Reports'] 
+    /* {
+      name: 'CRM Module',
+      icon: <HeartHandshake size={20} />,
+      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Opportunity Management', 'Complaint Management', 'CRM Reports']
     },
 
     {
       name: 'Account Integration',
       icon: <Calculator size={20} />,
       subItems: ['AP Book', 'AR Book', 'AR Book DO', 'Bank Book', 'Bank Book Entries', 'Cash Book', 'Cash Book Entry', 'Overdraft', 'PC Book', 'Petty Cash']
-    },
-    { 
-      name: 'Reports & Dashboards', 
-      icon: <BarChart3 size={20} />, 
-      subItems: ['Overview Dashboard', 'Inventory Reports', 'Purchase Reports', 'Sales Reports', 'Import Reports'] 
+    }, */
+    {
+      name: 'Reports & Dashboards',
+      icon: <BarChart3 size={20} />,
+      subItems: ['Overview Dashboard', 'Inventory Reports', 'Purchase Reports', 'Sales Reports', 'Import Reports']
     },
     { name: 'User Roles & Approval', icon: <Users size={20} />, subItems: ['Roles & Permissions', 'Approval Workflows'] },
     { name: 'Document Management', icon: <Paperclip size={20} />, subItems: ['Document Management'] },
@@ -69,7 +69,9 @@ const Sidebar = () => {
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-logo">
-        <div className="logo-box">TW</div>
+        <div className="logo-box" style={{ background: '#ffffff', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="TradeWare Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
         {!collapsed && <span>TradeWare ERP</span>}
       </div>
 
@@ -135,12 +137,13 @@ const Sidebar = () => {
         .sidebar {
           width: var(--sidebar-width);
           height: 100vh;
-          background: var(--secondary);
+          background: #344a6b;
           color: white;
           transition: all 0.3s ease;
           display: flex;
           flex-direction: column;
           z-index: 100;
+          border-right: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .sidebar.collapsed {
@@ -153,7 +156,8 @@ const Sidebar = () => {
           align-items: center;
           padding: 0 20px;
           gap: 12px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          color: white;
         }
 
         .logo-box {
@@ -172,6 +176,7 @@ const Sidebar = () => {
           font-weight: 600;
           font-size: 18px;
           white-space: nowrap;
+          color: white;
         }
 
         .sidebar-nav {
@@ -187,18 +192,19 @@ const Sidebar = () => {
           justify-content: space-between;
           cursor: pointer;
           transition: all 0.2s;
-          color: #94a3b8;
+          color: #cbd5e1;
         }
 
         .menu-item:hover {
-          background: rgba(255,255,255,0.05);
+          background: rgba(255, 255, 255, 0.06);
           color: white;
         }
 
         .menu-item.active-item {
           color: white;
-          background: rgba(59, 130, 246, 0.15);
-          border-right: 3px solid var(--primary);
+          background: rgba(255, 255, 255, 0.12);
+          border-right: 3px solid #60a5fa;
+          font-weight: 500;
         }
 
         .menu-item.open {
@@ -212,7 +218,7 @@ const Sidebar = () => {
         }
 
         .submenu {
-          background: rgba(0,0,0,0.2);
+          background: rgba(0, 0, 0, 0.15);
           padding: 5px 0;
         }
 
@@ -220,31 +226,32 @@ const Sidebar = () => {
           padding: 10px 20px 10px 52px;
           display: block;
           font-size: 14px;
-          color: #94a3b8;
+          color: #cbd5e1;
           transition: all 0.2s;
         }
 
         .submenu-item:hover, .submenu-item.active {
           color: white;
-          background: rgba(59, 130, 246, 0.1);
+          background: rgba(255, 255, 255, 0.08);
         }
 
         .submenu-item.active {
-          border-right: 3px solid var(--primary);
+          border-right: 3px solid #60a5fa;
+          font-weight: 500;
         }
 
         .sidebar-version {
           position: sticky;
           bottom: 0;
           padding: 10px 20px;
-          background: rgba(0, 0, 0, 0.25);
-          border-top: 1px solid rgba(255,255,255,0.06);
+          background: rgba(0, 0, 0, 0.15);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           align-items: center;
           gap: 7px;
           font-size: 11px;
           font-weight: 600;
-          color: #64748b;
+          color: #94a3b8;
           letter-spacing: 0.04em;
           user-select: none;
         }
@@ -253,9 +260,9 @@ const Sidebar = () => {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #60a5fa;
           flex-shrink: 0;
-          box-shadow: 0 0 5px rgba(59,130,246,0.6);
+          box-shadow: 0 0 5px rgba(96, 165, 250, 0.6);
         }
       `}</style>
     </div>

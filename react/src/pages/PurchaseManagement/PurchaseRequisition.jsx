@@ -418,7 +418,6 @@ const PurchaseRequisition = () => {
                   <TableCell>Item Name</TableCell>
                   <TableCell width="120">Qty</TableCell>
                   <TableCell width="120">UOM</TableCell>
-                  <TableCell width="140">Estimated Price</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -451,16 +450,6 @@ const PurchaseRequisition = () => {
                         className="table-input"
                         value={item.uom}
                         onChange={(e) => handleItemChange(idx, 'uom', e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <input 
-                        type="number" 
-                        className="table-input"
-                        value={item.unitPrice}
-                        min="0.01"
-                        step="0.01"
-                        onChange={(e) => handleItemChange(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
                       />
                     </TableCell>
                     <TableCell align="center">

@@ -4,8 +4,8 @@ import { Lock, User, LogIn, AlertCircle } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('Admin');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const users = useSelector(state => state.erp.users);
@@ -31,7 +31,9 @@ const Login = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-card fade-in">
         <div className="login-header">
-          <div className="login-logo">TW</div>
+          <div className="login-logo" style={{ background: '#ffffff', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/logo.png" alt="TradeWare Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
           <h1>TradeWare ERP</h1>
           <p>Powering Smart Trading Operations</p>
         </div>
@@ -48,9 +50,9 @@ const Login = ({ onLogin }) => {
             <label>Username</label>
             <div className="input-wrapper">
               <User size={18} className="input-icon" />
-              <input 
-                type="text" 
-                placeholder="Enter username" 
+              <input
+                type="text"
+                placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -62,9 +64,9 @@ const Login = ({ onLogin }) => {
             <label>Password</label>
             <div className="input-wrapper">
               <Lock size={18} className="input-icon" />
-              <input 
-                type="password" 
-                placeholder="Enter password" 
+              <input
+                type="password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

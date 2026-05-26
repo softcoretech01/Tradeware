@@ -13,7 +13,8 @@ const initialState = {
       ],
       totalFCY: 10400,
       totalLCY: 868400,
-      status: 'Shipped' // Draft, Ordered, Shipped, Cleared
+      status: 'Shipped', // Draft, Ordered, Shipped, Cleared
+      paymentTerms: 'Net 60'
     },
     {
       id: 'IPO-2026-002',
@@ -26,7 +27,8 @@ const initialState = {
       ],
       totalFCY: 6250,
       totalLCY: 563750,
-      status: 'Ordered'
+      status: 'Ordered',
+      paymentTerms: 'COD'
     },
     {
       id: 'IPO-2026-003',
@@ -39,7 +41,8 @@ const initialState = {
       ],
       totalFCY: 5000,
       totalLCY: 417500,
-      status: 'Cleared'
+      status: 'Cleared',
+      paymentTerms: 'Net 30'
     }
   ],
   shipments: [

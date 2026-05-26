@@ -164,16 +164,16 @@ const App = () => {
                 <Route path="/document-management/document-management" element={<DocumentManagement />} />
 
                 {/* Account Integration Routes */}
-                <Route path="/account-integration/ap-book" element={<APBook />} />
-                <Route path="/account-integration/ar-book" element={<ARBook />} />
-                <Route path="/account-integration/ar-book-do" element={<ARBookDO />} />
-                <Route path="/account-integration/bank-book" element={<BankBook />} />
-                <Route path="/account-integration/bank-book-entries" element={<BankBookEntries />} />
-                <Route path="/account-integration/cash-book" element={<CashBook />} />
-                <Route path="/account-integration/cash-book-entry" element={<CashBookEntry />} />
-                <Route path="/account-integration/overdraft" element={<Overdraft />} />
-                <Route path="/account-integration/pc-book" element={<PCBook />} />
-                <Route path="/account-integration/petty-cash" element={<PettyCash />} />
+                <Route path="/finance/ap-book" element={<APBook />} />
+                <Route path="/finance/ar-book" element={<ARBook />} />
+                <Route path="/finance/ar-book-do" element={<ARBookDO />} />
+                <Route path="/finance/bank-book" element={<BankBook />} />
+                <Route path="/finance/bank-book-entries" element={<BankBookEntries />} />
+                <Route path="/finance/cash-book" element={<CashBook />} />
+                <Route path="/finance/cash-book-entry" element={<CashBookEntry />} />
+                <Route path="/finance/overdraft" element={<Overdraft />} />
+                <Route path="/finance/pc-book" element={<PCBook />} />
+                <Route path="/finance/petty-cash" element={<PettyCash />} />
 
                 <Route path="*" element={<div className="placeholder">Coming Soon</div>} />
               </Routes>

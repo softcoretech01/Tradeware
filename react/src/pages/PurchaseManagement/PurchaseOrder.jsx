@@ -511,52 +511,24 @@ const PurchaseOrder = () => {
               </Select>
             </FormControl>
 
-            <TextField
-              label="Payment Terms"
-              value={formData.paymentTerms}
-              onChange={(e) => setFormData(prev => ({ ...prev, paymentTerms: e.target.value }))}
-              fullWidth
-            />
+            <FormControl fullWidth>
+              <InputLabel id="payment-terms-label">Payment Terms</InputLabel>
+              <Select
+                labelId="payment-terms-label"
+                value={formData.paymentTerms}
+                label="Payment Terms"
+                onChange={(e) => setFormData(prev => ({ ...prev, paymentTerms: e.target.value }))}
+              >
+                <MenuItem value="COD">COD (Cash on Delivery)</MenuItem>
+                <MenuItem value="Cash">Cash</MenuItem>
+                <MenuItem value="Net 15">Net 15 Days</MenuItem>
+                <MenuItem value="Net 30">Net 30 Days</MenuItem>
+                <MenuItem value="Net 60">Net 60 Days</MenuItem>
+                <MenuItem value="Net 90">Net 90 Days</MenuItem>
+              </Select>
+            </FormControl>
           </div>
 
-          {/* Blanket PO Option */}
-          <div style={{ margin: '16px 0', padding: '12px', border: '1px solid var(--border)', borderRadius: '6px' }}>
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  checked={formData.isBlanket} 
-                  onChange={(e) => setFormData(prev => ({ ...prev, isBlanket: e.target.checked }))} 
-                />
-              }
-              label="Mark as Blanket Purchase Agreement (Contract)"
-            />
-
-            {formData.isBlanket && (
-              <div className="dialog-grid" style={{ marginTop: '12px' }}>
-                <TextField
-                  label="Contract Limit Value ($)"
-                  type="number"
-                  value={formData.blanketDetails.contractValue}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    blanketDetails: { ...prev.blanketDetails, contractValue: parseFloat(e.target.value) || 0 }
-                  }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Agreement Validity Date"
-                  type="date"
-                  value={formData.blanketDetails.validity}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    blanketDetails: { ...prev.blanketDetails, validity: e.target.value }
-                  }))}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </div>
-            )}
-          </div>
 
           {/* Freight & India Inland Transport Details Option */}
           <div style={{ margin: '16px 0', padding: '12px', border: '1px solid var(--border)', borderRadius: '6px' }}>
