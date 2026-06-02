@@ -72,7 +72,16 @@ const Sidebar = () => {
         <div className="logo-box" style={{ background: '#ffffff', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img src="/logo.png" alt="TradeWare Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
-        {!collapsed && <span>TradeWare ERP</span>}
+        {!collapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>TradeWare ERP</span>
+            {currentUser?.company && (
+              <span style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 'bold', marginTop: '2px', lineHeight: '1.2' }}>
+                {currentUser.company}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="sidebar-nav">

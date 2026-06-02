@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('Admin');
   const [password, setPassword] = useState('admin123');
+  const [company, setCompany] = useState('Ritzy');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const users = useSelector(state => state.erp.users);
@@ -16,11 +17,11 @@ const Login = ({ onLogin }) => {
       u => u.name.toLowerCase() === username.toLowerCase() || u.role.toLowerCase() === username.toLowerCase()
     );
     if (foundUser && password === 'admin123') {
-      onLogin(foundUser);
+      onLogin({ ...foundUser, company });
       navigate('/dashboard');
     } else if (username.toLowerCase() === 'admin' && password === 'admin123') {
       const adminUser = users.find(u => u.role === 'Admin');
-      onLogin(adminUser);
+      onLogin({ ...adminUser, company });
       navigate('/dashboard');
     } else {
       setError('Invalid username or password. (Hint: Use user names or roles, e.g. "Admin" or "Sarah Connor" with password "admin123")');
@@ -45,6 +46,20 @@ const Login = ({ onLogin }) => {
               <span>{error}</span>
             </div>
           )}
+
+          <div className="input-group">
+            <label>Company</label>
+            <div className="input-wrapper">
+              <select
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="company-select"
+              >
+                <option value="Ritzy">Ritzy</option>
+                <option value="Ritzy Trade">Ritzy Trade</option>
+              </select>
+            </div>
+          </div>
 
           <div className="input-group">
             <label>Username</label>
@@ -178,7 +193,7 @@ const Login = ({ onLogin }) => {
           color: var(--text-muted);
         }
 
-        .input-wrapper input {
+        .input-wrapper input, .input-wrapper select {
           width: 100%;
           padding: 12px 12px 12px 40px;
           border: 1px solid var(--border);
@@ -188,7 +203,13 @@ const Login = ({ onLogin }) => {
           transition: all 0.2s;
         }
 
-        .input-wrapper input:focus {
+        .input-wrapper select.company-select {
+          padding-left: 12px;
+          background: white;
+          cursor: pointer;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus {
           border-color: var(--primary);
           box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
         }

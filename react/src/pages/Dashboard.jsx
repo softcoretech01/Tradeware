@@ -2,18 +2,28 @@ import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingCart, TrendingUp, Clock, AlertCircle, ArrowUpRight
+  ShoppingCart, TrendingUp, Clock, AlertCircle, ArrowUpRight, Search as SearchIcon, X as CancelIcon
 } from 'lucide-react';
 import { 
   Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button, 
   Table, TableBody, TableCell, TableHead, TableRow,
-  Select, MenuItem, FormControl, InputLabel
+  Select, MenuItem, FormControl, InputLabel, TextField, IconButton
 } from '@mui/material';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [detailsPopup, setDetailsPopup] = useState(null);
   const [salesPersonFilter, setSalesPersonFilter] = useState('All');
+  const [customerFilter, setCustomerFilter] = useState('All');
+  const [supplierFilter, setSupplierFilter] = useState('All');
+  const [currencyFilter, setCurrencyFilter] = useState('All');
+
+  const [appliedSalesPersonFilter, setAppliedSalesPersonFilter] = useState('All');
+  const [appliedCustomerFilter, setAppliedCustomerFilter] = useState('All');
+  const [appliedSupplierFilter, setAppliedSupplierFilter] = useState('All');
+  const [appliedCurrencyFilter, setAppliedCurrencyFilter] = useState('All');
 
   // Load ERP data from store
   let { 
@@ -24,8 +34,8 @@ const Dashboard = () => {
   salesOrders = [
     ...salesOrders,
     {
-      id: 'SO-MOCK-1',
-      soNumber: 'SO-MOCK-1',
+      id: 'SO-001',
+      soNumber: 'SO-001',
       customerName: 'Global Tech Industries',
       date: new Date().toISOString(),
       salesPerson: 'kabilesh',
@@ -34,8 +44,8 @@ const Dashboard = () => {
       items: [{ orderedQty: 50, unitPrice: 200 }]
     },
     {
-      id: 'SO-MOCK-2',
-      soNumber: 'SO-MOCK-2',
+      id: 'SO-002',
+      soNumber: 'SO-002',
       customerName: 'Acme Corp',
       date: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
       salesPerson: 'sachin',
@@ -44,8 +54,8 @@ const Dashboard = () => {
       items: [{ orderedQty: 120, unitPrice: 50 }]
     },
     {
-      id: 'SO-MOCK-3',
-      soNumber: 'SO-MOCK-3',
+      id: 'SO-003',
+      soNumber: 'SO-003',
       customerName: 'Stark Enterprises',
       date: new Date(new Date().setDate(new Date().getDate() - 15)).toISOString(),
       salesPerson: 'kabilesh',
@@ -68,6 +78,25 @@ const Dashboard = () => {
   ];
 
   const inventory = useSelector(state => state.inventory?.inventory || []);
+
+  const uniqueCustomers = useMemo(() => {
+    const customers = salesOrders.map(o => o.customerName).filter(Boolean);
+    return ['All', ...new Set(customers)];
+  }, [salesOrders]);
+
+  const uniqueSuppliers = useMemo(() => {
+    const suppliers = purchaseOrders.map(o => o.supplierName).filter(Boolean);
+    return ['All', ...new Set(suppliers)];
+  }, [purchaseOrders]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   // Date Filter State
   const defaultTo = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -161,29 +190,49 @@ const Dashboard = () => {
       <div className="filter-bar">
         <div className="filter-group">
           <label>From Date:</label>
-          <input 
-            type="date" 
-            value={filterFrom} 
-            onChange={(e) => setFilterFrom(e.target.value)}
-            className="filter-input"
+          <DatePicker 
+            selected={filterFrom ? new Date(filterFrom) : null}
+            onChange={(date) => {
+              if (date) {
+                const formattedDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                setFilterFrom(formattedDate);
+              } else {
+                setFilterFrom('');
+              }
+            }}
+            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 160 }} />}
+            dateFormat="dd/MMM/yyyy"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
           />
         </div>
         <div className="filter-group">
           <label>To Date:</label>
-          <input 
-            type="date" 
-            value={filterTo} 
-            onChange={(e) => setFilterTo(e.target.value)}
-            className="filter-input"
+          <DatePicker 
+            selected={filterTo ? new Date(filterTo) : null}
+            onChange={(date) => {
+              if (date) {
+                const formattedDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                setFilterTo(formattedDate);
+              } else {
+                setFilterTo('');
+              }
+            }}
+            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 160 }} />}
+            dateFormat="dd/MMM/yyyy"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
           />
         </div>
-        <div className="filter-actions">
-          <Button variant="contained" color="primary" onClick={handleSearch} size="large">
-            Search
-          </Button>
-          <Button variant="outlined" color="error" onClick={handleCancel} size="large">
-            Cancel
-          </Button>
+        <div className="filter-actions" style={{ marginLeft: 0, gap: '8px' }}>
+          <IconButton color="success" onClick={handleSearch} title="Search" sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '8px' }}>
+            <SearchIcon />
+          </IconButton>
+          <IconButton color="error" onClick={handleCancel} title="Cancel" sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '8px' }}>
+            <CancelIcon />
+          </IconButton>
         </div>
       </div>
 
@@ -194,11 +243,8 @@ const Dashboard = () => {
             <TrendingUp size={24} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#2563eb' }}>Gross Sales Order Value</span>
-            <span className="kpi-value">${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-            <span className="kpi-trend positive">
-              <ArrowUpRight size={14} /> Live gross sales value
-            </span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#2563eb' }}>Sales</span>
+            <span className="kpi-value">₹{totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
           </div>
         </div>
 
@@ -207,11 +253,8 @@ const Dashboard = () => {
             <ShoppingCart size={24} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#475569' }}>Gross Purchase Commitment</span>
-            <span className="kpi-value">${totalPurchases.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-            <span className="kpi-trend positive">
-              <ArrowUpRight size={14} /> Total active commitments
-            </span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#475569' }}>Purchases</span>
+            <span className="kpi-value">₹{totalPurchases.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
           </div>
         </div>
 
@@ -221,8 +264,7 @@ const Dashboard = () => {
           </div>
           <div className="kpi-info">
             <span className="kpi-label" style={{ textDecoration: 'underline', color: '#d97706' }}>Yet To Bill (Outstanding)</span>
-            <span className="kpi-value">${totalYetToBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-            <span className="kpi-subtext">{yetToBillOrders.length} sales orders pending invoice</span>
+            <span className="kpi-value">₹{totalYetToBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
           </div>
         </div>
       </div>
@@ -233,7 +275,6 @@ const Dashboard = () => {
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertCircle size={18} style={{ color: '#ef4444' }} /> Low Stock Items
           </h3>
-          <span className="badge-count" style={{ background: '#fef2f2', color: '#ef4444' }}>{lowStockItems.length} Alerts</span>
         </div>
         <div className="list-container">
           {lowStockItems.length === 0 ? (
@@ -246,7 +287,6 @@ const Dashboard = () => {
                 <tr>
                   <th>Item Code</th>
                   <th>Item Name</th>
-                  <th>Warehouse</th>
                   <th>Available</th>
                   <th>Min Level</th>
                   <th>Status</th>
@@ -257,7 +297,6 @@ const Dashboard = () => {
                   <tr key={item.id}>
                     <td className="bold-cell">{item.itemCode}</td>
                     <td>{item.itemName}</td>
-                    <td>{item.warehouse}</td>
                     <td style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.availableStock}</td>
                     <td>{item.minStock}</td>
                     <td>
@@ -289,13 +328,13 @@ const Dashboard = () => {
         }}
       >
         <DialogTitle>
-          {detailsPopup === 'sales' ? 'Gross Sales Orders Detail' : 
-           detailsPopup === 'purchases' ? 'Gross Purchase Commitments Detail' : 
+          {detailsPopup === 'sales' ? 'Sales' : 
+           detailsPopup === 'purchases' ? 'Purchases' : 
            'Yet To Bill (Pending Bills)'}
         </DialogTitle>
         <DialogContent dividers>
-          {detailsPopup === 'yetToBill' && (
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {detailsPopup === 'yetToBill' && (
               <FormControl size="small" style={{ minWidth: 220 }}>
                 <InputLabel>Filter by Sales Person</InputLabel>
                 <Select
@@ -308,8 +347,72 @@ const Dashboard = () => {
                   <MenuItem value="sachin">sachin</MenuItem>
                 </Select>
               </FormControl>
-            </div>
-          )}
+            )}
+            {detailsPopup === 'sales' && (
+              <FormControl size="small" style={{ minWidth: 220 }}>
+                <InputLabel>Filter by Customer</InputLabel>
+                <Select
+                  value={customerFilter}
+                  label="Filter by Customer"
+                  onChange={(e) => setCustomerFilter(e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {uniqueCustomers.filter(c => c !== 'All').map(c => (
+                    <MenuItem key={c} value={c}>{c}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            {detailsPopup === 'purchases' && (
+              <>
+                <FormControl size="small" style={{ minWidth: 220 }}>
+                  <InputLabel>Filter by Supplier</InputLabel>
+                  <Select
+                    value={supplierFilter}
+                    label="Filter by Supplier"
+                    onChange={(e) => setSupplierFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All</MenuItem>
+                    {uniqueSuppliers.filter(s => s !== 'All').map(s => (
+                      <MenuItem key={s} value={s}>{s}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" style={{ minWidth: 220 }}>
+                  <InputLabel>Filter by Currency</InputLabel>
+                  <Select
+                    value={currencyFilter}
+                    label="Filter by Currency"
+                    onChange={(e) => setCurrencyFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All</MenuItem>
+                    <MenuItem value="INR">INR (₹)</MenuItem>
+                    <MenuItem value="USD">USD ($)</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            )}
+            <IconButton color="success" onClick={() => {
+              setAppliedSalesPersonFilter(salesPersonFilter);
+              setAppliedCustomerFilter(customerFilter);
+              setAppliedSupplierFilter(supplierFilter);
+              setAppliedCurrencyFilter(currencyFilter);
+            }} sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '6px' }} title="Search">
+              <SearchIcon size={18} />
+            </IconButton>
+            <IconButton color="error" onClick={() => {
+              setSalesPersonFilter('All');
+              setCustomerFilter('All');
+              setSupplierFilter('All');
+              setCurrencyFilter('All');
+              setAppliedSalesPersonFilter('All');
+              setAppliedCustomerFilter('All');
+              setAppliedSupplierFilter('All');
+              setAppliedCurrencyFilter('All');
+            }} sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '6px' }} title="Cancel">
+              <CancelIcon size={18} />
+            </IconButton>
+          </div>
           <Table size="small" sx={{ 
             '& thead th': { backgroundColor: '#e2e8f0', color: '#0f172a', fontWeight: '600' },
             '& tbody tr:nth-of-type(even)': { backgroundColor: '#f8fafc' },
@@ -318,10 +421,10 @@ const Dashboard = () => {
           }}>
             <TableHead>
               <TableRow>
+                {detailsPopup === 'yetToBill' && <TableCell><b>Sales Person</b></TableCell>}
                 <TableCell><b>{detailsPopup === 'purchases' ? 'PO Number' : 'SO No'}</b></TableCell>
                 <TableCell><b>{detailsPopup === 'yetToBill' ? 'SO Date' : 'Date'}</b></TableCell>
                 <TableCell><b>{detailsPopup === 'purchases' ? 'Supplier' : 'Customer Name'}</b></TableCell>
-                {detailsPopup !== 'yetToBill' && <TableCell><b>Status</b></TableCell>}
                 <TableCell align="right"><b>Value</b></TableCell>
               </TableRow>
             </TableHead>
@@ -330,31 +433,33 @@ const Dashboard = () => {
                 detailsPopup === 'purchases' ? filteredPurchaseOrders : 
                 yetToBillOrders)
                 .filter(order => {
-                  if (detailsPopup !== 'yetToBill') return true;
-                  if (salesPersonFilter === 'All') return true;
-                  const person = order.salesPerson || order.createdBy || 'Admin';
-                  return person === salesPersonFilter;
+                  if (detailsPopup === 'yetToBill') {
+                    if (appliedSalesPersonFilter !== 'All') {
+                      const person = order.salesPerson || order.createdBy || 'Admin';
+                      if (person !== appliedSalesPersonFilter) return false;
+                    }
+                  } else if (detailsPopup === 'sales') {
+                    if (appliedCustomerFilter !== 'All' && order.customerName !== appliedCustomerFilter) return false;
+                  } else if (detailsPopup === 'purchases') {
+                    if (appliedSupplierFilter !== 'All' && order.supplierName !== appliedSupplierFilter) return false;
+                    if (appliedCurrencyFilter !== 'All') {
+                      const curr = order.currency || 'INR'; // Assuming default INR if not specified
+                      if (curr !== appliedCurrencyFilter) return false;
+                    }
+                  }
+                  return true;
                 })
                 .map(order => {
                 const orderValue = order.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
                 return (
                   <TableRow key={order.id || order.poNumber || order.soNumber}>
-                    <TableCell>{detailsPopup === 'purchases' ? order.poNumber : order.soNumber}</TableCell>
-                    <TableCell>{new Date(order.date || order.createdAt).toLocaleDateString()}</TableCell>
+                    {detailsPopup === 'yetToBill' && <TableCell>{order.salesPerson || order.createdBy || 'Admin'}</TableCell>}
+                    <TableCell>{detailsPopup === 'purchases' ? (order.poNumber || order.id) : (order.soNumber || order.id)}</TableCell>
+                    <TableCell>{formatDate(order.date || order.createdAt)}</TableCell>
                     <TableCell>{detailsPopup === 'purchases' ? order.supplierName : order.customerName}</TableCell>
-                    {detailsPopup !== 'yetToBill' && (
-                      <TableCell>
-                        <Chip 
-                          label={order.status} 
-                          size="small" 
-                          color={
-                            order.status === 'Completed' || order.status === 'Delivered' ? 'success' : 
-                            order.status === 'Pending' ? 'warning' : 'default'
-                          }
-                        />
-                      </TableCell>
-                    )}
-                    <TableCell align="right">${orderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                    <TableCell align="right">
+                      ₹{orderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -362,13 +467,24 @@ const Dashboard = () => {
                 detailsPopup === 'purchases' ? filteredPurchaseOrders : 
                 yetToBillOrders)
                 .filter(order => {
-                  if (detailsPopup !== 'yetToBill') return true;
-                  if (salesPersonFilter === 'All') return true;
-                  const person = order.salesPerson || order.createdBy || 'Admin';
-                  return person === salesPersonFilter;
+                  if (detailsPopup === 'yetToBill') {
+                    if (appliedSalesPersonFilter !== 'All') {
+                      const person = order.salesPerson || order.createdBy || 'Admin';
+                      if (person !== appliedSalesPersonFilter) return false;
+                    }
+                  } else if (detailsPopup === 'sales') {
+                    if (appliedCustomerFilter !== 'All' && order.customerName !== appliedCustomerFilter) return false;
+                  } else if (detailsPopup === 'purchases') {
+                    if (appliedSupplierFilter !== 'All' && order.supplierName !== appliedSupplierFilter) return false;
+                    if (appliedCurrencyFilter !== 'All') {
+                      const curr = order.currency || 'INR'; // Assuming default INR if not specified
+                      if (curr !== appliedCurrencyFilter) return false;
+                    }
+                  }
+                  return true;
                 }).length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={detailsPopup === 'yetToBill' ? 4 : 5} align="center" style={{ padding: '20px', color: '#666' }}>
+                  <TableCell colSpan={detailsPopup === 'yetToBill' ? 5 : 4} align="center" style={{ padding: '20px', color: '#666' }}>
                     No records found matching your filters.
                   </TableCell>
                 </TableRow>
@@ -564,6 +680,97 @@ const Dashboard = () => {
           text-align: center;
           color: var(--text-muted);
           font-size: 13px;
+        }
+
+        /* React DatePicker Custom Blue Theme (from screenshot) */
+        .react-datepicker {
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+          font-family: inherit !important;
+          border-radius: 6px !important;
+          overflow: hidden !important;
+        }
+        .react-datepicker__header {
+          background-color: #3b82f6 !important;
+          border-bottom: none !important;
+          padding-top: 12px !important;
+          padding-bottom: 8px !important;
+        }
+        .react-datepicker__current-month,
+        .react-datepicker__day-name,
+        .react-datepicker-year-header {
+          color: white !important;
+          font-weight: 600 !important;
+        }
+        .react-datepicker__day-name {
+          font-size: 14px !important;
+          text-transform: capitalize !important;
+        }
+        .react-datepicker__month-read-view--down-arrow,
+        .react-datepicker__year-read-view--down-arrow {
+          border-color: white !important;
+        }
+        .react-datepicker__navigation-icon::before {
+          border-color: white !important;
+        }
+        .react-datepicker__day--selected,
+        .react-datepicker__day--keyboard-selected {
+          background-color: #3b82f6 !important;
+          border-radius: 50% !important;
+          color: white !important;
+        }
+        .react-datepicker__day {
+          border-radius: 50% !important;
+          width: 2rem !important;
+          line-height: 2rem !important;
+          font-size: 14px !important;
+        }
+        .react-datepicker__day:hover {
+          background-color: #e0f2fe !important;
+          border-radius: 50% !important;
+        }
+        .react-datepicker__month-select, .react-datepicker__year-select {
+          background-color: transparent !important;
+          color: white !important;
+          border: none !important;
+          font-size: 18px !important;
+          font-weight: 500 !important;
+          cursor: pointer !important;
+          outline: none !important;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          padding: 0 4px !important;
+        }
+        .react-datepicker__month-select option, .react-datepicker__year-select option {
+          color: black !important;
+          background: white !important;
+        }
+        .react-datepicker__header__dropdown {
+          margin-bottom: 12px !important;
+        }
+        
+        .react-datepicker-wrapper input {
+          font-family: inherit !important;
+          font-weight: 500 !important;
+          color: #0f172a !important;
+          border-radius: 10px !important;
+          border: 1px solid #cbd5e1 !important;
+          padding: 10px 14px !important;
+          transition: all 0.3s ease !important;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+          background: #f8fafc !important;
+          cursor: pointer !important;
+          width: 100%;
+        }
+        .react-datepicker-wrapper input:hover {
+          border-color: #94a3b8 !important;
+        }
+        .react-datepicker-wrapper input:focus {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+          background: white !important;
+          outline: none !important;
         }
       `}</style>
     </div>
