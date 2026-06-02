@@ -1,42 +1,142 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingCart, TrendingUp, Clock, RefreshCw, AlertCircle, Users, ArrowUpRight
+  ShoppingCart, TrendingUp, Clock, AlertCircle, ArrowUpRight
 } from 'lucide-react';
-import { Chip } from '@mui/material';
+import { 
+  Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button, 
+  Table, TableBody, TableCell, TableHead, TableRow,
+  Select, MenuItem, FormControl, InputLabel
+} from '@mui/material';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [detailsPopup, setDetailsPopup] = useState(null);
+  const [salesPersonFilter, setSalesPersonFilter] = useState('All');
 
   // Load ERP data from store
-  const { 
+  let { 
     purchaseOrders = [], salesOrders = []
   } = useSelector(state => state.erp);
 
+  // Add mock data for testing filters
+  salesOrders = [
+    ...salesOrders,
+    {
+      id: 'SO-MOCK-1',
+      soNumber: 'SO-MOCK-1',
+      customerName: 'Global Tech Industries',
+      date: new Date().toISOString(),
+      salesPerson: 'kabilesh',
+      status: 'Pending',
+      invoiceGenerated: false,
+      items: [{ orderedQty: 50, unitPrice: 200 }]
+    },
+    {
+      id: 'SO-MOCK-2',
+      soNumber: 'SO-MOCK-2',
+      customerName: 'Acme Corp',
+      date: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
+      salesPerson: 'sachin',
+      status: 'Pending',
+      invoiceGenerated: false,
+      items: [{ orderedQty: 120, unitPrice: 50 }]
+    },
+    {
+      id: 'SO-MOCK-3',
+      soNumber: 'SO-MOCK-3',
+      customerName: 'Stark Enterprises',
+      date: new Date(new Date().setDate(new Date().getDate() - 15)).toISOString(),
+      salesPerson: 'kabilesh',
+      status: 'Pending',
+      invoiceGenerated: false,
+      items: [{ orderedQty: 10, unitPrice: 5000 }]
+    }
+  ];
+
+  purchaseOrders = [
+    ...purchaseOrders,
+    {
+      id: 'PO-MOCK-1',
+      poNumber: 'PO-MOCK-1',
+      supplierName: 'Alpha Supplies',
+      date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+      status: 'Pending',
+      items: [{ orderedQty: 200, unitPrice: 15 }]
+    }
+  ];
+
   const inventory = useSelector(state => state.inventory?.inventory || []);
-  const customers = useSelector(state => state.customers?.customers || []);
+
+  // Date Filter State
+  const defaultTo = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const defaultFrom = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3);
+    return d.toISOString().split('T')[0];
+  }, []);
+
+  const [filterFrom, setFilterFrom] = useState(defaultFrom);
+  const [filterTo, setFilterTo] = useState(defaultTo);
+  const [appliedFilterFrom, setAppliedFilterFrom] = useState(defaultFrom);
+  const [appliedFilterTo, setAppliedFilterTo] = useState(defaultTo);
+
+  const handleSearch = () => {
+    setAppliedFilterFrom(filterFrom);
+    setAppliedFilterTo(filterTo);
+  };
+
+  const handleCancel = () => {
+    setFilterFrom(defaultFrom);
+    setFilterTo(defaultTo);
+    setAppliedFilterFrom(defaultFrom);
+    setAppliedFilterTo(defaultTo);
+  };
+
+  // Filtered ERP data
+  const filteredSalesOrders = useMemo(() => {
+    return salesOrders.filter(so => {
+      if (!so.date && !so.createdAt) return true;
+      const soDate = new Date(so.date || so.createdAt);
+      const from = new Date(appliedFilterFrom);
+      const to = new Date(appliedFilterTo);
+      to.setHours(23, 59, 59, 999);
+      return soDate >= from && soDate <= to;
+    });
+  }, [salesOrders, appliedFilterFrom, appliedFilterTo]);
+
+  const filteredPurchaseOrders = useMemo(() => {
+    return purchaseOrders.filter(po => {
+      if (!po.date && !po.createdAt) return true;
+      const poDate = new Date(po.date || po.createdAt);
+      const from = new Date(appliedFilterFrom);
+      const to = new Date(appliedFilterTo);
+      to.setHours(23, 59, 59, 999);
+      return poDate >= from && poDate <= to;
+    });
+  }, [purchaseOrders, appliedFilterFrom, appliedFilterTo]);
 
   // 1. Gross Sales Order Value
   const totalSales = useMemo(() => {
-    return salesOrders.reduce((sum, so) => {
+    return filteredSalesOrders.reduce((sum, so) => {
       const soVal = so.items.reduce((iSum, item) => iSum + (item.orderedQty * item.unitPrice), 0);
       return sum + soVal;
     }, 0);
-  }, [salesOrders]);
+  }, [filteredSalesOrders]);
 
   // 2. Gross Purchase Commitments
   const totalPurchases = useMemo(() => {
-    return purchaseOrders.reduce((sum, po) => {
+    return filteredPurchaseOrders.reduce((sum, po) => {
       const poVal = po.items.reduce((iSum, item) => iSum + (item.orderedQty * item.unitPrice), 0);
       return sum + poVal;
     }, 0);
-  }, [purchaseOrders]);
+  }, [filteredPurchaseOrders]);
 
   // 3. Yet To Bill (Sales Orders that do not have an invoice generated yet)
   const yetToBillOrders = useMemo(() => {
-    return salesOrders.filter(so => !so.invoiceGenerated);
-  }, [salesOrders]);
+    return filteredSalesOrders.filter(so => !so.invoiceGenerated);
+  }, [filteredSalesOrders]);
 
   const totalYetToBill = useMemo(() => {
     return yetToBillOrders.reduce((sum, so) => {
@@ -54,71 +154,47 @@ const Dashboard = () => {
     );
   }, [inventory]);
 
-  // 5. Customer Value and Volume Calculations
-  const customerAnalysis = useMemo(() => {
-    return customers.map(cust => {
-      const custOrders = salesOrders.filter(so => so.customerName.toLowerCase() === cust.name.toLowerCase());
-      const totalSpent = custOrders.reduce((sum, so) => {
-        return sum + so.items.reduce((acc, item) => acc + (item.orderedQty * item.unitPrice), 0);
-      }, 0);
-      const orderCount = custOrders.length;
-      return {
-        id: cust.id,
-        name: cust.name,
-        creditLimit: cust.creditLimit,
-        totalSpent,
-        orderCount
-      };
-    });
-  }, [customers, salesOrders]);
-
-  // Low Value Customers: spent less than $5,000
-  const lowValueCustomers = useMemo(() => {
-    return customerAnalysis.filter(c => c.totalSpent < 5000);
-  }, [customerAnalysis]);
-
-  // Low Volume Customers: placed 0 or 1 order
-  const lowVolumeCustomers = useMemo(() => {
-    return customerAnalysis.filter(c => c.orderCount <= 1);
-  }, [customerAnalysis]);
-
-  // Mock monthly data for SVG Chart (Sales vs Purchases)
-  const monthlyData = useMemo(() => {
-    return [
-      { month: 'Jan', sales: 12000, purchase: 9500 },
-      { month: 'Feb', sales: 15000, purchase: 11000 },
-      { month: 'Mar', sales: 18000, purchase: 14000 },
-      { month: 'Apr', sales: 16500, purchase: 13000 },
-      { month: 'May', sales: totalSales || 24000, purchase: totalPurchases || 16000 }
-    ];
-  }, [totalSales, totalPurchases]);
-
-  // SVG Chart sizing
-  const chartHeight = 200;
-  const chartWidth = 500;
-  const maxVal = 30000;
-
   return (
     <div className="dashboard-container fade-in">
-      {/* Welcome Banner */}
-      <div className="welcome-banner">
-        <div>
-          <h1>ERP Analytics Dashboard</h1>
-          <p>Targeted overview of outstanding billing pipeline, stock alerts, purchase commitments, and customer segment analysis.</p>
+      
+      {/* Date Filter Bar */}
+      <div className="filter-bar">
+        <div className="filter-group">
+          <label>From Date:</label>
+          <input 
+            type="date" 
+            value={filterFrom} 
+            onChange={(e) => setFilterFrom(e.target.value)}
+            className="filter-input"
+          />
         </div>
-        <button className="refresh-btn" onClick={() => window.location.reload()}>
-          <RefreshCw size={16} /> Refresh Data
-        </button>
+        <div className="filter-group">
+          <label>To Date:</label>
+          <input 
+            type="date" 
+            value={filterTo} 
+            onChange={(e) => setFilterTo(e.target.value)}
+            className="filter-input"
+          />
+        </div>
+        <div className="filter-actions">
+          <Button variant="contained" color="primary" onClick={handleSearch} size="large">
+            Search
+          </Button>
+          <Button variant="outlined" color="error" onClick={handleCancel} size="large">
+            Cancel
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Cards Grid */}
+      {/* 3 KPI Cards at the top */}
       <div className="kpi-grid">
-        <div className="kpi-card">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('sales'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view sales details">
           <div className="kpi-icon-wrapper sales">
             <TrendingUp size={24} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Gross Sales Order Value</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#2563eb' }}>Gross Sales Order Value</span>
             <span className="kpi-value">${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             <span className="kpi-trend positive">
               <ArrowUpRight size={14} /> Live gross sales value
@@ -126,12 +202,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('purchases'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view purchase details">
           <div className="kpi-icon-wrapper purchase">
             <ShoppingCart size={24} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Gross Purchase Commitment</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#475569' }}>Gross Purchase Commitment</span>
             <span className="kpi-value">${totalPurchases.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             <span className="kpi-trend positive">
               <ArrowUpRight size={14} /> Total active commitments
@@ -139,381 +215,241 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('yetToBill'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view pending bills details">
           <div className="kpi-icon-wrapper yet-to-bill">
             <Clock size={24} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Yet To Bill (Outstanding)</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#d97706' }}>Yet To Bill (Outstanding)</span>
             <span className="kpi-value">${totalYetToBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             <span className="kpi-subtext">{yetToBillOrders.length} sales orders pending invoice</span>
           </div>
         </div>
       </div>
 
-      {/* Main Charts Grid */}
-      <div className="dashboard-charts-grid">
-        {/* Sales vs Purchase Flow Chart */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3>Sales vs Purchase Flow (Monthly Trend)</h3>
-            <div className="chart-legends">
-              <div className="legend-item"><span className="legend-dot sales"></span> Sales</div>
-              <div className="legend-item"><span className="legend-dot purchase"></span> Purchases</div>
+      {/* Low Stock Items Panel below the KPIs */}
+      <div className="chart-panel">
+        <div className="panel-header">
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertCircle size={18} style={{ color: '#ef4444' }} /> Low Stock Items
+          </h3>
+          <span className="badge-count" style={{ background: '#fef2f2', color: '#ef4444' }}>{lowStockItems.length} Alerts</span>
+        </div>
+        <div className="list-container">
+          {lowStockItems.length === 0 ? (
+            <div className="empty-state">
+              <p>All stock levels are optimal.</p>
             </div>
-          </div>
-          <div className="chart-body">
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="svg-chart">
-              {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                const y = chartHeight - (ratio * (chartHeight - 40)) - 25;
-                const val = Math.round(ratio * maxVal);
-                return (
-                  <g key={idx}>
-                    <line x1="45" y1={y} x2={chartWidth - 10} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-                    <text x="40" y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">
-                      ${val >= 1000 ? `${val / 1000}k` : val}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {monthlyData.map((d, idx) => {
-                const xGroup = 65 + idx * 85;
-                const barWidth = 24;
-                const gap = 4;
-
-                const salesHeight = (d.sales / maxVal) * (chartHeight - 40);
-                const salesY = chartHeight - salesHeight - 25;
-
-                const purchaseHeight = (d.purchase / maxVal) * (chartHeight - 40);
-                const purchaseY = chartHeight - purchaseHeight - 25;
-
-                return (
-                  <g key={idx}>
-                    <rect 
-                      x={xGroup} 
-                      y={salesY} 
-                      width={barWidth} 
-                      height={salesHeight} 
-                      fill="url(#salesGrad)" 
-                      rx="4"
-                      className="chart-bar"
-                    />
-                    <rect 
-                      x={xGroup + barWidth + gap} 
-                      y={purchaseY} 
-                      width={barWidth} 
-                      height={purchaseHeight} 
-                      fill="url(#purchaseGrad)" 
-                      rx="4"
-                      className="chart-bar"
-                    />
-                    <text x={xGroup + barWidth} y={chartHeight - 5} textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="500">
-                      {d.month}
-                    </text>
-                  </g>
-                );
-              })}
-
-              <defs>
-                <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#1d4ed8" />
-                </linearGradient>
-                <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#94a3b8" />
-                  <stop offset="100%" stopColor="#475569" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
-        {/* Builder-wise Supply Analytics */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3>Builder-wise Supply Volume (Pcs)</h3>
-          </div>
-          <div className="chart-body" style={{ padding: '10px 0', width: '100%' }}>
-            <svg viewBox="0 0 500 200" className="svg-chart" style={{ width: '100%' }}>
-              {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                const x = 120 + ratio * 350;
-                const val = Math.round(ratio * 120);
-                return (
-                  <g key={idx}>
-                    <line x1={x} y1="20" x2={x} y2="160" stroke="#f1f5f9" strokeWidth="1" />
-                    <text x={x} y="175" textAnchor="middle" fontSize="9" fill="#94a3b8">
-                      {val}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {[
-                { name: 'Ace Builders', qty: 100 },
-                { name: 'Woodlands Const', qty: 80 },
-                { name: 'Apex Projects', qty: 45 }
-              ].map((builder, idx) => {
-                const y = 30 + idx * 45;
-                const barHeight = 18;
-                const barWidth = (builder.qty / 120) * 350;
-
-                return (
-                  <g key={idx}>
-                    <text x="110" y={y + 12} textAnchor="end" fontSize="10" fill="#64748b" fontWeight="500">
-                      {builder.name}
-                    </text>
-                    <rect
-                      x="120"
-                      y={y}
-                      width={barWidth}
-                      height={barHeight}
-                      fill="url(#builderGrad)"
-                      rx="3"
-                      className="chart-bar"
-                    />
-                    <text x={120 + barWidth + 6} y={y + 12} fontSize="10" fill="#1e293b" fontWeight="600">
-                      {builder.qty}
-                    </text>
-                  </g>
-                );
-              })}
-
-              <defs>
-                <linearGradient id="builderGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#10b981" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+          ) : (
+            <table className="erp-table" style={{ width: '100%', fontSize: '12px' }}>
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Item Name</th>
+                  <th>Warehouse</th>
+                  <th>Available</th>
+                  <th>Min Level</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStockItems.map(item => (
+                  <tr key={item.id}>
+                    <td className="bold-cell">{item.itemCode}</td>
+                    <td>{item.itemName}</td>
+                    <td>{item.warehouse}</td>
+                    <td style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.availableStock}</td>
+                    <td>{item.minStock}</td>
+                    <td>
+                      <Chip 
+                        label={item.status} 
+                        color={item.status === 'Out of Stock' ? 'error' : 'warning'} 
+                        size="small" 
+                        sx={{ height: '20px', fontSize: '10px' }} 
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* Dynamic Inventory & Billing Analysis */}
-      <div className="dashboard-charts-grid" style={{ marginTop: '12px' }}>
-        {/* Low Stock Items Panel */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertCircle size={18} style={{ color: '#ef4444' }} /> Low Stock Items
-            </h3>
-            <span className="badge-count" style={{ background: '#fef2f2', color: '#ef4444' }}>{lowStockItems.length} Alerts</span>
-          </div>
-          <div className="list-container">
-            {lowStockItems.length === 0 ? (
-              <div className="empty-state">
-                <p>All stock levels are optimal.</p>
-              </div>
-            ) : (
-              <table className="erp-table" style={{ width: '100%', fontSize: '12px' }}>
-                <thead>
-                  <tr>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>Warehouse</th>
-                    <th>Available</th>
-                    <th>Min Level</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lowStockItems.map(item => (
-                    <tr key={item.id}>
-                      <td className="bold-cell">{item.itemCode}</td>
-                      <td>{item.itemName}</td>
-                      <td>{item.warehouse}</td>
-                      <td style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.availableStock}</td>
-                      <td>{item.minStock}</td>
-                      <td>
+      {/* Details Popup */}
+      <Dialog 
+        open={!!detailsPopup} 
+        onClose={() => setDetailsPopup(null)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh'
+          }
+        }}
+      >
+        <DialogTitle>
+          {detailsPopup === 'sales' ? 'Gross Sales Orders Detail' : 
+           detailsPopup === 'purchases' ? 'Gross Purchase Commitments Detail' : 
+           'Yet To Bill (Pending Bills)'}
+        </DialogTitle>
+        <DialogContent dividers>
+          {detailsPopup === 'yetToBill' && (
+            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <FormControl size="small" style={{ minWidth: 220 }}>
+                <InputLabel>Filter by Sales Person</InputLabel>
+                <Select
+                  value={salesPersonFilter}
+                  label="Filter by Sales Person"
+                  onChange={(e) => setSalesPersonFilter(e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  <MenuItem value="kabilesh">kabilesh</MenuItem>
+                  <MenuItem value="sachin">sachin</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+          )}
+          <Table size="small" sx={{ 
+            '& thead th': { backgroundColor: '#e2e8f0', color: '#0f172a', fontWeight: '600' },
+            '& tbody tr:nth-of-type(even)': { backgroundColor: '#f8fafc' },
+            '& tbody tr:hover': { backgroundColor: '#f1f5f9' },
+            border: '1px solid #cbd5e1'
+          }}>
+            <TableHead>
+              <TableRow>
+                <TableCell><b>{detailsPopup === 'purchases' ? 'PO Number' : 'SO No'}</b></TableCell>
+                <TableCell><b>{detailsPopup === 'yetToBill' ? 'SO Date' : 'Date'}</b></TableCell>
+                <TableCell><b>{detailsPopup === 'purchases' ? 'Supplier' : 'Customer Name'}</b></TableCell>
+                {detailsPopup !== 'yetToBill' && <TableCell><b>Status</b></TableCell>}
+                <TableCell align="right"><b>Value</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {(detailsPopup === 'sales' ? filteredSalesOrders : 
+                detailsPopup === 'purchases' ? filteredPurchaseOrders : 
+                yetToBillOrders)
+                .filter(order => {
+                  if (detailsPopup !== 'yetToBill') return true;
+                  if (salesPersonFilter === 'All') return true;
+                  const person = order.salesPerson || order.createdBy || 'Admin';
+                  return person === salesPersonFilter;
+                })
+                .map(order => {
+                const orderValue = order.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
+                return (
+                  <TableRow key={order.id || order.poNumber || order.soNumber}>
+                    <TableCell>{detailsPopup === 'purchases' ? order.poNumber : order.soNumber}</TableCell>
+                    <TableCell>{new Date(order.date || order.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{detailsPopup === 'purchases' ? order.supplierName : order.customerName}</TableCell>
+                    {detailsPopup !== 'yetToBill' && (
+                      <TableCell>
                         <Chip 
-                          label={item.status} 
-                          color={item.status === 'Out of Stock' ? 'error' : 'warning'} 
+                          label={order.status} 
                           size="small" 
-                          sx={{ height: '20px', fontSize: '10px' }} 
+                          color={
+                            order.status === 'Completed' || order.status === 'Delivered' ? 'success' : 
+                            order.status === 'Pending' ? 'warning' : 'default'
+                          }
                         />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-        {/* Yet To Bill Sales Orders */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3>Yet To Bill (Sales Orders pending Billing)</h3>
-            <span className="badge-count" style={{ background: '#fef3c7', color: '#d97706' }}>{yetToBillOrders.length} Pending</span>
-          </div>
-          <div className="list-container">
-            {yetToBillOrders.length === 0 ? (
-              <div className="empty-state">
-                <p>No outstanding bills pending.</p>
-              </div>
-            ) : (
-              <table className="erp-table" style={{ width: '100%', fontSize: '12px' }}>
-                <thead>
-                  <tr>
-                    <th>SO Number</th>
-                    <th>Customer Name</th>
-                    <th>Order Date</th>
-                    <th style={{ textAlign: 'right' }}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {yetToBillOrders.map(so => {
-                    const amt = so.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
-                    return (
-                      <tr key={so.id}>
-                        <td className="bold-cell">{so.id}</td>
-                        <td className="bold-cell">{so.customerName}</td>
-                        <td>{so.date}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold' }}>${amt.toLocaleString()}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Customer Segmentation Analysis */}
-      <div className="dashboard-charts-grid" style={{ marginTop: '12px' }}>
-        {/* Low Value Customers */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={18} style={{ color: '#4b5563' }} /> Low Value Customers
-            </h3>
-            <span className="badge-count" style={{ background: '#f3f4f6', color: '#4b5563' }}>Spent &lt; $5k</span>
-          </div>
-          <div className="list-container">
-            {lowValueCustomers.length === 0 ? (
-              <div className="empty-state">
-                <p>No customers fall in this bracket.</p>
-              </div>
-            ) : (
-              <table className="erp-table" style={{ width: '100%', fontSize: '12px' }}>
-                <thead>
-                  <tr>
-                    <th>Cust ID</th>
-                    <th>Customer Name</th>
-                    <th style={{ textAlign: 'right' }}>Credit Limit</th>
-                    <th style={{ textAlign: 'right' }}>Total Trade (INR/USD)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lowValueCustomers.map(cust => (
-                    <tr key={cust.id}>
-                      <td className="bold-cell">{cust.id}</td>
-                      <td className="bold-cell">{cust.name}</td>
-                      <td style={{ textAlign: 'right' }}>${cust.creditLimit?.toLocaleString()}</td>
-                      <td style={{ textAlign: 'right', color: '#b91c1c', fontWeight: 'bold' }}>${cust.totalSpent?.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-        {/* Low Volume Customers */}
-        <div className="chart-panel">
-          <div className="panel-header">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={18} style={{ color: '#4b5563' }} /> Low Volume Customers
-            </h3>
-            <span className="badge-count" style={{ background: '#f3f4f6', color: '#4b5563' }}>&le; 1 Order</span>
-          </div>
-          <div className="list-container">
-            {lowVolumeCustomers.length === 0 ? (
-              <div className="empty-state">
-                <p>No customers fall in this bracket.</p>
-              </div>
-            ) : (
-              <table className="erp-table" style={{ width: '100%', fontSize: '12px' }}>
-                <thead>
-                  <tr>
-                    <th>Cust ID</th>
-                    <th>Customer Name</th>
-                    <th style={{ textAlign: 'right' }}>Credit Limit</th>
-                    <th style={{ textAlign: 'right' }}>Order Count</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lowVolumeCustomers.map(cust => (
-                    <tr key={cust.id}>
-                      <td className="bold-cell">{cust.id}</td>
-                      <td className="bold-cell">{cust.name}</td>
-                      <td style={{ textAlign: 'right' }}>${cust.creditLimit?.toLocaleString()}</td>
-                      <td style={{ textAlign: 'right', color: '#b91c1c', fontWeight: 'bold' }}>{cust.orderCount} Order(s)</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      </div>
+                      </TableCell>
+                    )}
+                    <TableCell align="right">${orderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                  </TableRow>
+                );
+              })}
+              {(detailsPopup === 'sales' ? filteredSalesOrders : 
+                detailsPopup === 'purchases' ? filteredPurchaseOrders : 
+                yetToBillOrders)
+                .filter(order => {
+                  if (detailsPopup !== 'yetToBill') return true;
+                  if (salesPersonFilter === 'All') return true;
+                  const person = order.salesPerson || order.createdBy || 'Admin';
+                  return person === salesPersonFilter;
+                }).length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={detailsPopup === 'yetToBill' ? 4 : 5} align="center" style={{ padding: '20px', color: '#666' }}>
+                    No records found matching your filters.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailsPopup(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       <style jsx="true">{`
         .dashboard-container {
-          padding: 4px;
+          padding: 24px;
           display: flex;
           flex-direction: column;
           gap: 24px;
         }
 
-        .welcome-banner {
+        .filter-bar {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-          color: white;
-          padding: 24px;
+          gap: 20px;
+          background: var(--surface);
+          padding: 16px 20px;
           border-radius: var(--radius);
-          box-shadow: var(--shadow);
+          border: 1px solid var(--border);
+          box-shadow: var(--shadow-sm);
         }
 
-        .welcome-banner h1 {
-          font-size: 24px;
-          font-weight: 700;
-          margin-bottom: 8px;
-        }
-
-        .welcome-banner p {
-          font-size: 14px;
-          opacity: 0.9;
-          max-width: 600px;
-        }
-
-        .refresh-btn {
-          background: rgba(255, 255, 255, 0.15);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          padding: 10px 16px;
-          border-radius: 6px;
-          font-weight: 500;
-          font-size: 14px;
+        .filter-group {
           display: flex;
           align-items: center;
           gap: 8px;
-          transition: all 0.2s;
         }
 
-        .refresh-btn:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-1px);
+        .filter-group label {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--text-main);
+        }
+
+        .filter-input {
+          padding: 10px 16px;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          font-size: 15px;
+          color: var(--text-main);
+          outline: none;
+          min-width: 180px;
+        }
+
+        .filter-actions {
+          display: flex;
+          gap: 12px;
+          margin-left: auto;
+        }
+
+        @media (max-width: 768px) {
+          .filter-bar {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .filter-actions {
+            margin-left: 0;
+            width: 100%;
+            justify-content: flex-end;
+          }
         }
 
         .kpi-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         @media (max-width: 768px) {
@@ -583,18 +519,6 @@ const Dashboard = () => {
         .kpi-trend.positive { color: var(--accent); }
         .kpi-subtext { font-size: 12px; color: var(--text-muted); }
 
-        .dashboard-charts-grid {
-          display: grid;
-          grid-template-columns: 3fr 2fr;
-          gap: 20px;
-        }
-
-        @media (max-width: 900px) {
-          .dashboard-charts-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
         .chart-panel {
           background: var(--surface);
           border: 1px solid var(--border);
@@ -618,50 +542,7 @@ const Dashboard = () => {
           font-size: 15px;
           font-weight: 600;
           color: var(--text-main);
-        }
-
-        .chart-legends {
-          display: flex;
-          gap: 12px;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .legend-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-        }
-
-        .legend-dot.sales { background: #3b82f6; }
-        .legend-dot.purchase { background: #64748b; }
-
-        .chart-body {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 10px 0;
-        }
-
-        .svg-chart {
-          width: 100%;
-          height: auto;
-          max-height: 220px;
-        }
-
-        .chart-bar {
-          transition: opacity 0.2s;
-          cursor: pointer;
-        }
-
-        .chart-bar:hover {
-          opacity: 0.85;
+          margin: 0;
         }
 
         .badge-count {

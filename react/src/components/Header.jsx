@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, LogOut, Settings } from 'lucide-react';
+import { Bell, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setCurrentUser } from '../store/erpSlice';
 import { Menu, MenuItem } from '@mui/material';
@@ -65,6 +65,9 @@ const Header = ({ onLogout }) => {
 
       <div className="header-right">
         <div className="header-actions">
+          <button className="icon-btn" onClick={() => window.location.reload()} title="Refresh Data">
+            <RefreshCw size={20} />
+          </button>
           <button className="icon-btn"><Bell size={20} /></button>
           <button className="icon-btn"><Settings size={20} /></button>
         </div>

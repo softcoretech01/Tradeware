@@ -38,6 +38,9 @@ const LandedCost = () => {
   const [localTransport, setLocalTransport] = useState('0');
   const [linerCharges, setLinerCharges] = useState('0');
   const [insuranceCost, setInsuranceCost] = useState('0');
+  const [handlingCharges, setHandlingCharges] = useState('0');
+  const [packingCharges, setPackingCharges] = useState('0');
+  const [agingCharges, setAgingCharges] = useState('0');
 
   // Expiry date setting state for posting batches
   const [mfgDate, setMfgDate] = useState(new Date().toISOString().split('T')[0]);
@@ -57,6 +60,9 @@ const LandedCost = () => {
       setLocalTransport(String(selectedShipment.localTransport || 0));
       setLinerCharges(String(selectedShipment.linerCharges || selectedShipment.handlingCharges || 0));
       setInsuranceCost(String(selectedShipment.insuranceCost || 0));
+      setHandlingCharges(String(selectedShipment.additionalHandlingCharges || 0));
+      setPackingCharges(String(selectedShipment.packingCharges || 0));
+      setAgingCharges(String(selectedShipment.agingCharges || 0));
       
       setDutyPercent(String(selectedShipment.dutyPercent || 15));
       setCessPercent(String(selectedShipment.cessPercent || 10));
@@ -107,7 +113,10 @@ const LandedCost = () => {
     const roadFr = Number(roadFreight) || 0;
     const localTr = Number(localTransport) || 0;
     const linerCh = Number(linerCharges) || 0;
-    const otherOverheads = roadFr + localTr + linerCh;
+    const handCh = Number(handlingCharges) || 0;
+    const packCh = Number(packingCharges) || 0;
+    const ageCh = Number(agingCharges) || 0;
+    const otherOverheads = roadFr + localTr + linerCh + handCh + packCh + ageCh;
 
     // Total Overhead = Sea Freight + Insurance + Total Customs Charges + Other Overheads
     const totalOverhead = seaFr + insCost + totalCustomsDuty + otherOverheads;
@@ -148,7 +157,10 @@ const LandedCost = () => {
     roadFreight,
     localTransport,
     linerCharges,
-    insuranceCost
+    insuranceCost,
+    handlingCharges,
+    packingCharges,
+    agingCharges
   ]);
 
   // Handle Generate & Post Batches
@@ -169,7 +181,10 @@ const LandedCost = () => {
       seaFreight: Number(seaFreight),
       roadFreight: Number(roadFreight),
       localTransport: Number(localTransport),
-      linerCharges: Number(linerCharges)
+      linerCharges: Number(linerCharges),
+      additionalHandlingCharges: Number(handlingCharges),
+      packingCharges: Number(packingCharges),
+      agingCharges: Number(agingCharges)
     }));
 
     // Create Batches
@@ -439,6 +454,36 @@ const LandedCost = () => {
                         type="number"
                         value={insuranceCost}
                         onChange={(e) => setInsuranceCost(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Handling Charges (INR)"
+                        type="number"
+                        value={handlingCharges}
+                        onChange={(e) => setHandlingCharges(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Packing Charges (INR)"
+                        type="number"
+                        value={packingCharges}
+                        onChange={(e) => setPackingCharges(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Aging Charges (INR)"
+                        type="number"
+                        value={agingCharges}
+                        onChange={(e) => setAgingCharges(e.target.value)}
                       />
                     </Grid>
                   </Grid>

@@ -477,7 +477,7 @@ const initialState = {
     {
       id: 'DOC-2026-001',
       name: 'ace_po_9921_signed.pdf',
-      category: 'Customer PO',
+      category: 'Bill of Entry',
       uploadedBy: 'Luke Skywalker',
       uploadDate: '2026-05-08',
       size: '1.2 MB',
@@ -490,7 +490,7 @@ const initialState = {
     {
       id: 'DOC-2026-002',
       name: 'invoice_inv_2026_001.pdf',
-      category: 'Invoice',
+      category: 'Expenses',
       uploadedBy: 'Hermione Granger',
       uploadDate: '2026-05-25',
       size: '850 KB',
@@ -503,7 +503,7 @@ const initialState = {
     {
       id: 'DOC-2026-003',
       name: 'drawing_pin_piston_120.dwg',
-      category: 'Product Drawing',
+      category: 'Expenses',
       uploadedBy: 'James Bond',
       uploadDate: '2026-05-12',
       size: '4.5 MB',

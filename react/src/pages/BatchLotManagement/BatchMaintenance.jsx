@@ -123,8 +123,8 @@ const BatchMaintenance = () => {
     switch (status) {
       case 'Available':
         return <Chip label="Available" size="small" style={{ backgroundColor: GREEN.bg, color: GREEN.main, fontWeight: 600 }} />;
-      case 'Quarantined':
-        return <Chip label="Quarantined" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main, fontWeight: 600 }} />;
+      case 'On Hold':
+        return <Chip label="On Hold" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main, fontWeight: 600 }} />;
       case 'Expired':
         return <Chip label="Expired" size="small" style={{ backgroundColor: RED.bg, color: RED.main, fontWeight: 600 }} />;
       default:
@@ -172,7 +172,7 @@ const BatchMaintenance = () => {
             Batch & Lot Maintenance
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Monitor product shelf lives, track quarantine statuses, and inspect complete batch traceability.
+            Monitor product shelf lives, track hold statuses, and inspect complete batch traceability.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -215,7 +215,7 @@ const BatchMaintenance = () => {
             >
               <MenuItem value="All">All Statuses</MenuItem>
               <MenuItem value="Available">Available</MenuItem>
-              <MenuItem value="Quarantined">Quarantined</MenuItem>
+              <MenuItem value="On Hold">On Hold</MenuItem>
               <MenuItem value="Expired">Expired</MenuItem>
             </Select>
           </FormControl>
@@ -228,7 +228,7 @@ const BatchMaintenance = () => {
             >
               <MenuItem value="All">All Warehouses</MenuItem>
               <MenuItem value="Main Warehouse">Main Warehouse</MenuItem>
-              <MenuItem value="Quarantine Warehouse">Quarantine Warehouse</MenuItem>
+              <MenuItem value="Hold Warehouse">Hold Warehouse</MenuItem>
             </Select>
           </FormControl>
         </div>
@@ -358,7 +358,7 @@ const BatchMaintenance = () => {
                 onChange={(e) => setEditStatus(e.target.value)}
               >
                 <MenuItem value="Available">Available (PASSED QC)</MenuItem>
-                <MenuItem value="Quarantined">Quarantined (QC HOLD / LOCK)</MenuItem>
+                <MenuItem value="On Hold">On Hold (QC HOLD / LOCK)</MenuItem>
                 <MenuItem value="Expired">Expired (FAILED QC)</MenuItem>
               </Select>
             </FormControl>
@@ -371,7 +371,7 @@ const BatchMaintenance = () => {
                 onChange={(e) => setEditWarehouse(e.target.value)}
               >
                 <MenuItem value="Main Warehouse">Main Warehouse</MenuItem>
-                <MenuItem value="Quarantine Warehouse">Quarantine Warehouse</MenuItem>
+                <MenuItem value="Hold Warehouse">Hold Warehouse</MenuItem>
               </Select>
             </FormControl>
 
@@ -498,11 +498,11 @@ const BatchMaintenance = () => {
                 <Box sx={{ display: 'flex', gap: 3, zIndex: 1 }}>
                   <Box sx={{
                     width: '24px', height: '24px', borderRadius: '50%',
-                    backgroundColor: selectedBatch.status === 'Available' ? GREEN.bg : (selectedBatch.status === 'Quarantined' ? AMBER.bg : RED.bg),
-                    border: `2px solid ${selectedBatch.status === 'Available' ? GREEN.main : (selectedBatch.status === 'Quarantined' ? AMBER.main : RED.main)}`,
+                    backgroundColor: selectedBatch.status === 'Available' ? GREEN.bg : (selectedBatch.status === 'On Hold' ? AMBER.bg : RED.bg),
+                    border: `2px solid ${selectedBatch.status === 'Available' ? GREEN.main : (selectedBatch.status === 'On Hold' ? AMBER.main : RED.main)}`,
                     display: 'flex', alignItems: 'center', justify: 'center', ml: '16px', mt: '3px'
                   }}>
-                    <ClipboardCheck size={12} style={{ color: selectedBatch.status === 'Available' ? GREEN.main : (selectedBatch.status === 'Quarantined' ? AMBER.main : RED.main), margin: 'auto' }} />
+                    <ClipboardCheck size={12} style={{ color: selectedBatch.status === 'Available' ? GREEN.main : (selectedBatch.status === 'On Hold' ? AMBER.main : RED.main), margin: 'auto' }} />
                   </Box>
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -514,8 +514,8 @@ const BatchMaintenance = () => {
                     <Box sx={{ mt: 1 }}>
                       {selectedBatch.status === 'Available' ? (
                         <Chip icon={<CheckCircle size={14} />} label="QC Status: PASS" size="small" style={{ backgroundColor: GREEN.bg, color: GREEN.main }} />
-                      ) : selectedBatch.status === 'Quarantined' ? (
-                        <Chip icon={<AlertTriangle size={14} />} label="QC Status: HOLD / QUARANTINE" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main }} />
+                      ) : selectedBatch.status === 'On Hold' ? (
+                        <Chip icon={<AlertTriangle size={14} />} label="QC Status: ON HOLD" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main }} />
                       ) : (
                         <Chip icon={<XCircle size={14} />} label="QC Status: EXPIRED / FAIL" size="small" style={{ backgroundColor: RED.bg, color: RED.main }} />
                       )}

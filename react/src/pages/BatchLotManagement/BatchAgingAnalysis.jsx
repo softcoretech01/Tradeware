@@ -73,7 +73,7 @@ const BatchAgingAnalysis = () => {
       else if (b.ageBucket === '61-90 Days') b3 += b.qty;
       else b4 += b.qty;
 
-      // Expiry danger tracking (less than 60 days to expiry, and not already expired/quarantined)
+      // Expiry danger tracking (less than 60 days to expiry, and not already expired/on hold)
       if (b.daysToExpiry <= 60 && b.status === 'Available' && b.qty > 0) {
         nearExpiry.push(b);
       }
@@ -356,10 +356,10 @@ const BatchAgingAnalysis = () => {
                         style={{
                           borderColor:
                             b.status === 'Available' ? GREEN.main :
-                            b.status === 'Quarantined' ? AMBER.main : RED.main,
+                            b.status === 'On Hold' ? AMBER.main : RED.main,
                           color:
                             b.status === 'Available' ? GREEN.main :
-                            b.status === 'Quarantined' ? AMBER.main : RED.main,
+                            b.status === 'On Hold' ? AMBER.main : RED.main,
                           fontWeight: 600
                         }}
                       />

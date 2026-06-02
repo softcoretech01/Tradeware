@@ -42,8 +42,7 @@ const CustomerPO = () => {
     date: new Date().toISOString().split('T')[0],
     amount: 0,
     deliverySchedules: [],
-    paymentTerms: 'Net 30',
-    uploadedDocName: ''
+    paymentTerms: 'Net 30'
   });
 
   const handleOpenCreate = () => {
@@ -55,8 +54,7 @@ const CustomerPO = () => {
       date: new Date().toISOString().split('T')[0],
       amount: 0,
       deliverySchedules: [{ date: new Date().toISOString().split('T')[0], qty: 1 }],
-      paymentTerms: 'Net 30',
-      uploadedDocName: ''
+      paymentTerms: 'Net 30'
     });
     setFormOpen(true);
   };
@@ -130,8 +128,7 @@ const CustomerPO = () => {
       'Client Name': cpo.customerName,
       'Date': cpo.date,
       'Contract Value': cpo.amount,
-      'Terms': cpo.paymentTerms,
-      'Attachment': cpo.uploadedDocName || 'N/A'
+      'Terms': cpo.paymentTerms
     }));
     exportToExcel(data, 'Customer_POs', 'CustomerPOs');
   };
@@ -199,7 +196,6 @@ const CustomerPO = () => {
               <th>Customer</th>
               <th>Date</th>
               <th>PO Value</th>
-              <th>Attachment</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -217,13 +213,6 @@ const CustomerPO = () => {
                   <td>{cpo.customerName}</td>
                   <td>{cpo.date}</td>
                   <td className="bold-cell">${cpo.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-                  <td>
-                    {cpo.uploadedDocName ? (
-                      <Chip icon={<Paperclip size={12} />} label={cpo.uploadedDocName} size="small" color="primary" variant="outlined" />
-                    ) : (
-                      <span className="text-muted" style={{ fontSize: '12px' }}>No Attachment</span>
-                    )}
-                  </td>
                   <td className="actions-cell">
                     <Tooltip title="View CPO Details">
                       <IconButton size="small" onClick={() => { setSelectedCPO(cpo); setViewOpen(true); }}>
@@ -319,19 +308,7 @@ const CustomerPO = () => {
             />
           </div>
 
-          {/* Document Upload Mock */}
-          <div style={{ padding: '16px', background: '#f8fafc', border: '1px dashed var(--border)', borderRadius: '6px', margin: '20px 0', textAlign: 'center' }}>
-            <UploadCloud size={28} style={{ color: 'var(--primary-light)', marginBottom: '8px' }} />
-            <p style={{ fontSize: '13px', fontWeight: '500' }}>Upload Signed Customer PO Document (.pdf, .png)</p>
-            <input 
-              type="text" 
-              className="table-input" 
-              style={{ maxWidth: '300px', margin: '8px auto', display: 'block', textAlign: 'center' }}
-              placeholder="Enter mock filename e.g. signed_po.pdf"
-              value={formData.uploadedDocName}
-              onChange={(e) => setFormData(prev => ({ ...prev, uploadedDocName: e.target.value }))}
-            />
-          </div>
+
 
           {/* Schedules */}
           {formData.deliverySchedules.length > 0 && (
@@ -385,9 +362,6 @@ const CustomerPO = () => {
               </div>
               <div className="view-detail-row">
                 <strong>Payment Terms:</strong> <span>{selectedCPO.paymentTerms}</span>
-              </div>
-              <div className="view-detail-row">
-                <strong>File Attachment:</strong> <span>{selectedCPO.uploadedDocName || 'No document attached.'}</span>
               </div>
 
               <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>Delivery Schedule Targets</h4>

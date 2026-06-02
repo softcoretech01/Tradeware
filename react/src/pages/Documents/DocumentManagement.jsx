@@ -38,18 +38,15 @@ const DocumentManagement = () => {
   const [dragActive, setDragActive] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     name: '',
-    category: 'Customer PO',
+    category: 'Expenses',
     linkedTransaction: '',
     remarks: '',
     size: '1.2 MB'
   });
 
   const categories = [
-    'Customer PO',
-    'Product Drawing',
-    'Invoice',
-    'Bill of Entry',
-    'Delivery Proof'
+    'Expenses',
+    'Bill of Entry'
   ];
 
   // Detect duplicate filename for version control warning
@@ -113,7 +110,7 @@ const DocumentManagement = () => {
     setUploadOpen(false);
     setUploadForm({
       name: '',
-      category: 'Customer PO',
+      category: 'Expenses',
       linkedTransaction: '',
       remarks: '',
       size: '1.2 MB'
@@ -152,11 +149,8 @@ const DocumentManagement = () => {
     )},
     { field: 'category', headerName: 'Category', width: 150, renderCell: (params) => {
       let color = 'default';
-      if (params.value === 'Customer PO') color = 'primary';
-      if (params.value === 'Product Drawing') color = 'secondary';
-      if (params.value === 'Invoice') color = 'success';
+      if (params.value === 'Expenses') color = 'success';
       if (params.value === 'Bill of Entry') color = 'warning';
-      if (params.value === 'Delivery Proof') color = 'info';
 
       return <Chip label={params.value} size="small" color={color} variant="outlined" />;
     }},
@@ -255,7 +249,7 @@ const DocumentManagement = () => {
       );
     }
 
-    if (previewDoc.category === 'Invoice' || previewDoc.category === 'Customer PO' || previewDoc.category === 'Bill of Entry') {
+    if (previewDoc.category === 'Expenses' || previewDoc.category === 'Bill of Entry') {
       return (
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '24px', color: '#1e293b', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.02)', fontFamily: 'sans-serif' }}>
           {/* Invoice/PO Header */}

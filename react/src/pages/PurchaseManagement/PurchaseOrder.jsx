@@ -57,18 +57,7 @@ const PurchaseOrder = () => {
     },
     deliverySchedules: [],
     status: 'Draft',
-    deliveryStatus: 'Pending',
-    freightMode: 'None',
-    shippingLine: '',
-    portOfLoading: '',
-    portOfDischarge: '',
-    containerNo: '',
-    blNo: '',
-    transporterName: '',
-    vehicleNo: '',
-    lrNo: '',
-    ewayBillNo: '',
-    dispatchRoute: ''
+    deliveryStatus: 'Pending'
   });
 
   // Check query params
@@ -97,36 +86,14 @@ const PurchaseOrder = () => {
       },
       deliverySchedules: [{ date: new Date().toISOString().split('T')[0], qty: 1 }],
       status: 'Draft',
-      deliveryStatus: 'Pending',
-      freightMode: 'None',
-      shippingLine: '',
-      portOfLoading: '',
-      portOfDischarge: '',
-      containerNo: '',
-      blNo: '',
-      transporterName: '',
-      vehicleNo: '',
-      lrNo: '',
-      ewayBillNo: '',
-      dispatchRoute: ''
+      deliveryStatus: 'Pending'
     });
     setFormOpen(true);
   };
 
   const handleOpenEdit = (po) => {
     setFormData({
-      ...po,
-      freightMode: po.freightMode || 'None',
-      shippingLine: po.shippingLine || '',
-      portOfLoading: po.portOfLoading || '',
-      portOfDischarge: po.portOfDischarge || '',
-      containerNo: po.containerNo || '',
-      blNo: po.blNo || '',
-      transporterName: po.transporterName || '',
-      vehicleNo: po.vehicleNo || '',
-      lrNo: po.lrNo || '',
-      ewayBillNo: po.ewayBillNo || '',
-      dispatchRoute: po.dispatchRoute || ''
+      ...po
     });
     setFormOpen(true);
   };
@@ -530,100 +497,6 @@ const PurchaseOrder = () => {
           </div>
 
 
-          {/* Freight & India Inland Transport Details Option */}
-          <div style={{ margin: '16px 0', padding: '12px', border: '1px solid var(--border)', borderRadius: '6px' }}>
-            <h4 style={{ margin: '0 0 12px 0' }}>Freight & India Inland Transport Details</h4>
-            
-            <div className="dialog-grid" style={{ marginBottom: '12px' }}>
-              <FormControl fullWidth>
-                <InputLabel>Freight Mode</InputLabel>
-                <Select
-                  value={formData.freightMode}
-                  label="Freight Mode"
-                  onChange={(e) => setFormData(prev => ({ ...prev, freightMode: e.target.value }))}
-                >
-                  <MenuItem value="None">None / Self Pickup</MenuItem>
-                  <MenuItem value="Road Freight">Road Freight (Domestic / Inland)</MenuItem>
-                  <MenuItem value="Sea Freight">Sea Freight (International / Coastal)</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
-            {formData.freightMode === 'Sea Freight' && (
-              <div className="dialog-grid">
-                <TextField
-                  label="Shipping Line / Ocean Carrier"
-                  value={formData.shippingLine}
-                  onChange={(e) => setFormData(prev => ({ ...prev, shippingLine: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Port of Loading (POL)"
-                  value={formData.portOfLoading}
-                  onChange={(e) => setFormData(prev => ({ ...prev, portOfLoading: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Port of Discharge (POD)"
-                  value={formData.portOfDischarge}
-                  onChange={(e) => setFormData(prev => ({ ...prev, portOfDischarge: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Container Number"
-                  placeholder="e.g. MSKU9981240"
-                  value={formData.containerNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, containerNo: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Bill of Lading (B/L) No"
-                  value={formData.blNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, blNo: e.target.value }))}
-                  fullWidth
-                />
-              </div>
-            )}
-
-            {formData.freightMode === 'Road Freight' && (
-              <div className="dialog-grid">
-                <TextField
-                  label="Transporter Name"
-                  value={formData.transporterName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, transporterName: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Vehicle Number"
-                  placeholder="e.g. MH-12-PQ-1234"
-                  value={formData.vehicleNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, vehicleNo: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Lorry Receipt (LR) No"
-                  value={formData.lrNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, lrNo: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="E-Way Bill Number"
-                  placeholder="Mandatory if value > ₹50,000"
-                  value={formData.ewayBillNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, ewayBillNo: e.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Dispatch Route"
-                  placeholder="e.g. Mumbai to Pune"
-                  value={formData.dispatchRoute}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dispatchRoute: e.target.value }))}
-                  fullWidth
-                />
-              </div>
-            )}
-          </div>
-
           {/* Line Items Table */}
           <div className="line-items-section">
             <div className="section-title-row">
@@ -785,31 +658,6 @@ const PurchaseOrder = () => {
                 </div>
               )}
 
-              {selectedPO.freightMode && selectedPO.freightMode !== 'None' && (
-                <div style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '10px 0' }}>
-                  <strong>Freight & Inland Transport Details ({selectedPO.freightMode}):</strong><br />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '5px', fontSize: '13px' }}>
-                    {selectedPO.freightMode === 'Sea Freight' ? (
-                      <>
-                        <div><strong>Shipping Line:</strong> {selectedPO.shippingLine || '—'}</div>
-                        <div><strong>Container No:</strong> {selectedPO.containerNo || '—'}</div>
-                        <div><strong>B/L No:</strong> {selectedPO.blNo || '—'}</div>
-                        <div><strong>Port of Loading:</strong> {selectedPO.portOfLoading || '—'}</div>
-                        <div><strong>Port of Discharge:</strong> {selectedPO.portOfDischarge || '—'}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div><strong>Transporter:</strong> {selectedPO.transporterName || '—'}</div>
-                        <div><strong>Vehicle No:</strong> {selectedPO.vehicleNo || '—'}</div>
-                        <div><strong>Lorry Receipt No:</strong> {selectedPO.lrNo || '—'}</div>
-                        <div><strong>E-Way Bill Number:</strong> {selectedPO.ewayBillNo || '—'}</div>
-                        <div><strong>Dispatch Route:</strong> {selectedPO.dispatchRoute || '—'}</div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>Order Line Items</h4>
               <Table size="small" className="detail-table">
                 <TableHead>
@@ -901,31 +749,6 @@ const PurchaseOrder = () => {
                   <p><strong>DELIVERY STATUS:</strong> {selectedPO.deliveryStatus}</p>
                 </div>
               </div>
-
-              {selectedPO.freightMode && selectedPO.freightMode !== 'None' && (
-                <div style={{ marginTop: '15px', marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px' }}>
-                  <p style={{ margin: '0 0 5px 0' }}><strong>SHIPPING & TRANSPORTATION DETAILS ({selectedPO.freightMode.toUpperCase()}):</strong></p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '5px' }}>
-                    {selectedPO.freightMode === 'Sea Freight' ? (
-                      <>
-                        <p style={{ margin: 0 }}><strong>Shipping Line:</strong> {selectedPO.shippingLine || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>Container No:</strong> {selectedPO.containerNo || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>Port of Loading:</strong> {selectedPO.portOfLoading || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>Port of Discharge:</strong> {selectedPO.portOfDischarge || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>B/L No:</strong> {selectedPO.blNo || '—'}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{ margin: 0 }}><strong>Transporter Name:</strong> {selectedPO.transporterName || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>Vehicle No:</strong> {selectedPO.vehicleNo || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>LR No:</strong> {selectedPO.lrNo || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>E-Way Bill Number:</strong> {selectedPO.ewayBillNo || '—'}</p>
-                        <p style={{ margin: 0 }}><strong>Dispatch Route:</strong> {selectedPO.dispatchRoute || '—'}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <table className="print-items-table">
                 <thead>

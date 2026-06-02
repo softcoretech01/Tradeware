@@ -135,6 +135,7 @@ const BatchStockInquiry = () => {
       'Selling Price': b.finalSellingPrice,
       'Mfg Date': b.mfgDate,
       'Expiry Date': b.expiryDate,
+      'Days to Expire': Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24)),
       'Status': b.status
     }));
     exportToExcel(data, `Batch_Stock_Inquiry_${new Date().toISOString().split('T')[0]}`, 'Batch Stock');
@@ -149,6 +150,7 @@ const BatchStockInquiry = () => {
       { field: 'qty', headerName: 'Stock Qty' },
       { field: 'finalSellingPrice', headerName: 'Selling Price' },
       { field: 'expiryDate', headerName: 'Expiry Date' },
+      { field: 'daysToExpiry', headerName: 'Days to Expire' },
       { field: 'status', headerName: 'Status' }
     ];
     exportToPDF(cols, filteredBatches, `Batch_Stock_Inquiry_${new Date().toISOString().split('T')[0]}`, 'Batch Stock Inquiry Report');
@@ -358,7 +360,7 @@ const BatchStockInquiry = () => {
             >
               <MenuItem value="All">All Warehouse Locations</MenuItem>
               <MenuItem value="Main Warehouse">Main Warehouse</MenuItem>
-              <MenuItem value="Quarantine Warehouse">Quarantine Warehouse</MenuItem>
+              <MenuItem value="Hold Warehouse">Hold Warehouse</MenuItem>
             </Select>
           </FormControl>
         </div>
@@ -377,12 +379,15 @@ const BatchStockInquiry = () => {
               <th>Landed Unit Cost</th>
               <th>Selling Price</th>
               <th>Expiry Date</th>
+              <th>Days to Expire</th>
               <th>QC Status</th>
             </tr>
           </thead>
           <tbody>
             {paginatedBatches.length > 0 ? (
-              paginatedBatches.map(b => (
+              paginatedBatches.map(b => {
+                const daysToExpiry = Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                return (
                 <tr key={b.batchNo}>
                   <td className="bold-cell">{b.batchNo}</td>
                   <td>{b.itemCode}</td>
@@ -397,17 +402,20 @@ const BatchStockInquiry = () => {
                   <td>₹{b.landedUnitCost?.toFixed(2)}</td>
                   <td>₹{b.finalSellingPrice?.toFixed(2)}</td>
                   <td>{b.expiryDate}</td>
+                  <td style={{ color: daysToExpiry < 0 ? RED.main : (daysToExpiry <= 60 ? AMBER.main : 'inherit'), fontWeight: daysToExpiry <= 60 ? 700 : 400 }}>
+                    {daysToExpiry < 0 ? 'Expired' : `${daysToExpiry} days`}
+                  </td>
                   <td>
                     {b.status === 'Available' ? (
                       <Chip label="Approved / Active" size="small" style={{ backgroundColor: GREEN.bg, color: GREEN.main, fontWeight: 600 }} />
-                    ) : b.status === 'Quarantined' ? (
-                      <Chip label="QC Locked / Quarantine" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main, fontWeight: 600 }} />
+                    ) : b.status === 'On Hold' ? (
+                      <Chip label="QC Locked / On Hold" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main, fontWeight: 600 }} />
                     ) : (
                       <Chip label="Expired" size="small" style={{ backgroundColor: RED.bg, color: RED.main, fontWeight: 600 }} />
                     )}
                   </td>
                 </tr>
-              ))
+              )})
             ) : (
               <tr>
                 <td colSpan={9} className="table-empty">

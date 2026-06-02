@@ -432,97 +432,11 @@ const SellingPrice = () => {
         </Box>
       )}
 
-      {/* LOWER GRID: MANAGER APPROVAL INBOX & NEGOTIATED CONTRACTS */}
+      {/* LOWER GRID: NEGOTIATED CONTRACTS */}
       <Grid container spacing={3}>
         
-        {/* MANAGER APPROVAL INBOX */}
-        <Grid item xs={12} md={7}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1, backgroundColor: BLUE.bg }}>
-              <ClipboardCheck size={18} style={{ color: BLUE.main }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: BLUE.main }}>
-                Manager Low-Margin Approval Inbox (Authorization Pipeline)
-              </Typography>
-            </Box>
-            <CardContent sx={{ p: 0, height: '300px', overflowY: 'auto' }}>
-              {marginApprovals.length > 0 ? (
-                <table className="erp-table" style={{ fontSize: '13px' }}>
-                  <thead>
-                    <tr>
-                      <th>Details</th>
-                      <th>Requested Price</th>
-                      <th>Margin %</th>
-                      <th>Customer Target</th>
-                      <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {marginApprovals.map(req => (
-                      <tr key={req.id}>
-                        <td>
-                          <Typography variant="body2" sx={{ fontWeight: 700 }}>{req.batchNo}</Typography>
-                          <Typography variant="caption" color="text.secondary">{req.itemName}</Typography>
-                        </td>
-                        <td className="bold-cell">₹{req.requestedPrice?.toFixed(2)}</td>
-                        <td className="bold-cell" style={{ color: RED.main }}>{req.marginPercent?.toFixed(1)}%</td>
-                        <td>{req.customerName}</td>
-                        <td>
-                          <Chip
-                            label={req.status}
-                            size="small"
-                            style={{
-                              backgroundColor:
-                                req.status === 'Approved' ? GREEN.bg :
-                                req.status === 'Rejected' ? RED.bg : AMBER.bg,
-                              color:
-                                req.status === 'Approved' ? GREEN.main :
-                                req.status === 'Rejected' ? RED.main : AMBER.main,
-                              fontWeight: 600
-                            }}
-                          />
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          {req.status === 'Pending' ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                              <Tooltip title="Approve Request">
-                                <IconButton
-                                  className="btn-icon-success"
-                                  onClick={() => handleApproveRequest(req.id)}
-                                  size="small"
-                                >
-                                  <CheckCircle size={18} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Reject Request">
-                                <IconButton
-                                  className="btn-icon-danger"
-                                  onClick={() => handleRejectRequest(req.id)}
-                                  size="small"
-                                >
-                                  <XCircle size={18} />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          ) : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.secondary' }}>
-                  <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                    No authorization requests are currently pending in queue.
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
         {/* CUSTOMER NEGOTIATED CONTRACTS REGISTRY */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12}>
           <Card variant="outlined" sx={{ height: '100%' }}>
             <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1 }}>
               <Users size={18} style={{ color: BLUE.main }} />

@@ -38,7 +38,7 @@ import BatchAgingAnalysis from './pages/BatchLotManagement/BatchAgingAnalysis';
 
 // Import Management Pages
 import ImportPurchase from './pages/ImportManagement/ImportPurchase';
-import ShipmentTracking from './pages/ImportManagement/ShipmentTracking';
+// import ShipmentTracking from './pages/ImportManagement/ShipmentTracking';
 import LandedCost from './pages/ImportManagement/LandedCost';
 import SellingPrice from './pages/ImportManagement/SellingPrice';
 import PricingManagement from './pages/PricingManagement/PricingManagement';
@@ -142,7 +142,7 @@ const App = () => {
 
                 {/* Import Management */}
                 <Route path="/import-management/import-purchase-management" element={<ImportPurchase />} />
-                <Route path="/import-management/shipment-tracking" element={<ShipmentTracking />} />
+                {/* <Route path="/import-management/shipment-tracking" element={<ShipmentTracking />} /> */}
                 <Route path="/import-management/landed-cost-calculation" element={<LandedCost />} />
                 <Route path="/import-management/selling-price-finalization" element={<SellingPrice />} />
 

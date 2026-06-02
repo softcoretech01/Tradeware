@@ -85,6 +85,37 @@ const initialState = {
       items: [
         { itemCode: 'ITM-0001', itemName: 'Aluminium Profile AS-100', qty: 1000, fcyUnitPrice: 5.0 }
       ]
+    },
+    {
+      id: 'SH-2026-003',
+      poNo: 'IPO-2026-004',
+      supplierName: 'Mega Hardware Supplies',
+      containerNo: 'TGHU1234567',
+      blNo: 'BL-8888888',
+      departureDate: '2026-05-15',
+      eta: '2026-06-01',
+      status: 'Customs Clearance',
+      billOfEntryNo: 'BOE-111111-B',
+      customsDuty: 15000,
+      freightCharges: 8000,
+      handlingCharges: 2000,
+      packingCharges: 1000,
+      agingCharges: 500,
+      insuranceCost: 1000,
+      currency: 'USD',
+      exchangeRate: 83.5,
+      items: [
+        { itemCode: 'ITM-0010', itemName: 'Steel Bracket A', qty: 1000, fcyUnitPrice: 2.5 },
+        { itemCode: 'ITM-0011', itemName: 'Steel Bracket B', qty: 800, fcyUnitPrice: 3.0 },
+        { itemCode: 'ITM-0012', itemName: 'Steel Bracket C', qty: 500, fcyUnitPrice: 4.5 },
+        { itemCode: 'ITM-0013', itemName: 'Screws Pack (100pcs)', qty: 2000, fcyUnitPrice: 1.0 },
+        { itemCode: 'ITM-0014', itemName: 'Bolts Pack (50pcs)', qty: 1500, fcyUnitPrice: 1.5 },
+        { itemCode: 'ITM-0015', itemName: 'Washers Pack (200pcs)', qty: 3000, fcyUnitPrice: 0.5 },
+        { itemCode: 'ITM-0016', itemName: 'Aluminium Handle', qty: 400, fcyUnitPrice: 5.0 },
+        { itemCode: 'ITM-0017', itemName: 'Rubber Grip', qty: 400, fcyUnitPrice: 1.2 },
+        { itemCode: 'ITM-0018', itemName: 'Steel Hinge', qty: 1200, fcyUnitPrice: 2.0 },
+        { itemCode: 'ITM-0019', itemName: 'Plastic Cap', qty: 5000, fcyUnitPrice: 0.2 }
+      ]
     }
   ],
   batches: [
@@ -99,7 +130,7 @@ const initialState = {
       landedUnitCost: 418.00,
       finalSellingPrice: 580.00,
       marginPercent: 27.9,
-      status: 'Available', // Available, Quarantined, Expired
+      status: 'Available', // Available, On Hold, Expired
       warehouse: 'Main Warehouse',
       sequence: 1,
       poReference: 'IPO-2026-001',
@@ -167,8 +198,8 @@ const initialState = {
       landedUnitCost: 45.00,
       finalSellingPrice: 52.00,
       marginPercent: 13.5,
-      status: 'Quarantined',
-      warehouse: 'Quarantine Warehouse',
+      status: 'On Hold',
+      warehouse: 'Hold Warehouse',
       sequence: 1,
       poReference: 'IPO-2026-003',
       shipmentRef: 'SH-2026-002'
@@ -185,7 +216,7 @@ const initialState = {
       finalSellingPrice: 550.00,
       marginPercent: 29.1,
       status: 'Expired',
-      warehouse: 'Quarantine Warehouse',
+      warehouse: 'Hold Warehouse',
       sequence: 3,
       poReference: '',
       shipmentRef: ''

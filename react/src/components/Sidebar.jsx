@@ -33,7 +33,7 @@ const Sidebar = () => {
       subItems: ['Items', 'Customers', 'Suppliers', 'Warehouse'],
     },
     { name: 'Purchase Management', icon: <ShoppingCart size={20} />, subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Quality Control'] },
-    { name: 'Import Management', icon: <Globe size={20} />, subItems: ['Import Purchase Management', 'Shipment Tracking', 'Landed Cost Calculation', 'Selling Price Finalization'] },
+    { name: 'Import Management', icon: <Globe size={20} />, subItems: ['Import Purchase Management', /* 'Shipment Tracking', */ 'Landed Cost Calculation', 'Selling Price Finalization'] },
     { name: 'Batch & Lot Management', icon: <Tag size={20} />, subItems: ['Batch Maintenance', 'Batch Stock Inquiry', 'Batch Aging Analysis'] },
     { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Stock Inward', 'Stock Outward', 'Stock Adjustment'] },
     { name: 'Pricing Management', icon: <Calculator size={20} />, to: '/pricing-management' },

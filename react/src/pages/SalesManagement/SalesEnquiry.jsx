@@ -69,7 +69,7 @@ const SalesEnquiry = () => {
       customerId: defaultCust ? defaultCust.id : '',
       customerName: defaultCust ? defaultCust.name : '',
       source: 'Email',
-      items: [{ itemId: itemsMaster[0]?.id || '', qty: 1, targetPrice: 10 }],
+      items: [{ itemId: itemsMaster[0]?.id || '', qty: 1, targetPrice: itemsMaster[0]?.standardPrice || 0 }],
       status: 'Active',
       remarks: ''
     });
@@ -93,7 +93,7 @@ const SalesEnquiry = () => {
   const handleAddLineItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { itemId: itemsMaster[0]?.id || '', qty: 1, targetPrice: 10 }]
+      items: [...prev.items, { itemId: itemsMaster[0]?.id || '', qty: 1, targetPrice: itemsMaster[0]?.standardPrice || 0 }]
     }));
   };
 
@@ -111,7 +111,8 @@ const SalesEnquiry = () => {
       updated[idx] = {
         ...updated[idx],
         itemId: value,
-        name: match ? match.name : ''
+        name: match ? match.name : '',
+        targetPrice: match ? (match.standardPrice || 0) : 0
       };
     } else {
       updated[idx] = {
@@ -421,7 +422,8 @@ const SalesEnquiry = () => {
                 <TableRow>
                   <TableCell>Item Name</TableCell>
                   <TableCell width="140">Qty Requested</TableCell>
-                  <TableCell width="160">Client Target Price ($)</TableCell>
+                  <TableCell width="160">Unit Price ($)</TableCell>
+                  <TableCell width="160">Total Amount ($)</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -445,7 +447,7 @@ const SalesEnquiry = () => {
                         className="table-input"
                         value={item.qty}
                         min="1"
-                        onChange={(e) => handleItemChange(idx, 'qty', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(idx, 'qty', e.target.value === '' ? '' : parseFloat(e.target.value))}
                       />
                     </TableCell>
                     <TableCell>
@@ -455,7 +457,15 @@ const SalesEnquiry = () => {
                         value={item.targetPrice}
                         min="0.01"
                         step="0.01"
-                        onChange={(e) => handleItemChange(idx, 'targetPrice', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(idx, 'targetPrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <input 
+                        type="text" 
+                        className="table-input"
+                        value={(item.qty * item.targetPrice).toFixed(2)}
+                        disabled
                       />
                     </TableCell>
                     <TableCell align="center">
@@ -516,7 +526,7 @@ const SalesEnquiry = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Qty Inquired</TableCell>
-                    <TableCell align="right">Target Price</TableCell>
+                    <TableCell align="right">Unit Price</TableCell>
                     <TableCell align="right">Est. Total Deal</TableCell>
                   </TableRow>
                 </TableHead>

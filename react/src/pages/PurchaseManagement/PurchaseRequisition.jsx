@@ -26,6 +26,7 @@ const PurchaseRequisition = () => {
   // Store Selectors
   const requisitions = useSelector(state => state.erp.requisitions);
   const itemsMaster = useSelector(state => state.items.items);
+  const inventory = useSelector(state => state.inventory?.inventory || []);
 
   // Component States
   const [searchTerm, setSearchTerm] = useState('');
@@ -416,6 +417,7 @@ const PurchaseRequisition = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Item Name</TableCell>
+                  <TableCell width="120">Available Stock</TableCell>
                   <TableCell width="120">Qty</TableCell>
                   <TableCell width="120">UOM</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
@@ -434,6 +436,9 @@ const PurchaseRequisition = () => {
                           <option key={itm.id} value={itm.id}>{itm.name} ({itm.id})</option>
                         ))}
                       </select>
+                    </TableCell>
+                    <TableCell>
+                      {inventory.find(inv => inv.itemCode === item.itemId)?.availableStock || 0}
                     </TableCell>
                     <TableCell>
                       <input 
