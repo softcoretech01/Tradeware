@@ -182,7 +182,7 @@ const InventoryFormDialog = ({ open, onClose, onSave, editItem }) => {
                   error={!!errors.itemName} helperText={errors.itemName}
                   placeholder="Enter item name" />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Category</InputLabel>
                   <Select value={form.category} label="Category" onChange={handleChange('category')}>
@@ -192,17 +192,7 @@ const InventoryFormDialog = ({ open, onClose, onSave, editItem }) => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Warehouse</InputLabel>
-                  <Select value={form.warehouse} label="Warehouse" onChange={handleChange('warehouse')}>
-                    {['Main Warehouse', 'Secondary Warehouse', 'Cold Storage', 'Transit Warehouse'].map(w =>
-                      <MenuItem key={w} value={w}>{w}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
                   <InputLabel>UOM</InputLabel>
                   <Select value={form.uom} label="UOM" onChange={handleChange('uom')}>
@@ -239,9 +229,8 @@ const InventoryFormDialog = ({ open, onClose, onSave, editItem }) => {
         {activeTab === 1 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Stock summary badges */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
               <StockBadge label="Available" value={form.availableStock} color="#2E7D32" bg="#E8F5E9" />
-              <StockBadge label="Reserved" value={form.reservedStock} color="#1565C0" bg="#E3F2FD" />
               <StockBadge label="Damaged" value={form.damagedStock} color="#C62828" bg="#FFEBEE" />
               <StockBadge label="Status" value={form.stockStatus}
                 color={
@@ -260,38 +249,33 @@ const InventoryFormDialog = ({ open, onClose, onSave, editItem }) => {
 
             <SectionTitle>Quantities</SectionTitle>
             <Grid container spacing={2.5}>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Opening Stock" type="number"
                   value={form.openingStock} onChange={handleChange('openingStock')}
                   error={!!errors.openingStock} helperText={errors.openingStock}
                   InputProps={{ inputProps: { min: 0 } }} />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Inward Qty" type="number"
                   value={form.inwardQty} onChange={handleChange('inwardQty')}
                   InputProps={{ inputProps: { min: 0 } }} />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Outward Qty" type="number"
                   value={form.outwardQty} onChange={handleChange('outwardQty')}
                   InputProps={{ inputProps: { min: 0 } }} />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Available Stock" type="number"
                   value={form.availableStock} disabled
                   sx={{ '& .MuiInputBase-root': { bgcolor: '#F0FDF4' } }} />
               </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField fullWidth size="small" label="Reserved Stock" type="number"
-                  value={form.reservedStock} onChange={handleChange('reservedStock')}
-                  InputProps={{ inputProps: { min: 0 } }} />
-              </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Damaged Stock" type="number"
                   value={form.damagedStock} onChange={handleChange('damagedStock')}
                   InputProps={{ inputProps: { min: 0 } }} />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={6} sm={4}>
                 <TextField fullWidth size="small" label="Expired Stock" type="number"
                   value={form.expiredStock} onChange={handleChange('expiredStock')}
                   InputProps={{ inputProps: { min: 0 } }} />
@@ -416,19 +400,9 @@ const InventoryFormDialog = ({ open, onClose, onSave, editItem }) => {
         {/* ─── TAB 4: SETTINGS ─── */}
         {activeTab === 4 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <SectionTitle>Status & Approval</SectionTitle>
+            <SectionTitle>Status</SectionTitle>
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Approval Status</InputLabel>
-                  <Select value={form.approvalStatus} label="Approval Status" onChange={handleChange('approvalStatus')}>
-                    {['Pending', 'Approved', 'Rejected'].map(s =>
-                      <MenuItem key={s} value={s}>{s}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={12}>
                 <FormControlLabel
                   control={
                     <Switch checked={form.active}

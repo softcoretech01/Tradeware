@@ -128,9 +128,14 @@ const CustomerManagement = () => {
           <p className="subtitle">Explore active customer profiles, inspect key contact roles, tax settings, and audit their historical transaction trails.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Export Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
         </div>
       </div>
 

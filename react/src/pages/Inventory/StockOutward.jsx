@@ -1,3 +1,4 @@
+import { FileSpreadsheet } from 'lucide-react';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { DataGrid } from '@mui/x-data-grid';
@@ -350,9 +351,13 @@ const StockOutward = () => {
             sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#EF5350', color: '#C62828', '&:hover': { borderColor: '#C62828', bgcolor: '#FFEBEE' } }}>
             PDF
           </Button>
-          <Button variant="outlined" startIcon={<ExcelIcon />} onClick={handleExportExcel}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#66BB6A', color: '#2E7D32', '&:hover': { borderColor: '#2E7D32', bgcolor: '#E8F5E9' } }}>
-            Excel
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
           </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddNew}
             sx={{ textTransform: 'none', fontWeight: 700, bgcolor: BLUE.main, px: 3, boxShadow: '0 4px 14px rgba(21,101,192,0.3)', '&:hover': { bgcolor: BLUE.dark } }}>

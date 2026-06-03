@@ -152,9 +152,14 @@ const CustomerPO = () => {
           <p className="subtitle">Register client purchase orders, record file attachments, and lock delivery release milestones.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -212,7 +217,7 @@ const CustomerPO = () => {
                   <td className="bold-cell">{cpo.customerPoRef}</td>
                   <td>{cpo.customerName}</td>
                   <td>{cpo.date}</td>
-                  <td className="bold-cell">${cpo.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                  <td className="bold-cell">INR {cpo.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                   <td className="actions-cell">
                     <Tooltip title="View CPO Details">
                       <IconButton size="small" onClick={() => { setSelectedCPO(cpo); setViewOpen(true); }}>
@@ -301,7 +306,7 @@ const CustomerPO = () => {
             />
 
             <TextField
-              label="Order Total Value ($)"
+              label="Order Total Value (INR)"
               value={formData.amount}
               fullWidth
               disabled
@@ -358,7 +363,7 @@ const CustomerPO = () => {
                 <strong>Date Registered:</strong> <span>{selectedCPO.date}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Order Value Total:</strong> <span>${selectedCPO.amount.toLocaleString()}</span>
+                <strong>Order Value Total:</strong> <span>INR {selectedCPO.amount.toLocaleString()}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Payment Terms:</strong> <span>{selectedCPO.paymentTerms}</span>
@@ -418,7 +423,7 @@ const CustomerPO = () => {
                 <div>
                   <p><strong>CLIENT PO REF:</strong> {selectedCPO.customerPoRef}</p>
                   <p><strong>QUOTATION REFERENCE:</strong> {selectedCPO.qtRef}</p>
-                  <p><strong>PO VALUE:</strong> ${selectedCPO.amount.toFixed(2)}</p>
+                  <p><strong>PO VALUE:</strong> INR {selectedCPO.amount.toFixed(2)}</p>
                 </div>
               </div>
 

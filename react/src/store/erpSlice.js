@@ -242,9 +242,71 @@ const initialState = {
         id: 'INV-2026-001',
         amount: 1200,
         taxAmount: 216,
+        taxType: 'SGST',
         total: 1416,
         date: '2026-05-25'
       }
+    },
+    {
+      id: 'SO-2026-002',
+      cpoRef: 'CPO-2026-002',
+      customerName: 'AIR LIQUIDE SINGAPORE PTE LTD',
+      date: '2026-05-20',
+      items: [
+        { itemId: 'ITM05315', name: 'Stang Piston Sanchin 120', orderedQty: 40, suppliedQty: 40, unitPrice: 27.6, pendingQty: 0 }
+      ],
+      warehouse: 'WH-MAIN-RACK1',
+      deliveryStatus: 'Fully Shipped',
+      deliverySchedule: '2026-05-28',
+      invoiceGenerated: false,
+      invoiceDetails: null
+    },
+    {
+      id: 'SO-2026-003',
+      cpoRef: 'CPO-2026-003',
+      customerName: 'AKHUN SERVICE',
+      date: '2026-05-21',
+      items: [
+        { itemId: 'ITM05310', name: 'Selendang Ban 1100-20 KR Malaysia', orderedQty: 5, suppliedQty: 5, unitPrice: 2500.0, pendingQty: 0 },
+        { itemId: 'ITM05309', name: 'Selendang Ban 1000-20 KR Malaysia', orderedQty: 10, suppliedQty: 10, unitPrice: 2200.0, pendingQty: 0 }
+      ],
+      warehouse: 'Secondary Warehouse',
+      deliveryStatus: 'Fully Shipped',
+      deliverySchedule: '2026-05-29',
+      invoiceGenerated: false,
+      invoiceDetails: null
+    },
+    {
+      id: 'SO-2026-004',
+      cpoRef: 'CPO-2026-004',
+      customerName: 'ACE FIRE ENGINEERING PTE LTD',
+      date: '2026-05-22',
+      items: [
+        { itemId: 'ITM05312', name: 'Oil Seal Kit Sanchin 120', orderedQty: 20, suppliedQty: 15, unitPrice: 180.0, pendingQty: 5 },
+        { itemId: 'ITM05308', name: 'Selendang Ban 750-16 KR Malaysia', orderedQty: 30, suppliedQty: 30, unitPrice: 1800.0, pendingQty: 0 },
+        { itemId: 'ITM05314', name: 'Pin Piston Sanchin 120', orderedQty: 10, suppliedQty: 10, unitPrice: 120.0, pendingQty: 0 }
+      ],
+      warehouse: 'Main Warehouse',
+      deliveryStatus: 'Partially Shipped',
+      deliverySchedule: '2026-05-30',
+      invoiceGenerated: false,
+      invoiceDetails: null
+    }
+  ],
+  invoices: [
+    {
+      id: 'INV-2026-001',
+      soRef: 'SO-2026-001',
+      cpoRef: 'CPO-2026-001',
+      customerName: 'ACE FIRE ENGINEERING PTE LTD',
+      date: '2026-05-25',
+      items: [
+        { itemId: 'ITM05316', name: 'Pin Piston Sanchin 120', suppliedQty: 80, unitPrice: 15.0 }
+      ],
+      subTotal: 1200,
+      taxType: 'SGST',
+      taxAmount: 216,
+      grandTotal: 1416
     }
   ],
   deliveryChallans: [
@@ -725,7 +787,7 @@ const erpSlice = createSlice({
       }
     },
     generateInvoice: (state, action) => {
-      const { soId, invoiceId, amount, taxAmount, total } = action.payload;
+      const { soId, invoiceId, amount, taxAmount, taxType, total, items, customerName, cpoRef } = action.payload;
       const so = state.salesOrders.find(s => s.id === soId);
       if (so) {
         so.invoiceGenerated = true;
@@ -733,9 +795,22 @@ const erpSlice = createSlice({
           id: invoiceId,
           amount,
           taxAmount,
+          taxType,
           total,
           date: new Date().toISOString().split('T')[0]
         };
+        state.invoices.unshift({
+          id: invoiceId,
+          soRef: soId,
+          cpoRef,
+          customerName,
+          date: new Date().toISOString().split('T')[0],
+          items,
+          subTotal: amount,
+          taxType,
+          taxAmount,
+          grandTotal: total
+        });
       }
     },
     deleteSalesOrder: (state, action) => {

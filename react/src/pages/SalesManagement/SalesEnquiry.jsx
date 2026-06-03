@@ -248,9 +248,14 @@ const SalesEnquiry = () => {
           <p className="subtitle">Log customer leads, specify target prices, and route into the Quotation pipeline.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -422,8 +427,8 @@ const SalesEnquiry = () => {
                 <TableRow>
                   <TableCell>Item Name</TableCell>
                   <TableCell width="140">Qty Requested</TableCell>
-                  <TableCell width="160">Unit Price ($)</TableCell>
-                  <TableCell width="160">Total Amount ($)</TableCell>
+                  <TableCell width="160">Unit Price (INR)</TableCell>
+                  <TableCell width="160">Total Amount (INR)</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -535,8 +540,8 @@ const SalesEnquiry = () => {
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.qty}</TableCell>
-                      <TableCell align="right">${itm.targetPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">${(itm.qty * itm.targetPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {itm.targetPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {(itm.qty * itm.targetPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -609,13 +614,13 @@ const SalesEnquiry = () => {
                       <td>{itm.itemId}</td>
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.qty}</td>
-                      <td className="num-col">${itm.targetPrice.toFixed(2)}</td>
-                      <td className="num-col">${(itm.qty * itm.targetPrice).toFixed(2)}</td>
+                      <td className="num-col">INR {itm.targetPrice.toFixed(2)}</td>
+                      <td className="num-col">INR {(itm.qty * itm.targetPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="4">Estimated Potential Pipeline Value</td>
-                    <td className="num-col">${selectedEnquiry.items.reduce((sum, i) => sum + (i.qty * i.targetPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">INR {selectedEnquiry.items.reduce((sum, i) => sum + (i.qty * i.targetPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

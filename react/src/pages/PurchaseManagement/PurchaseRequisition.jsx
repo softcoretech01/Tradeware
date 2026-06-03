@@ -220,9 +220,14 @@ const PurchaseRequisition = () => {
           <p className="subtitle">Manage internal item requests, priorities, and workflow approval paths.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -540,14 +545,14 @@ const PurchaseRequisition = () => {
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.qty}</TableCell>
                       <TableCell>{itm.uom}</TableCell>
-                      <TableCell align="right">${itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">${(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={4} align="right"><strong>Estimated Total Value:</strong></TableCell>
                     <TableCell align="right" className="bold-cell">
-                      ${selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
+                      INR {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -610,13 +615,13 @@ const PurchaseRequisition = () => {
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.qty}</td>
                       <td>{itm.uom}</td>
-                      <td className="num-col">${itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">${(itm.qty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col">INR {(itm.qty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Estimated Grand Total</td>
-                    <td className="num-col">${selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">INR {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

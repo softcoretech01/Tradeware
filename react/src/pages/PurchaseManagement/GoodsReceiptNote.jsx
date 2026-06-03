@@ -277,9 +277,14 @@ const GoodsReceiptNote = () => {
           <p className="subtitle">Record supplier deliveries, specify batches/lot info, allocate warehouse bins, and complete QC checks.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>

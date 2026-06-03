@@ -36,6 +36,7 @@ const SellingPrice = () => {
   // States
   const [searchTerm, setSearchTerm] = useState('');
   const [marginFilter, setMarginFilter] = useState('All'); // All, Low, Normal
+  const [costFilter, setCostFilter] = useState('All'); // All, Local landing cost, Import Landing Cost
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
@@ -119,9 +120,16 @@ const SellingPrice = () => {
         (marginFilter === 'Low' && isLow) ||
         (marginFilter === 'Normal' && !isLow);
 
-      return matchSearch && matchMargin;
+      const isLocal = !!b.grnReference;
+      const isImport = !isLocal;
+      const matchCost =
+        costFilter === 'All' ||
+        (costFilter === 'Local landing cost' && isLocal) ||
+        (costFilter === 'Import Landing Cost' && isImport);
+
+      return matchSearch && matchMargin && matchCost;
     });
-  }, [batches, searchTerm, marginFilter]);
+  }, [batches, searchTerm, marginFilter, costFilter]);
 
   // Pagination
   const paginatedBatches = useMemo(() => {
@@ -231,12 +239,6 @@ const SellingPrice = () => {
     exportToPDF(cols, filteredBatches, `Selling_Prices_${new Date().toISOString().split('T')[0]}`, 'Selling Price Finalization List');
   };
 
-  // Negotiated Contracts Registry Mock Data
-  const negotiatedContracts = [
-    { customer: 'ACE FIRE ENGINEERING PTE LTD', item: 'Aluminium Profile AS-100', price: '₹520.00', margin: '19.6%', validity: '2026-12-31', status: 'Active' },
-    { customer: 'AIR LIQUIDE SINGAPORE PTE LTD', item: 'EPDM Rubber Gasket', price: '₹48.00', margin: '6.25%', validity: '2026-08-30', status: 'Approved' }
-  ];
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 0 }}>
       {/* HEADER SECTION */}
@@ -246,15 +248,15 @@ const SellingPrice = () => {
             Selling Price Finalization
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Validate gross profit margins, initiate low-margin workflow requests, and review customer pricing contracts.
+            Validate gross profit margins and initiate low-margin workflow requests.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="outlined"
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
             onClick={handleExportExcel}
-            startIcon={<FileSpreadsheet size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
           >
             Export Excel
           </Button>
@@ -269,53 +271,6 @@ const SellingPrice = () => {
         </Box>
       </Box>
 
-      {/* PRICE SUMMARY CARDS */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: GREEN.bg }}>
-                <TrendingUp size={24} style={{ color: GREEN.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Avg. Inventory Margin</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>{stats.avgMargin?.toFixed(1)}%</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined" sx={{ borderColor: stats.lowMarginCount > 0 ? RED.light : 'inherit' }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: stats.lowMarginCount > 0 ? RED.bg : SLATE.bg }}>
-                <Percent size={24} style={{ color: stats.lowMarginCount > 0 ? RED.main : SLATE.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Low Margin Batches (&lt;15%)</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: stats.lowMarginCount > 0 ? RED.main : 'inherit' }}>
-                  {stats.lowMarginCount} Batches
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined" sx={{ borderColor: stats.activeApprovals > 0 ? AMBER.light : 'inherit' }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: stats.activeApprovals > 0 ? AMBER.bg : SLATE.bg }}>
-                <Lock size={24} style={{ color: stats.activeApprovals > 0 ? AMBER.main : SLATE.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Pending Margin Approvals</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: stats.activeApprovals > 0 ? AMBER.main : 'inherit' }}>
-                  {stats.activeApprovals} Requests
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
       {/* FILTER PANEL */}
       <div className="filter-panel">
         <div className="search-bar">
@@ -327,7 +282,18 @@ const SellingPrice = () => {
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
-        <div className="filter-selects">
+        <div className="filter-selects" style={{ display: 'flex', gap: '10px' }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <Select
+              value={costFilter}
+              onChange={(e) => { setCostFilter(e.target.value); setCurrentPage(1); }}
+              displayEmpty
+            >
+              <MenuItem value="All">All Costs</MenuItem>
+              <MenuItem value="Local landing cost">Local Landing Cost</MenuItem>
+              <MenuItem value="Import Landing Cost">Import Landing Cost</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl size="small" sx={{ minWidth: 180 }}>
             <Select
               value={marginFilter}
@@ -353,7 +319,6 @@ const SellingPrice = () => {
               <th>Landed Cost (INR)</th>
               <th>Final Selling Price</th>
               <th>Gross Margin (%)</th>
-              <th>Margin Status</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -366,17 +331,15 @@ const SellingPrice = () => {
                     <td className="bold-cell">{b.batchNo}</td>
                     <td>{b.itemCode}</td>
                     <td>{b.itemName}</td>
-                    <td>₹{b.landedUnitCost?.toFixed(2)}</td>
+                    <td>
+                      ₹{b.landedUnitCost?.toFixed(2)}
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: '10px' }}>
+                        {b.grnReference ? 'Local' : 'Import'}
+                      </Typography>
+                    </td>
                     <td className="bold-cell">₹{b.finalSellingPrice?.toFixed(2)}</td>
                     <td className="bold-cell" style={{ color: isLow ? RED.main : GREEN.main }}>
                       {b.marginPercent?.toFixed(1)}%
-                    </td>
-                    <td>
-                      {isLow ? (
-                        <Chip label="LOW MARGIN" size="small" style={{ backgroundColor: RED.bg, color: RED.main, fontWeight: 700 }} />
-                      ) : (
-                        <Chip label="OK" size="small" style={{ backgroundColor: GREEN.bg, color: GREEN.main, fontWeight: 700 }} />
-                      )}
                     </td>
                     <td className="actions-cell">
                       <Tooltip title="Update Selling Price">
@@ -394,7 +357,7 @@ const SellingPrice = () => {
               })
             ) : (
               <tr>
-                <td colSpan={8} className="table-empty">
+                <td colSpan={7} className="table-empty">
                   No inventory batch pricing logs found.
                 </td>
               </tr>
@@ -431,51 +394,6 @@ const SellingPrice = () => {
           </Box>
         </Box>
       )}
-
-      {/* LOWER GRID: NEGOTIATED CONTRACTS */}
-      <Grid container spacing={3}>
-        
-        {/* CUSTOMER NEGOTIATED CONTRACTS REGISTRY */}
-        <Grid item xs={12}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Users size={18} style={{ color: BLUE.main }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                Customer-Specific Negotiated Contracts
-              </Typography>
-            </Box>
-            <CardContent sx={{ height: '300px', overflowY: 'auto', p: 2 }}>
-              {negotiatedContracts.map((contract, index) => (
-                <Paper key={index} variant="outlined" sx={{ p: 2, mb: 1.5, backgroundColor: SLATE.bg }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: BLUE.dark }}>
-                      {contract.customer}
-                    </Typography>
-                    <Chip label={contract.status} size="small" color="primary" sx={{ height: 20, fontSize: '10px' }} />
-                  </Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Item: {contract.item}
-                  </Typography>
-                  <Grid container sx={{ mt: 1 }}>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Contract Price</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: BLUE.main }}>{contract.price}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Gross Margin</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: RED.main }}>{contract.margin}</Typography>
-                    </Grid>
-                  </Grid>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                    Valid until: {contract.validity}
-                  </Typography>
-                </Paper>
-              ))}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
       {/* UPDATE PRICE MODAL */}
       <Dialog open={editPriceModalOpen} onClose={() => setEditPriceModalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle className="dialog-title">

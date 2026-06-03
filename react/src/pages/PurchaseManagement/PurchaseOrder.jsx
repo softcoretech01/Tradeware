@@ -266,7 +266,6 @@ const PurchaseOrder = () => {
       'Terms': po.paymentTerms,
       'Blanket PO': po.isBlanket ? 'Yes' : 'No',
       'Total Value': po.items.reduce((acc, i) => acc + (i.orderedQty * i.unitPrice), 0),
-      'Approval Status': po.status,
       'Delivery Status': po.deliveryStatus
     }));
     exportToExcel(data, 'Purchase_Orders', 'PurchaseOrders');
@@ -278,7 +277,6 @@ const PurchaseOrder = () => {
       { field: 'date', headerName: 'Date' },
       { field: 'supplierName', headerName: 'Supplier' },
       { field: 'paymentTerms', headerName: 'Terms' },
-      { field: 'status', headerName: 'Approval' },
       { field: 'deliveryStatus', headerName: 'Delivery' }
     ];
     exportToPDF(cols, filteredPOs, 'Purchase_Orders', 'Purchase Orders Report');
@@ -292,9 +290,14 @@ const PurchaseOrder = () => {
           <p className="subtitle">Track supplier orders, release Blanket PO contracts, and manage schedules.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -343,7 +346,6 @@ const PurchaseOrder = () => {
               <th>Supplier</th>
               <th>Value</th>
               <th>Type</th>
-              <th>Approval</th>
               <th>Delivery</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -351,7 +353,7 @@ const PurchaseOrder = () => {
           <tbody>
             {filteredPOs.length === 0 ? (
               <tr>
-                <td colSpan="9" className="table-empty">No purchase orders found matching filters.</td>
+                <td colSpan="8" className="table-empty">No purchase orders found matching filters.</td>
               </tr>
             ) : (
               filteredPOs.map((po) => {
@@ -362,19 +364,12 @@ const PurchaseOrder = () => {
                     <td>{po.date}</td>
                     <td className="text-muted">{po.prRef || 'Direct'}</td>
                     <td>{po.supplierName}</td>
-                    <td className="bold-cell">${totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td className="bold-cell">INR {totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                     <td>
                       <Chip 
                         label={po.isBlanket ? 'Blanket Contract' : 'Standard'} 
                         variant="outlined" 
                         color={po.isBlanket ? 'secondary' : 'default'} 
-                        size="small" 
-                      />
-                    </td>
-                    <td>
-                      <Chip 
-                        label={po.status} 
-                        color={po.status === 'Approved' ? 'success' : po.status === 'Pending Approval' ? 'warning' : 'error'} 
                         size="small" 
                       />
                     </td>
@@ -555,7 +550,7 @@ const PurchaseOrder = () => {
                       />
                     </TableCell>
                     <TableCell className="bold-cell">
-                      ${(item.orderedQty * item.unitPrice).toFixed(2)}
+                      INR {(item.orderedQty * item.unitPrice).toFixed(2)}
                     </TableCell>
                     {!formData.prRef && (
                       <TableCell align="center">
@@ -653,7 +648,7 @@ const PurchaseOrder = () => {
               {selectedPO.isBlanket && (
                 <div style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '10px 0' }}>
                   <strong>Blanket PO details:</strong><br />
-                  Contract Limit: ${selectedPO.blanketDetails.contractValue.toLocaleString()}<br />
+                  Contract Limit: INR {selectedPO.blanketDetails.contractValue.toLocaleString()}<br />
                   Validity Date: {selectedPO.blanketDetails.validity}
                 </div>
               )}
@@ -679,14 +674,14 @@ const PurchaseOrder = () => {
                       <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'var(--warning)' : 'inherit' }}>
                         {itm.pendingQty}
                       </TableCell>
-                      <TableCell align="right">${itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">${(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={5} align="right"><strong>Grand Total Value:</strong></TableCell>
                     <TableCell align="right" className="bold-cell">
-                      ${selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}
+                      INR {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -768,13 +763,13 @@ const PurchaseOrder = () => {
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.orderedQty}</td>
                       <td className="num-col">{itm.receivedQty || 0}</td>
-                      <td className="num-col">${itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">${(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col">INR {(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Purchase Value Total</td>
-                    <td className="num-col">${selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">INR {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

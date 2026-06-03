@@ -8,9 +8,7 @@ import Customers from './pages/Masters/Customers';
 import Suppliers from './pages/Masters/Suppliers';
 import LocationMaster from './pages/Masters/LocationMaster';
 import InventoryMaster from './pages/Inventory/InventoryMaster';
-import StockInward from './pages/Inventory/StockInward';
-import StockOutward from './pages/Inventory/StockOutward';
-import StockAdjustment from './pages/Inventory/StockAdjustment';
+import DamagedStock from './pages/Inventory/DamagedStock';
 import Login from './pages/Login';
 
 // New ERP Pages
@@ -20,11 +18,12 @@ import PurchaseOrder from './pages/PurchaseManagement/PurchaseOrder';
 import GoodsReceiptNote from './pages/PurchaseManagement/GoodsReceiptNote';
 import PurchaseReturn from './pages/PurchaseManagement/PurchaseReturn';
 import QualityControl from './pages/PurchaseManagement/QualityControl';
+import LandedCostCalculation from './pages/PurchaseManagement/LandedCostCalculation';
 import SalesEnquiry from './pages/SalesManagement/SalesEnquiry';
 import QuotationManagement from './pages/SalesManagement/QuotationManagement';
 import CustomerPO from './pages/SalesManagement/CustomerPO';
 import SalesOrder from './pages/SalesManagement/SalesOrder';
-
+import Invoice from './pages/SalesManagement/Invoice';
 
 // Security and Doc management pages
 import RolesPermissions from './pages/UserRoles/RolesPermissions';
@@ -41,7 +40,6 @@ import ImportPurchase from './pages/ImportManagement/ImportPurchase';
 // import ShipmentTracking from './pages/ImportManagement/ShipmentTracking';
 import LandedCost from './pages/ImportManagement/LandedCost';
 import SellingPrice from './pages/ImportManagement/SellingPrice';
-import PricingManagement from './pages/PricingManagement/PricingManagement';
 import ReportsDashboards from './pages/Reports/ReportsDashboards';
 import InventoryReports from './pages/Reports/InventoryReports';
 import PurchaseReports from './pages/Reports/PurchaseReports';
@@ -105,9 +103,7 @@ const App = () => {
 
                 {/* Inventory */}
                 <Route path="/inventory-management/stock-overview" element={<InventoryMaster />} />
-                <Route path="/inventory-management/stock-inward" element={<StockInward />} />
-                <Route path="/inventory-management/stock-outward" element={<StockOutward />} />
-                <Route path="/inventory-management/stock-adjustment" element={<StockAdjustment />} />
+                <Route path="/inventory-management/damages" element={<DamagedStock />} />
                 <Route path="/inventory-management" element={<InventoryMaster />} />
 
                 {/* Purchase Management */}
@@ -116,12 +112,11 @@ const App = () => {
                 <Route path="/purchase-management/grn" element={<GoodsReceiptNote />} />
                 <Route path="/purchase-management/purchase-return" element={<PurchaseReturn />} />
                 <Route path="/purchase-management/quality-control" element={<QualityControl />} />
+                <Route path="/purchase-management/landed-cost-calculation" element={<LandedCostCalculation />} />
 
                 {/* Sales & Orders */}
-                <Route path="/sales-orders/sales-enquiry" element={<SalesEnquiry />} />
-                <Route path="/sales-orders/quotation-management" element={<QuotationManagement />} />
-                <Route path="/sales-orders/customer-po-management" element={<CustomerPO />} />
-                <Route path="/sales-orders/sales-order-management" element={<SalesOrder />} />
+                <Route path="/sales-orders/sales-order" element={<SalesOrder />} />
+                <Route path="/sales-orders/invoice" element={<Invoice />} />
 
                 {/* CRM Module Routes */}
                 <Route path="/crm-module/crm-dashboard" element={<CRMDashboard />} />
@@ -146,8 +141,6 @@ const App = () => {
                 <Route path="/import-management/landed-cost-calculation" element={<LandedCost />} />
                 <Route path="/import-management/selling-price-finalization" element={<SellingPrice />} />
 
-                {/* Pricing Management */}
-                <Route path="/pricing-management" element={<PricingManagement />} />
                 {/* Reports & Dashboards */}
                 <Route path="/reports-dashboards" element={<ReportsDashboards />} />
                 <Route path="/reports-dashboards/overview-dashboard" element={<ReportsDashboards />} />

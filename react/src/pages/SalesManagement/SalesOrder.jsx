@@ -53,15 +53,6 @@ const SalesOrder = () => {
     invoiceDetails: null
   });
 
-  // Invoice Dialog States
-  const [invoiceForm, setInvoiceForm] = useState({
-    soId: '',
-    invoiceId: '',
-    amount: 0,
-    taxAmount: 0,
-    total: 0
-  });
-
   const handleOpenCreate = () => {
     setFormData({
       id: `SO-2026-${Math.floor(100 + Math.random() * 900)}`,
@@ -141,44 +132,7 @@ const SalesOrder = () => {
   };
 
   const handleOpenInvoiceModal = (so) => {
-    const totalTaxable = so.items.reduce((acc, curr) => acc + (curr.suppliedQty * curr.unitPrice), 0);
-    const tax = totalTaxable * 0.18;
-    const finalTotal = totalTaxable + tax;
-
-    setInvoiceForm({
-      soId: so.id,
-      invoiceId: `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
-      amount: totalTaxable,
-      taxAmount: tax,
-      total: finalTotal
-    });
-    setInvoiceOpen(true);
-  };
-
-  const handleSaveInvoice = () => {
-    dispatch(generateInvoice({
-      soId: invoiceForm.soId,
-      invoiceId: invoiceForm.invoiceId,
-      amount: invoiceForm.amount,
-      taxAmount: invoiceForm.taxAmount,
-      total: invoiceForm.total
-    }));
-
-    alert(`Invoice ${invoiceForm.invoiceId} generated successfully!`);
-    setInvoiceOpen(false);
-    
-    // Refresh selected state if view dialog is open
-    setSelectedSO(prev => ({
-      ...prev,
-      invoiceGenerated: true,
-      invoiceDetails: {
-        id: invoiceForm.invoiceId,
-        amount: invoiceForm.amount,
-        taxAmount: invoiceForm.taxAmount,
-        total: invoiceForm.total,
-        date: new Date().toISOString().split('T')[0]
-      }
-    }));
+    alert('Invoice generation has been moved to the dedicated Invoice module. Please go to Sales & Orders -> Invoice to generate a tax invoice.');
   };
 
   const handleDelete = (id) => {
@@ -232,9 +186,14 @@ const SalesOrder = () => {
           <p className="subtitle">Execute order dispatches, manage warehouse allocations, track partial supply, and issue tax invoices.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -434,9 +393,9 @@ const SalesOrder = () => {
                       <TableCell className="bold-cell" style={{ color: item.pendingQty > 0 ? 'red' : 'inherit' }}>
                         {item.pendingQty}
                       </TableCell>
-                      <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell>INR {item.unitPrice.toFixed(2)}</TableCell>
                       <TableCell className="bold-cell">
-                        ${(item.suppliedQty * item.unitPrice).toFixed(2)}
+                        INR {(item.suppliedQty * item.unitPrice).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -482,9 +441,9 @@ const SalesOrder = () => {
                 <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', margin: '12px 0' }}>
                   <strong>Tax Invoice Issued:</strong><br />
                   Invoice Number: {selectedSO.invoiceDetails.id}<br />
-                  Taxable Value: ${selectedSO.invoiceDetails.amount.toFixed(2)}<br />
-                  Integrated Tax (18%): ${selectedSO.invoiceDetails.taxAmount.toFixed(2)}<br />
-                  <strong>Grand Total Receivable: ${selectedSO.invoiceDetails.total.toFixed(2)}</strong>
+                  Taxable Value: INR {selectedSO.invoiceDetails.amount.toFixed(2)}<br />
+                  Integrated Tax (18%): INR {selectedSO.invoiceDetails.taxAmount.toFixed(2)}<br />
+                  <strong>Grand Total Receivable: INR {selectedSO.invoiceDetails.total.toFixed(2)}</strong>
                 </div>
               )}
 
@@ -507,8 +466,8 @@ const SalesOrder = () => {
                       <TableCell align="right">{itm.orderedQty}</TableCell>
                       <TableCell align="right">{itm.suppliedQty}</TableCell>
                       <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'red' : 'inherit' }}>{itm.pendingQty}</TableCell>
-                      <TableCell align="right">${itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">${(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -534,145 +493,7 @@ const SalesOrder = () => {
         </DialogActions>
       </Dialog>
 
-      {/* GENERATE INVOICE DIALOG */}
-      <Dialog open={invoiceOpen} onClose={() => setInvoiceOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle className="dialog-title">Generate Tax Invoice</DialogTitle>
-        <DialogContent dividers>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <TextField
-              label="Invoice Number (Auto-assigned)"
-              value={invoiceForm.invoiceId}
-              fullWidth
-              disabled
-            />
 
-            <TextField
-              label="Taxable Subtotal Value ($)"
-              value={invoiceForm.amount.toFixed(2)}
-              fullWidth
-              disabled
-            />
-
-            <TextField
-              label="Integrated Sales Tax (18% GST) ($)"
-              value={invoiceForm.taxAmount.toFixed(2)}
-              fullWidth
-              disabled
-            />
-
-            <TextField
-              label="Grand Net Receivable ($)"
-              value={invoiceForm.total.toFixed(2)}
-              fullWidth
-              disabled
-              InputProps={{ style: { fontWeight: 'bold', color: 'var(--primary)' } }}
-            />
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInvoiceOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSaveInvoice} variant="contained" color="success">Commit & Print Invoice</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* PRINT VIEW (TAX INVOICE) DIALOG */}
-      <Dialog open={printOpen} onClose={() => setPrintOpen(false)} maxWidth="md" fullWidth>
-        <DialogContent dividers>
-          {selectedSO && selectedSO.invoiceGenerated && (
-            <div className="print-voucher-area" id="print-area">
-              <div className="print-header">
-                <div>
-                  <h1 className="company-title">TRADEWARE ERP SYSTEMS</h1>
-                  <p>10 Ubi Crescent, #05-24 Ubi Techpark, Singapore</p>
-                  <p>Email: contact@tradeware.com | Tel: 6543-2109</p>
-                </div>
-                <div className="voucher-title-block">
-                  <h2>TAX INVOICE</h2>
-                  <p><strong>INVOICE ID:</strong> {selectedSO.invoiceDetails.id}</p>
-                  <p><strong>DATE ISSUED:</strong> {selectedSO.invoiceDetails.date}</p>
-                </div>
-              </div>
-
-              <hr className="print-divider" />
-
-              <div className="print-metadata-grid">
-                <div>
-                  <p><strong>BILL TO (CLIENT):</strong></p>
-                  <p className="bold-cell">{selectedSO.customerName}</p>
-                </div>
-                <div>
-                  <p><strong>REF SALES ORDER:</strong> {selectedSO.id}</p>
-                  <p><strong>REF CUSTOMER PO:</strong> {selectedSO.cpoRef}</p>
-                  <p><strong>DISPATCH ORIGIN:</strong> {selectedSO.warehouse}</p>
-                </div>
-              </div>
-
-              <table className="print-items-table">
-                <thead>
-                  <tr>
-                    <th>Item ID</th>
-                    <th>Item Name</th>
-                    <th className="num-col">Qty Ordered</th>
-                    <th className="num-col">Qty Supplied</th>
-                    <th className="num-col">Unit Price</th>
-                    <th className="num-col">Taxable Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSO.items.map((itm, idx) => (
-                    <tr key={idx}>
-                      <td>{itm.itemId}</td>
-                      <td>{itm.name}</td>
-                      <td className="num-col">{itm.orderedQty}</td>
-                      <td className="num-col">{itm.suppliedQty}</td>
-                      <td className="num-col">${itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">${(itm.suppliedQty * itm.unitPrice).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                  <tr className="subtotal-row">
-                    <td colSpan="5">Subtotal Taxable Amount</td>
-                    <td className="num-col">${selectedSO.invoiceDetails.amount.toFixed(2)}</td>
-                  </tr>
-                  <tr className="subtotal-row">
-                    <td colSpan="5">Integrated Goods & Service Tax (18% GST)</td>
-                    <td className="num-col">${selectedSO.invoiceDetails.taxAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr className="total-row">
-                    <td colSpan="5">Grand Net Payable Value</td>
-                    <td className="num-col">${selectedSO.invoiceDetails.total.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className="print-remarks">
-                <p>This is a computer generated commercial Tax Invoice. Payment terms net 30 apply from date issued.</p>
-              </div>
-
-              <div className="print-signatures">
-                <div className="sig-line">
-                  <div className="sig-space"></div>
-                  <p>Prepared By (Finance Officer)</p>
-                </div>
-                <div className="sig-line">
-                  <div className="sig-space"></div>
-                  <p>Authorized Signature (Director)</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPrintOpen(false)} color="inherit">Close</Button>
-          <Button 
-            startIcon={<Printer size={16} />} 
-            variant="contained" 
-            color="primary"
-            onClick={() => window.print()}
-          >
-            Print Tax Invoice
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };

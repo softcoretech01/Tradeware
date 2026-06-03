@@ -198,9 +198,14 @@ const PurchaseReturn = () => {
           <p className="subtitle">Manage goods returns, process QC failures, and issue Debit Note credits.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-secondary" onClick={handleExportPDF}>
             <FileText size={16} /> PDF
           </button>
@@ -268,7 +273,7 @@ const PurchaseReturn = () => {
                     />
                   </td>
                   <td className="bold-cell">
-                    {ret.debitNoteGenerated ? `$${ret.debitNoteDetails.total.toFixed(2)}` : '$0.00'}
+                    {ret.debitNoteGenerated ? `INR ${ret.debitNoteDetails.total.toFixed(2)}` : 'INR 0.00'}
                   </td>
                   <td className="actions-cell">
                     <Tooltip title="View Return Details">
@@ -413,9 +418,9 @@ const PurchaseReturn = () => {
                 <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', margin: '12px 0' }}>
                   <strong>Debit Note Details:</strong><br />
                   Voucher Number: {selectedReturn.debitNoteDetails.id}<br />
-                  Credit Value: ${selectedReturn.debitNoteDetails.amount.toFixed(2)}<br />
-                  Refund Tax (18%): ${selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}<br />
-                  <strong>Grand Refund Credit: ${selectedReturn.debitNoteDetails.total.toFixed(2)}</strong>
+                  Credit Value: INR {selectedReturn.debitNoteDetails.amount.toFixed(2)}<br />
+                  Refund Tax (18%): INR {selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}<br />
+                  <strong>Grand Refund Credit: INR {selectedReturn.debitNoteDetails.total.toFixed(2)}</strong>
                 </div>
               )}
 
@@ -437,8 +442,8 @@ const PurchaseReturn = () => {
                         <span className="text-muted" style={{ fontSize: '11px' }}>Reason: {itm.reason}</span>
                       </TableCell>
                       <TableCell align="right">{itm.returnedQty}</TableCell>
-                      <TableCell align="right">${itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">${(itm.returnedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">INR {(itm.returnedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -514,21 +519,21 @@ const PurchaseReturn = () => {
                         <span style={{ fontSize: '11px', color: '#64748b' }}>Reason: {itm.reason}</span>
                       </td>
                       <td className="num-col">{itm.returnedQty}</td>
-                      <td className="num-col">${itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">${(itm.returnedQty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col">INR {(itm.returnedQty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="subtotal-row">
                     <td colSpan="4">Subtotal Taxable Amount</td>
-                    <td className="num-col">${selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
+                    <td className="num-col">INR {selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
                     <td colSpan="4">Integrated Tax Credit (18%)</td>
-                    <td className="num-col">${selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
+                    <td className="num-col">INR {selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="4">Total Adjusting Credit Value</td>
-                    <td className="num-col">${selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
+                    <td className="num-col">INR {selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

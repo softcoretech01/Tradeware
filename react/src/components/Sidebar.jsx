@@ -32,29 +32,28 @@ const Sidebar = () => {
       icon: <Box size={20} />,
       subItems: ['Items', 'Customers', 'Suppliers', 'Warehouse'],
     },
-    { name: 'Purchase Management', icon: <ShoppingCart size={20} />, subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Quality Control'] },
+    { name: 'Purchase Management', icon: <ShoppingCart size={20} />, subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Quality Control', 'Landed Cost Calculation'] },
     { name: 'Import Management', icon: <Globe size={20} />, subItems: ['Import Purchase Management', /* 'Shipment Tracking', */ 'Landed Cost Calculation', 'Selling Price Finalization'] },
     { name: 'Batch & Lot Management', icon: <Tag size={20} />, subItems: ['Batch Maintenance', 'Batch Stock Inquiry', 'Batch Aging Analysis'] },
-    { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Stock Inward', 'Stock Outward', 'Stock Adjustment'] },
-    { name: 'Pricing Management', icon: <Calculator size={20} />, to: '/pricing-management' },
-    { name: 'Sales & Orders', icon: <FileText size={20} />, subItems: ['Sales Enquiry', 'Quotation Management', 'Customer PO Management', 'Sales Order Management'] },
-    /* {
+    { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Damages'] },
+    { name: 'Sales & Orders', icon: <FileText size={20} />, subItems: ['Sales Order', 'Invoice'] },
+    {
       name: 'CRM Module',
       icon: <HeartHandshake size={20} />,
       subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Opportunity Management', 'Complaint Management', 'CRM Reports']
     },
 
-    {
+    /* {
       name: 'Account Integration',
       icon: <Calculator size={20} />,
       subItems: ['AP Book', 'AR Book', 'AR Book DO', 'Bank Book', 'Bank Book Entries', 'Cash Book', 'Cash Book Entry', 'Overdraft', 'PC Book', 'Petty Cash']
     }, */
-    {
+    /* {
       name: 'Reports & Dashboards',
       icon: <BarChart3 size={20} />,
       subItems: ['Overview Dashboard', 'Inventory Reports', 'Purchase Reports', 'Sales Reports', 'Import Reports']
-    },
-    { name: 'User Roles & Approval', icon: <Users size={20} />, subItems: ['Roles & Permissions', 'Approval Workflows'] },
+    }, */
+    { name: 'User Roles & Approval', icon: <Users size={20} />, subItems: ['Roles & Permissions'] },
     { name: 'Document Management', icon: <Paperclip size={20} />, subItems: ['Document Management'] },
   ];
 

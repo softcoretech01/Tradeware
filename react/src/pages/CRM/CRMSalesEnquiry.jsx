@@ -267,9 +267,14 @@ const CRMSalesEnquiry = () => {
           <p className="subtitle">Record customer product requirements, specify quantities and target price parameters, and assign follow-up tasks.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} /> Excel
-          </button>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcel}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
+            Export Excel
+          </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
             <Plus size={16} /> Create Enquiry
           </button>

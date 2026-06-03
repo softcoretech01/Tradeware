@@ -249,19 +249,11 @@ const ImportPurchase = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="contained"
-            onClick={() => setCreateModalOpen(true)}
-            startIcon={<Plus size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, backgroundColor: BLUE.main }}
-          >
-            New Import PO
-          </Button>
-          <Button
-            variant="outlined"
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
             onClick={handleExportExcel}
-            startIcon={<FileSpreadsheet size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
           >
             Export Excel
           </Button>

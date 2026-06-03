@@ -94,8 +94,7 @@ const QualityControl = () => {
       'Accepted Qty': ins.acceptedQty,
       'Rejected Qty': ins.rejectedQty,
       'QC Status': ins.qcStatus,
-      'Inspector': ins.inspectorName,
-      'Approval Status': ins.approvalStatus
+      'Inspector': ins.inspectorName
     }));
     exportToExcel(formatted, `QC_Inspection_${new Date().toISOString().split('T')[0]}`, 'Quality Inspections');
   };
@@ -110,7 +109,7 @@ const QualityControl = () => {
       { field: 'qtyReceived', headerName: 'Received Qty' },
       { field: 'acceptedQty', headerName: 'Accepted Qty' },
       { field: 'qcStatus', headerName: 'QC Status' },
-      { field: 'approvalStatus', headerName: 'Approval' }
+      { field: 'inspectorName', headerName: 'Inspector' }
     ];
     exportToPDF(cols, filteredInspections, `QC_Inspection_${new Date().toISOString().split('T')[0]}`, 'Quality Control Inspection Report');
   };
@@ -127,14 +126,6 @@ const QualityControl = () => {
     }
   };
 
-  const getApprovalStatusStyle = (status) => {
-    switch (status) {
-      case 'Approved': return { bg: GREEN.bg, color: GREEN.main };
-      case 'Rejected': return { bg: RED.bg, color: RED.main };
-      default: return { bg: AMBER.bg, color: AMBER.main };
-    }
-  };
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 0 }}>
       {/* HEADER SECTION */}
@@ -144,12 +135,16 @@ const QualityControl = () => {
             Quality Control (QC) Management
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Inspect incoming supply materials, production batches, and pre-shipment packages. Give DC / GRN approvals below.
+            Inspect incoming supply materials, production batches, and pre-shipment packages.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button variant="outlined" startIcon={<FileSpreadsheet size={16} />} onClick={handleExportExcelLocal}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#16A34A', color: '#16A34A', '&:hover': { bgcolor: '#F0FDF4' } }}>
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
+            onClick={handleExportExcelLocal}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          >
             Export Excel
           </Button>
           <Button variant="outlined" startIcon={<FileText size={16} />} onClick={handleExportPDFLocal}
@@ -181,18 +176,9 @@ const QualityControl = () => {
             <MenuItem value="Hold">Hold</MenuItem>
           </Select>
         </FormControl>
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Approval Status</InputLabel>
-          <Select value={approvalFilter} label="Approval Status" onChange={e => { setApprovalFilter(e.target.value); setCurrentPage(1); }}>
-            <MenuItem value="All">All Approval</MenuItem>
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Rejected">Rejected</MenuItem>
-          </Select>
-        </FormControl>
-        {(searchTerm || qcFilter !== 'All' || approvalFilter !== 'All') && (
+        {(searchTerm || qcFilter !== 'All') && (
           <Button size="small" startIcon={<RotateCcw size={14} />}
-            onClick={() => { setSearchTerm(''); setQcFilter('All'); setApprovalFilter('All'); setCurrentPage(1); }}
+            onClick={() => { setSearchTerm(''); setQcFilter('All'); setCurrentPage(1); }}
             sx={{ textTransform: 'none', color: RED.main }}>
             Clear Filters
           </Button>
@@ -217,7 +203,7 @@ const QualityControl = () => {
               <TableCell sx={{ fontWeight: 700 }} align="right">Accepted</TableCell>
               <TableCell sx={{ fontWeight: 700 }} align="right">Rejected</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>QC Status</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Approval</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Inspector</TableCell>
               <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -225,7 +211,6 @@ const QualityControl = () => {
             {paginatedInspections.length > 0 ? (
               paginatedInspections.map(ins => {
                 const qcStyle = getQcStatusStyle(ins.qcStatus);
-                const appStyle = getApprovalStatusStyle(ins.approvalStatus);
                 return (
                   <TableRow key={ins.id} hover>
                     <TableCell sx={{ fontWeight: 600, color: BLUE.main }}>{ins.id}</TableCell>
@@ -242,9 +227,7 @@ const QualityControl = () => {
                     <TableCell>
                       <Chip label={ins.qcStatus} size="small" sx={{ bgcolor: qcStyle.bg, color: qcStyle.color, fontWeight: 700, fontSize: 11 }} />
                     </TableCell>
-                    <TableCell>
-                      <Chip label={ins.approvalStatus} size="small" sx={{ bgcolor: appStyle.bg, color: appStyle.color, fontWeight: 700, fontSize: 10 }} />
-                    </TableCell>
+                    <TableCell>{ins.inspectorName}</TableCell>
                     <TableCell align="right">
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
                         <Tooltip title="View Detailed Report">
@@ -252,22 +235,6 @@ const QualityControl = () => {
                             <Eye size={16} style={{ color: BLUE.main }} />
                           </IconButton>
                         </Tooltip>
-                        
-                        {ins.approvalStatus === 'Pending' ? (
-                          <>
-                            <Button size="small" variant="contained" color="success" startIcon={<Check size={14} />} onClick={() => handleApproveQC(ins)}
-                              sx={{ textTransform: 'none', fontWeight: 700, fontSize: 11, py: 0.5 }}>
-                              Approve
-                            </Button>
-                            <Button size="small" variant="contained" color="error" startIcon={<X size={14} />} onClick={() => handleRejectQC(ins)}
-                              sx={{ textTransform: 'none', fontWeight: 700, fontSize: 11, py: 0.5 }}>
-                              Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <Chip label={ins.approvalStatus === 'Approved' ? 'Released' : 'Rejected'} size="small" variant="outlined" 
-                            color={ins.approvalStatus === 'Approved' ? 'success' : 'error'} sx={{ fontSize: 10, fontWeight: 700 }} />
-                        )}
                       </Box>
                     </TableCell>
                   </TableRow>

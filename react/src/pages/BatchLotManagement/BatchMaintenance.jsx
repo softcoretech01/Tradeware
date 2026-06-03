@@ -171,16 +171,13 @@ const BatchMaintenance = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Batch & Lot Maintenance
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Monitor product shelf lives, track hold statuses, and inspect complete batch traceability.
-          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="outlined"
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
             onClick={handleExportExcel}
-            startIcon={<FileSpreadsheet size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
           >
             Export Excel
           </Button>
@@ -220,17 +217,6 @@ const BatchMaintenance = () => {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <Select
-              value={warehouseFilter}
-              onChange={(e) => { setWarehouseFilter(e.target.value); setCurrentPage(1); }}
-              displayEmpty
-            >
-              <MenuItem value="All">All Warehouses</MenuItem>
-              <MenuItem value="Main Warehouse">Main Warehouse</MenuItem>
-              <MenuItem value="Hold Warehouse">Hold Warehouse</MenuItem>
-            </Select>
-          </FormControl>
         </div>
       </div>
 
@@ -247,7 +233,6 @@ const BatchMaintenance = () => {
               <th>Expiry Date</th>
               <th>Landed Cost (INR)</th>
               <th>Status</th>
-              <th className="actions-column">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -276,32 +261,12 @@ const BatchMaintenance = () => {
                     </td>
                     <td>₹{batch.landedUnitCost?.toFixed(2)}</td>
                     <td>{getStatusBadge(batch.status)}</td>
-                    <td className="actions-cell">
-                      <Tooltip title="Traceability Timeline">
-                        <IconButton
-                          className="btn-icon-success"
-                          onClick={() => handleOpenTimeline(batch)}
-                          sx={{ p: 1 }}
-                        >
-                          <History size={22} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit Status/Expiry">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleOpenEdit(batch)}
-                          sx={{ p: 1 }}
-                        >
-                          <Edit size={22} />
-                        </IconButton>
-                      </Tooltip>
-                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={9} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   No batches found matching filter parameters.
                 </td>
               </tr>

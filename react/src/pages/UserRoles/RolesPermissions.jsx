@@ -28,7 +28,7 @@ const RolesPermissions = () => {
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState({
-    id: '', name: '', role: 'Sachin', email: '', status: 'Active'
+    id: '', name: '', role: 'Sachin', email: '', status: 'Active', monthlyTarget: 0
   });
 
   // Selected Role for Permissions matrix editing
@@ -49,7 +49,8 @@ const RolesPermissions = () => {
       name: '',
       role: 'Sachin',
       email: '',
-      status: 'Active'
+      status: 'Active',
+      monthlyTarget: 0
     });
     setUserModalOpen(true);
   };
@@ -135,6 +136,9 @@ const RolesPermissions = () => {
         color={params.value === 'Active' ? 'success' : 'default'}
         size="small"
       />
+    )},
+    { field: 'monthlyTarget', headerName: 'Monthly Target (INR)', width: 160, type: 'number', renderCell: (params) => (
+      <span style={{ fontWeight: 600 }}>{params.value ? `INR ${params.value.toLocaleString()}` : '-'}</span>
     )},
     {
       field: 'actions',
@@ -392,6 +396,14 @@ const RolesPermissions = () => {
               <MenuItem value="Inactive">Inactive</MenuItem>
             </Select>
           </FormControl>
+          <TextField
+            label="Monthly Target (INR)"
+            variant="outlined"
+            type="number"
+            fullWidth
+            value={selectedUser.monthlyTarget}
+            onChange={(e) => setSelectedUser({ ...selectedUser, monthlyTarget: Number(e.target.value) })}
+          />
         </DialogContent>
         <DialogActions style={{ padding: '16px 24px', borderTop: '1px solid var(--border)' }}>
           <Button onClick={() => setUserModalOpen(false)} style={{ color: 'var(--text-muted)' }}>

@@ -129,7 +129,6 @@ const BatchStockInquiry = () => {
       'Batch No': b.batchNo,
       'Item Code': b.itemCode,
       'Item Name': b.itemName,
-      'Warehouse': b.warehouse,
       'Stock Qty': b.qty,
       'Landed Unit Cost (INR)': b.landedUnitCost,
       'Selling Price': b.finalSellingPrice,
@@ -146,7 +145,6 @@ const BatchStockInquiry = () => {
       { field: 'batchNo', headerName: 'Batch No' },
       { field: 'itemCode', headerName: 'Item Code' },
       { field: 'itemName', headerName: 'Item Name' },
-      { field: 'warehouse', headerName: 'Warehouse' },
       { field: 'qty', headerName: 'Stock Qty' },
       { field: 'finalSellingPrice', headerName: 'Selling Price' },
       { field: 'expiryDate', headerName: 'Expiry Date' },
@@ -169,11 +167,11 @@ const BatchStockInquiry = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="outlined"
+          <Button 
+            variant="outlined" 
+            startIcon={<FileSpreadsheet size={16} />} 
             onClick={handleExportExcel}
-            startIcon={<FileSpreadsheet size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
           >
             Export Excel
           </Button>
@@ -374,7 +372,6 @@ const BatchStockInquiry = () => {
               <th>Batch No</th>
               <th>Item Code</th>
               <th>Item Name</th>
-              <th>Warehouse</th>
               <th>Available Stock</th>
               <th>Landed Unit Cost</th>
               <th>Selling Price</th>
@@ -392,12 +389,6 @@ const BatchStockInquiry = () => {
                   <td className="bold-cell">{b.batchNo}</td>
                   <td>{b.itemCode}</td>
                   <td>{b.itemName}</td>
-                  <td>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Layers size={14} style={{ color: BLUE.light }} />
-                      {b.warehouse}
-                    </Box>
-                  </td>
                   <td className="bold-cell">{b.qty} units</td>
                   <td>₹{b.landedUnitCost?.toFixed(2)}</td>
                   <td>₹{b.finalSellingPrice?.toFixed(2)}</td>

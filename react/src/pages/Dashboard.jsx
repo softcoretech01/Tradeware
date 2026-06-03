@@ -200,7 +200,7 @@ const Dashboard = () => {
                 setFilterFrom('');
               }
             }}
-            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 160 }} />}
+            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 130 }} />}
             dateFormat="dd/MMM/yyyy"
             showMonthDropdown
             showYearDropdown
@@ -219,7 +219,7 @@ const Dashboard = () => {
                 setFilterTo('');
               }
             }}
-            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 160 }} />}
+            customInput={<TextField size="small" variant="outlined" sx={{ minWidth: 130 }} />}
             dateFormat="dd/MMM/yyyy"
             showMonthDropdown
             showYearDropdown
@@ -227,11 +227,11 @@ const Dashboard = () => {
           />
         </div>
         <div className="filter-actions" style={{ marginLeft: 0, gap: '8px' }}>
-          <IconButton color="success" onClick={handleSearch} title="Search" sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '8px' }}>
-            <SearchIcon />
+          <IconButton size="small" color="success" onClick={handleSearch} title="Search" sx={{ border: '1px solid currentColor', borderRadius: '6px', padding: '4px' }}>
+            <SearchIcon size={18} />
           </IconButton>
-          <IconButton color="error" onClick={handleCancel} title="Cancel" sx={{ border: '1px solid currentColor', borderRadius: '8px', padding: '8px' }}>
-            <CancelIcon />
+          <IconButton size="small" color="error" onClick={handleCancel} title="Cancel" sx={{ border: '1px solid currentColor', borderRadius: '6px', padding: '4px' }}>
+            <CancelIcon size={18} />
           </IconButton>
         </div>
       </div>
@@ -523,7 +523,7 @@ const Dashboard = () => {
         }
 
         .filter-group label {
-          font-size: 15px;
+          font-size: 13px;
           font-weight: 600;
           color: var(--text-main);
         }
@@ -754,9 +754,10 @@ const Dashboard = () => {
           font-family: inherit !important;
           font-weight: 500 !important;
           color: #0f172a !important;
-          border-radius: 10px !important;
+          border-radius: 6px !important;
           border: 1px solid #cbd5e1 !important;
-          padding: 10px 14px !important;
+          padding: 6px 12px !important;
+          font-size: 13px !important;
           transition: all 0.3s ease !important;
           box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
           background: #f8fafc !important;
