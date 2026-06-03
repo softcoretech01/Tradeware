@@ -28,13 +28,14 @@ const RolesPermissions = () => {
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState({
-    id: '', name: '', role: 'Sachin', email: '', status: 'Active', monthlyTarget: 0
+    id: '', name: '', department: '', role: 'Sachin', email: '', status: 'Active', monthlyTarget: 0
   });
 
   // Selected Role for Permissions matrix editing
   const roles = Object.keys(rolesPermissions);
   const [selectedRole, setSelectedRole] = useState(roles[0] || 'Admin');
   const [tempPermissions, setTempPermissions] = useState({});
+  const [showMatrix, setShowMatrix] = useState(false);
 
   React.useEffect(() => {
     if (rolesPermissions[selectedRole]) {
@@ -47,6 +48,7 @@ const RolesPermissions = () => {
     setSelectedUser({
       id: `usr00${users.length + 1}`,
       name: '',
+      department: '',
       role: 'Sachin',
       email: '',
       status: 'Active',
@@ -115,6 +117,7 @@ const RolesPermissions = () => {
         <span style={{ fontWeight: 600, color: '#334155' }}>{params.value}</span>
       </div>
     )},
+    { field: 'department', headerName: 'Department', width: 160 },
     { field: 'role', headerName: 'Role', width: 180, renderCell: (params) => (
       <Chip 
         label={params.value} 
@@ -160,10 +163,7 @@ const RolesPermissions = () => {
     'Import Management',
     'Batch & Lot Management',
     'Inventory Management',
-    'Pricing Management',
     'Sales & Orders',
-    'Account Integration',
-    'Reports & Dashboards',
     'User Roles & Approval',
     'Document Management'
   ];
@@ -176,9 +176,6 @@ const RolesPermissions = () => {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Shield size={24} style={{ color: 'var(--primary)' }} /> User Roles & Access Matrix
           </h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: 'var(--text-muted)' }}>
-            Configure active ERP logins and define module-specific permission profiles.
-          </p>
         </div>
         {activeTab === 0 && (
           <Button 
@@ -279,6 +276,14 @@ const RolesPermissions = () => {
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
               <Button
                 variant="outlined"
+                color="primary"
+                onClick={() => setShowMatrix(!showMatrix)}
+                style={{ textTransform: 'none', borderRadius: '6px' }}
+              >
+                {showMatrix ? 'Hide Matrix' : 'Show Matrix'}
+              </Button>
+              <Button
+                variant="outlined"
                 color="secondary"
                 startIcon={<X size={16} />}
                 onClick={() => {
@@ -301,55 +306,57 @@ const RolesPermissions = () => {
             </div>
           </div>
 
-          <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', width: '40%' }}>Module / Submodule</th>
-                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Read</th>
-                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Write</th>
-                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Approve</th>
-                </tr>
-              </thead>
-              <tbody>
-                {modulesList.map((modName, idx) => {
-                  const hasPerm = tempPermissions[modName] || { read: false, write: false, approve: false };
-                  return (
-                    <tr key={modName} style={{ borderBottom: idx === modulesList.length - 1 ? 'none' : '1px solid var(--border)', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '16px', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <FileText size={16} style={{ color: 'var(--primary)' }} />
-                        {modName}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <input 
-                          type="checkbox"
-                          checked={hasPerm.read}
-                          onChange={() => handleTogglePermission(modName, 'read')}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                        />
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <input 
-                          type="checkbox"
-                          checked={hasPerm.write}
-                          onChange={() => handleTogglePermission(modName, 'write')}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                        />
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <input 
-                          type="checkbox"
-                          checked={hasPerm.approve}
-                          onChange={() => handleTogglePermission(modName, 'approve')}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {showMatrix && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', width: '40%' }}>Module / Submodule</th>
+                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Read</th>
+                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Write</th>
+                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Approve</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {modulesList.map((modName, idx) => {
+                    const hasPerm = tempPermissions[modName] || { read: false, write: false, approve: false };
+                    return (
+                      <tr key={modName} style={{ borderBottom: idx === modulesList.length - 1 ? 'none' : '1px solid var(--border)', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '16px', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <FileText size={16} style={{ color: 'var(--primary)' }} />
+                          {modName}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <input 
+                            type="checkbox"
+                            checked={hasPerm.read}
+                            onChange={() => handleTogglePermission(modName, 'read')}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                          />
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <input 
+                            type="checkbox"
+                            checked={hasPerm.write}
+                            onChange={() => handleTogglePermission(modName, 'write')}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                          />
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <input 
+                            type="checkbox"
+                            checked={hasPerm.approve}
+                            onChange={() => handleTogglePermission(modName, 'approve')}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -372,6 +379,13 @@ const RolesPermissions = () => {
             fullWidth
             value={selectedUser.email}
             onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
+          />
+          <TextField
+            label="Department"
+            variant="outlined"
+            fullWidth
+            value={selectedUser.department}
+            onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
           />
           <FormControl fullWidth>
             <InputLabel>User Role</InputLabel>

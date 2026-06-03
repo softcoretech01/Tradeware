@@ -390,12 +390,13 @@ const initialState = {
   ],
   currentUser: null,
   users: [
-    { id: 'usr001', name: 'Admin User', role: 'Admin', email: 'admin@tradeware.com', status: 'Active' },
-    { id: 'usr002', name: 'Super Admin', role: 'Admin', email: 'sconnor@tradeware.com', status: 'Active' },
-    { id: 'usr003', name: 'Kabilesh', role: 'Warehouse Team', email: 'jbond@tradeware.com', status: 'Active' },
-    { id: 'usr004', name: 'Sachin', role: 'Sales Team', email: 'lskywalker@tradeware.com', status: 'Active' },
-    { id: 'usr005', name: 'Tharma', role: 'Accounts Team', email: 'hgranger@tradeware.com', status: 'Active' },
-    { id: 'usr006', name: 'Kaviya', role: 'Management', email: 'tstark@tradeware.com', status: 'Active' }
+    { id: 'usr001', name: 'Admin User', department: 'Management', role: 'Admin', email: 'admin@tradeware.com', status: 'Active', monthlyTarget: 0 },
+    { id: 'usr002', name: 'Super Admin', department: 'IT', role: 'Admin', email: 'sconnor@tradeware.com', status: 'Active', monthlyTarget: 0 },
+    { id: 'usr003', name: 'Kabilesh', department: 'Warehouse', role: 'Warehouse Team', email: 'jbond@tradeware.com', status: 'Active', monthlyTarget: 0 },
+    { id: 'usr004', name: 'Sachin', department: 'Sales', role: 'Sales Team', email: 'lskywalker@tradeware.com', status: 'Active', monthlyTarget: 100000 },
+    { id: 'usr005', name: 'Tharma', department: 'Finance', role: 'Accounts Team', email: 'hgranger@tradeware.com', status: 'Active', monthlyTarget: 0 },
+    { id: 'usr006', name: 'Kaviya', department: 'Management', role: 'Management', email: 'tstark@tradeware.com', status: 'Active', monthlyTarget: 0 },
+    { id: 'usr007', name: 'New User', department: 'Sales', role: 'Sales Team', email: 'newuser@tradeware.com', status: 'Active', monthlyTarget: 50000 }
   ],
   rolesPermissions: {
     'Admin': {
