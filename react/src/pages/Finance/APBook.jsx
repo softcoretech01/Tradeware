@@ -1,6 +1,8 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
+
   Search, X, Calendar, Filter, Download, ArrowRight, Check, HelpCircle
 } from 'lucide-react';
 
@@ -230,9 +232,9 @@ const APBook = () => {
                 {filteredGrn.map((row) => (
                   <tr key={row.no}>
                     <td className="link-cell"><u>{row.no}</u></td>
-                    <td>{row.date}</td>
+                    <td>{formatDate(row.date)}</td>
                     <td>{row.supplier}</td>
-                    <td>{row.createdDate}</td>
+                    <td>{formatDate(row.createdDate)}</td>
                     <td>{row.createdBy}</td>
                   </tr>
                 ))}
@@ -271,15 +273,15 @@ const APBook = () => {
                       />
                     </td>
                     <td className="link-cell"><u>{row.ref}</u></td>
-                    <td>{row.date}</td>
+                    <td>{formatDate(row.date)}</td>
                     <td>
                       <div className="stacked-cell">
                         <u className="link-color">{row.po}</u>
-                        <span className="sub-text">{row.poDate}</span>
+                        <span className="sub-text">{formatDate(row.poDate)}</span>
                       </div>
                     </td>
                     <td>{row.currency}</td>
-                    <td>{row.dueDate}</td>
+                    <td>{formatDate(row.dueDate)}</td>
                     <td style={{ textAlign: 'right' }}>{row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td style={{ textAlign: 'right' }}>{row.cumulative.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                   </tr>
@@ -309,27 +311,27 @@ const APBook = () => {
                     <td>
                       <div className="stacked-cell">
                         <u className="link-color">{row.po}</u>
-                        <span className="sub-text">{row.poDate}</span>
+                        <span className="sub-text">{formatDate(row.poDate)}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'right' }}>{row.poAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td>
                       <div className="stacked-cell">
                         <u className="link-color">{row.grn}</u>
-                        <span className="sub-text">{row.grnDate}</span>
+                        <span className="sub-text">{formatDate(row.grnDate)}</span>
                       </div>
                     </td>
                     <td>
                       <div className="stacked-cell">
                         <u className="link-color">{row.irn}</u>
-                        <span className="sub-text">{row.irnDate}</span>
+                        <span className="sub-text">{formatDate(row.irnDate)}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'right' }}>{row.grnIrnAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td>
                       <div className="stacked-cell">
                         <u className="link-color">{row.claim}</u>
-                        <span className="sub-text">{row.claimDate}</span>
+                        <span className="sub-text">{formatDate(row.claimDate)}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'right' }}>{row.claimAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>

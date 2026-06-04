@@ -176,8 +176,7 @@ const ComplaintManagement = () => {
             Export Excel
           </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Register Ticket
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -397,7 +396,7 @@ const ComplaintManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Ticket</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 

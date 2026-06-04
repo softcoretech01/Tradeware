@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +19,7 @@ import {
   deletePurchaseOrder 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const PurchaseOrder = () => {
   const dispatch = useDispatch();
@@ -287,7 +289,6 @@ const PurchaseOrder = () => {
       <div className="module-header">
         <div>
           <h2>Purchase Order</h2>
-          <p className="subtitle">Track supplier orders, release Blanket PO contracts, and manage schedules.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -298,11 +299,8 @@ const PurchaseOrder = () => {
           >
             Export Excel
           </Button>
-          <button className="btn-secondary" onClick={handleExportPDF}>
-            <FileText size={16} /> PDF
-          </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Purchase Order
+            <Plus size={16} /> New
           </button>
         </div>
       </div>
@@ -313,7 +311,7 @@ const PurchaseOrder = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by PO, PR reference, Supplier..." 
+            placeholder="Search by" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -324,13 +322,6 @@ const PurchaseOrder = () => {
             {suppliers.map(s => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
-          </select>
-
-          <select value={deliveryStatusFilter} onChange={(e) => setDeliveryStatusFilter(e.target.value)}>
-            <option value="">All Delivery Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Partially Received">Partially Received</option>
-            <option value="Fully Received">Fully Received</option>
           </select>
         </div>
       </div>
@@ -344,8 +335,7 @@ const PurchaseOrder = () => {
               <th>Date</th>
               <th>PR Ref</th>
               <th>Supplier</th>
-              <th>Value</th>
-              <th>Type</th>
+              <th>Value (₹)</th>
               <th>Delivery</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -361,18 +351,10 @@ const PurchaseOrder = () => {
                 return (
                   <tr key={po.id}>
                     <td className="bold-cell">{po.id}</td>
-                    <td>{po.date}</td>
+                    <td>{formatDate(po.date)}</td>
                     <td className="text-muted">{po.prRef || 'Direct'}</td>
                     <td>{po.supplierName}</td>
-                    <td className="bold-cell">INR {totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-                    <td>
-                      <Chip 
-                        label={po.isBlanket ? 'Blanket Contract' : 'Standard'} 
-                        variant="outlined" 
-                        color={po.isBlanket ? 'secondary' : 'default'} 
-                        size="small" 
-                      />
-                    </td>
+                    <td className="bold-cell">{totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                     <td>
                       <Chip 
                         label={po.deliveryStatus} 
@@ -387,28 +369,11 @@ const PurchaseOrder = () => {
                         </IconButton>
                       </Tooltip>
 
-                      {po.status === 'Draft' && (
-                        <Tooltip title="Edit PO">
-                          <IconButton size="small" color="primary" onClick={() => handleOpenEdit(po)}>
-                            <Edit size={16} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-
-                      {po.status === 'Pending Approval' && (
-                        <>
-                          <Tooltip title="Approve PO">
-                            <IconButton size="small" className="btn-icon-success" onClick={() => handleApprove(po.id, 'Approved')}>
-                              <Check size={16} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Reject PO">
-                            <IconButton size="small" className="btn-icon-danger" onClick={() => handleApprove(po.id, 'Rejected')}>
-                              <X size={16} />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
+                      <Tooltip title="Edit PO">
+                        <IconButton size="small" color="primary" onClick={() => handleOpenEdit(po)}>
+                          <Edit size={16} />
+                        </IconButton>
+                      </Tooltip>
 
                       <Tooltip title="Print PO">
                         <IconButton size="small" onClick={() => { setSelectedPO(po); setPrintOpen(true); }}>
@@ -550,7 +515,7 @@ const PurchaseOrder = () => {
                       />
                     </TableCell>
                     <TableCell className="bold-cell">
-                      INR {(item.orderedQty * item.unitPrice).toFixed(2)}
+                      {(item.orderedQty * item.unitPrice).toFixed(2)}
                     </TableCell>
                     {!formData.prRef && (
                       <TableCell align="center">
@@ -614,7 +579,7 @@ const PurchaseOrder = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Draft Order</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -628,7 +593,7 @@ const PurchaseOrder = () => {
                 <strong>Supplier:</strong> <span>{selectedPO.supplierName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Date:</strong> <span>{selectedPO.date}</span>
+                <strong>Date:</strong> <span>{formatDate(selectedPO.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>PR Reference:</strong> <span>{selectedPO.prRef || 'Direct Standalone'}</span>
@@ -648,7 +613,7 @@ const PurchaseOrder = () => {
               {selectedPO.isBlanket && (
                 <div style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '10px 0' }}>
                   <strong>Blanket PO details:</strong><br />
-                  Contract Limit: INR {selectedPO.blanketDetails.contractValue.toLocaleString()}<br />
+                  Contract Limit: ₹ {selectedPO.blanketDetails.contractValue.toLocaleString()}<br />
                   Validity Date: {selectedPO.blanketDetails.validity}
                 </div>
               )}
@@ -661,8 +626,8 @@ const PurchaseOrder = () => {
                     <TableCell align="right">Qty Ordered</TableCell>
                     <TableCell align="right">Qty Received</TableCell>
                     <TableCell align="right">Qty Pending</TableCell>
-                    <TableCell align="right">Unit Cost</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Unit Cost (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -674,14 +639,14 @@ const PurchaseOrder = () => {
                       <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'var(--warning)' : 'inherit' }}>
                         {itm.pendingQty}
                       </TableCell>
-                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={5} align="right"><strong>Grand Total Value:</strong></TableCell>
                     <TableCell align="right" className="bold-cell">
-                      INR {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}
+                      {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -698,7 +663,7 @@ const PurchaseOrder = () => {
                 <TableBody>
                   {selectedPO.deliverySchedules.map((s, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{s.date}</TableCell>
+                      <TableCell>{formatDate(s.date)}</TableCell>
                       <TableCell align="right">{s.qty}</TableCell>
                     </TableRow>
                   ))}
@@ -752,8 +717,8 @@ const PurchaseOrder = () => {
                     <th>Item Name</th>
                     <th className="num-col">Qty Ordered</th>
                     <th className="num-col">Qty Received</th>
-                    <th className="num-col">Unit Price</th>
-                    <th className="num-col">Total Cost</th>
+                    <th className="num-col">Unit Price (₹)</th>
+                    <th className="num-col">Total Cost (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -763,13 +728,13 @@ const PurchaseOrder = () => {
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.orderedQty}</td>
                       <td className="num-col">{itm.receivedQty || 0}</td>
-                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">INR {(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">{itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Purchase Value Total</td>
-                    <td className="num-col">INR {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">{selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

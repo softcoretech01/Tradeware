@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -18,6 +19,7 @@ import {
   deleteSalesOrder 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const SalesOrder = () => {
   const dispatch = useDispatch();
@@ -183,7 +185,6 @@ const SalesOrder = () => {
       <div className="module-header">
         <div>
           <h2>Sales Order Management</h2>
-          <p className="subtitle">Execute order dispatches, manage warehouse allocations, track partial supply, and issue tax invoices.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -198,8 +199,7 @@ const SalesOrder = () => {
             <FileText size={16} /> PDF
           </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Sales Order
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -209,7 +209,7 @@ const SalesOrder = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by SO No, Customer, CPO Ref..." 
+            placeholder="Search By" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -250,7 +250,7 @@ const SalesOrder = () => {
                   <td className="bold-cell">{so.id}</td>
                   <td className="text-muted">{so.cpoRef}</td>
                   <td>{so.customerName}</td>
-                  <td>{so.date}</td>
+                  <td>{formatDate(so.date)}</td>
                   <td>{so.warehouse}</td>
                   <td>
                     <Chip 
@@ -273,21 +273,11 @@ const SalesOrder = () => {
                       </IconButton>
                     </Tooltip>
 
-                    {!so.invoiceGenerated && (
-                      <Tooltip title="Generate Tax Invoice">
-                        <IconButton size="small" color="primary" onClick={() => handleOpenInvoiceModal(so)}>
-                          <Receipt size={16} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-
-                    {so.invoiceGenerated && (
-                      <Tooltip title="Print Tax Invoice">
-                        <IconButton size="small" onClick={() => { setSelectedSO(so); setPrintOpen(true); }}>
-                          <Printer size={16} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
+                    <Tooltip title="Edit Order">
+                      <IconButton size="small" color="primary" onClick={() => { setSelectedSO(so); setFormOpen(true); }}>
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
 
                     <Tooltip title="Delete Order">
                       <IconButton size="small" color="error" onClick={() => handleDelete(so.id)}>
@@ -371,8 +361,8 @@ const SalesOrder = () => {
                     <TableCell width="120">Ordered Qty</TableCell>
                     <TableCell width="120">Supply Qty</TableCell>
                     <TableCell width="120">Pending Qty</TableCell>
-                    <TableCell width="140">Unit Value</TableCell>
-                    <TableCell width="140">Total Value</TableCell>
+                    <TableCell width="140">Unit Value (₹)</TableCell>
+                    <TableCell width="140">Total Value (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -393,9 +383,9 @@ const SalesOrder = () => {
                       <TableCell className="bold-cell" style={{ color: item.pendingQty > 0 ? 'red' : 'inherit' }}>
                         {item.pendingQty}
                       </TableCell>
-                      <TableCell>INR {item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell>{item.unitPrice.toFixed(2)}</TableCell>
                       <TableCell className="bold-cell">
-                        INR {(item.suppliedQty * item.unitPrice).toFixed(2)}
+                        {(item.suppliedQty * item.unitPrice).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -406,7 +396,7 @@ const SalesOrder = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Create Dispatch Order</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -423,7 +413,7 @@ const SalesOrder = () => {
                 <strong>Customer Name:</strong> <span>{selectedSO.customerName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Order Date:</strong> <span>{selectedSO.date}</span>
+                <strong>Order Date:</strong> <span>{formatDate(selectedSO.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Dispatch Origin:</strong> <span>{selectedSO.warehouse}</span>
@@ -441,9 +431,9 @@ const SalesOrder = () => {
                 <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', margin: '12px 0' }}>
                   <strong>Tax Invoice Issued:</strong><br />
                   Invoice Number: {selectedSO.invoiceDetails.id}<br />
-                  Taxable Value: INR {selectedSO.invoiceDetails.amount.toFixed(2)}<br />
-                  Integrated Tax (18%): INR {selectedSO.invoiceDetails.taxAmount.toFixed(2)}<br />
-                  <strong>Grand Total Receivable: INR {selectedSO.invoiceDetails.total.toFixed(2)}</strong>
+                  Taxable Value: ₹ {selectedSO.invoiceDetails.amount.toFixed(2)}<br />
+                  Integrated Tax (18%): ₹ {selectedSO.invoiceDetails.taxAmount.toFixed(2)}<br />
+                  <strong>Grand Total Receivable: ₹ {selectedSO.invoiceDetails.total.toFixed(2)}</strong>
                 </div>
               )}
 
@@ -455,8 +445,8 @@ const SalesOrder = () => {
                     <TableCell align="right">Ordered Qty</TableCell>
                     <TableCell align="right">Supplied Qty</TableCell>
                     <TableCell align="right">Pending Qty</TableCell>
-                    <TableCell align="right">Unit Price</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Unit Price (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -466,8 +456,8 @@ const SalesOrder = () => {
                       <TableCell align="right">{itm.orderedQty}</TableCell>
                       <TableCell align="right">{itm.suppliedQty}</TableCell>
                       <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'red' : 'inherit' }}>{itm.pendingQty}</TableCell>
-                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

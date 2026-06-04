@@ -205,7 +205,7 @@ const DamagedStock = () => {
             onClick={handleOpenForm}
             sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#C62828', '&:hover': { bgcolor: '#B71C1C' }, borderRadius: 2 }}
           >
-            Add Damaged Stock
+            New
           </Button>
         </Stack>
       </Box>
@@ -213,7 +213,7 @@ const DamagedStock = () => {
       {/* FILTER BAR */}
       <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid #E0E0E0', display: 'flex', gap: 2, alignItems: 'center' }}>
         <TextField
-          size="small" placeholder="Search by item code or name..." value={search}
+          size="small" placeholder="Search By" value={search}
           onChange={e => setSearch(e.target.value)}
           InputProps={{
             startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
@@ -228,7 +228,6 @@ const DamagedStock = () => {
           sx={{ minWidth: 300, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#FAFAFA' } }}
         />
         <Box sx={{ flex: 1 }} />
-        <Chip label={`${damagedItems.length} Damaged Records`} sx={{ fontWeight: 600, bgcolor: '#FFEBEE', color: '#C62828' }} />
       </Paper>
 
       {/* DATAGRID */}
@@ -331,7 +330,7 @@ const DamagedStock = () => {
             disabled={!selectedItemId || !damageQty || Number(damageQty) <= 0}
             sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#C62828', '&:hover': { bgcolor: '#B71C1C' } }}
           >
-            Log Damage
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -359,7 +358,7 @@ const DamagedStock = () => {
             onClick={handleSaveEdit} 
             sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0D47A1', '&:hover': { bgcolor: '#0A3375' } }}
           >
-            Save Changes
+            Save
           </Button>
         </DialogActions>
       </Dialog>

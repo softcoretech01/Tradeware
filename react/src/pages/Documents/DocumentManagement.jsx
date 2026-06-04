@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { uploadDocument, deleteDocument } from '../../store/erpSlice';
@@ -11,6 +12,7 @@ import {
   Tabs, Tab, Button, IconButton, Chip, Tooltip, Alert
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+
 
 const DocumentManagement = () => {
   const dispatch = useDispatch();
@@ -273,7 +275,7 @@ const DocumentManagement = () => {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ color: '#64748b', marginBottom: '2px' }}>Document Details:</div>
-              <div>Date: <strong>{previewDoc.uploadDate}</strong></div>
+              <div>Date: <strong>{formatDate(previewDoc.uploadDate)}</strong></div>
               <div>Author: <strong>{previewDoc.uploadedBy}</strong></div>
               <div>Size: <strong>{previewDoc.size}</strong></div>
             </div>
@@ -684,7 +686,7 @@ const DocumentManagement = () => {
                         <span style={{ color: log.version === previewDoc.version ? 'var(--primary)' : 'var(--text-main)' }}>
                           Version v{log.version} {log.version === previewDoc.version ? '(Current)' : ''}
                         </span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{log.date}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{formatDate(log.date)}</span>
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         Uploaded by: <strong>{log.user}</strong>

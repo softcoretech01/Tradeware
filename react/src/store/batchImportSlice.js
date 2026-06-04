@@ -246,6 +246,15 @@ const batchImportSlice = createSlice({
     addImportPO: (state, action) => {
       state.importPOs.unshift(action.payload);
     },
+    updateImportPO: (state, action) => {
+      const index = state.importPOs.findIndex(p => p.id === action.payload.id);
+      if (index !== -1) {
+        state.importPOs[index] = action.payload;
+      }
+    },
+    deleteImportPO: (state, action) => {
+      state.importPOs = state.importPOs.filter(p => p.id !== action.payload);
+    },
     updateImportPOStatus: (state, action) => {
       const { id, status } = action.payload;
       const po = state.importPOs.find(p => p.id === id);
@@ -326,6 +335,8 @@ const batchImportSlice = createSlice({
 
 export const {
   addImportPO,
+  updateImportPO,
+  deleteImportPO,
   updateImportPOStatus,
   addShipment,
   updateShipmentStatus,

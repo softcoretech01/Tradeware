@@ -245,9 +245,6 @@ const LandedCost = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Landed Cost Calculation
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Allocate duty, freight, handling, and insurance overheads to container items proportionally based on FOB value ratio.
-          </Typography>
         </Box>
         {selectedShipment && (
           <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -257,7 +254,7 @@ const LandedCost = () => {
               startIcon={<FileSpreadsheet size={18} />}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              Export Worksheet
+              Export excel
             </Button>
             <Button
               variant="contained"
@@ -310,7 +307,7 @@ const LandedCost = () => {
       {selectedShipment && calculations && (
         <Grid container spacing={3}>
           {/* OVERHEAD EXPENSES FORM */}
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12}>
             <Card variant="outlined" sx={{ height: '100%' }}>
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1, backgroundColor: BLUE.bg }}>
                 <Calculator size={18} style={{ color: BLUE.main }} />
@@ -328,8 +325,8 @@ const LandedCost = () => {
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
                     1. Customs Duty & Cess
                   </Typography>
-                  <Grid container spacing={1.5}>
-                    <Grid item xs={6}>
+                  <Grid container spacing={1.5} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
@@ -339,7 +336,7 @@ const LandedCost = () => {
                         onChange={(e) => setDutyPercent(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
@@ -349,7 +346,7 @@ const LandedCost = () => {
                         onChange={(e) => setCessPercent(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
@@ -359,7 +356,7 @@ const LandedCost = () => {
                         onChange={(e) => setGstPercent(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={12} sx={{ py: 0 }}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -397,7 +394,7 @@ const LandedCost = () => {
                     2. Freight & Transportation
                   </Typography>
                   <Grid container spacing={1.5}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
                         size="small"
@@ -407,7 +404,7 @@ const LandedCost = () => {
                         onChange={(e) => setSeaFreight(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
                         size="small"
@@ -417,7 +414,7 @@ const LandedCost = () => {
                         onChange={(e) => setRoadFreight(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
                         size="small"
@@ -436,7 +433,7 @@ const LandedCost = () => {
                     3. Port & Other Charges
                   </Typography>
                   <Grid container spacing={1.5}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={2}>
                       <TextField
                         fullWidth
                         size="small"
@@ -446,7 +443,7 @@ const LandedCost = () => {
                         onChange={(e) => setLinerCharges(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={2}>
                       <TextField
                         fullWidth
                         size="small"
@@ -456,7 +453,7 @@ const LandedCost = () => {
                         onChange={(e) => setInsuranceCost(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={12} sm={4} md={2}>
                       <TextField
                         fullWidth
                         size="small"
@@ -466,7 +463,7 @@ const LandedCost = () => {
                         onChange={(e) => setHandlingCharges(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={12} sm={4} md={3}>
                       <TextField
                         fullWidth
                         size="small"
@@ -476,7 +473,7 @@ const LandedCost = () => {
                         onChange={(e) => setPackingCharges(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={12} sm={4} md={3}>
                       <TextField
                         fullWidth
                         size="small"
@@ -500,7 +497,7 @@ const LandedCost = () => {
           </Grid>
 
           {/* DYNAMIC COST ALLOCATION WORKSHEET */}
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12}>
             <Card variant="outlined">
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>

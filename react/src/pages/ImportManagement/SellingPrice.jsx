@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import {
   Search, FileSpreadsheet, FileText, CheckCircle, XCircle, AlertTriangle,
-  Lock, Edit3, ClipboardCheck, ArrowUpRight, DollarSign, Percent, Info,
+  Lock, Edit, ClipboardCheck, ArrowUpRight, DollarSign, Percent, Info,
   TrendingUp, Users
 } from 'lucide-react';
 import {
@@ -247,9 +247,6 @@ const SellingPrice = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Selling Price Finalization
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Validate gross profit margins and initiate low-margin workflow requests.
-          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button 
@@ -260,14 +257,6 @@ const SellingPrice = () => {
           >
             Export Excel
           </Button>
-          <Button
-            variant="outlined"
-            onClick={handleExportPDF}
-            startIcon={<FileText size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
-          >
-            Export PDF
-          </Button>
         </Box>
       </Box>
 
@@ -277,7 +266,7 @@ const SellingPrice = () => {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Search by batch number or item name..."
+            placeholder="Search By"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -316,9 +305,9 @@ const SellingPrice = () => {
               <th>Batch No</th>
               <th>Item Code</th>
               <th>Item Name</th>
-              <th>Landed Cost (INR)</th>
-              <th>Final Selling Price</th>
-              <th>Gross Margin (%)</th>
+              <th style={{ textAlign: 'right' }}>Landed Cost (₹)</th>
+              <th style={{ textAlign: 'right' }}>Final Selling Price (₹)</th>
+              <th style={{ textAlign: 'right' }}>Gross Margin (%)</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -331,14 +320,14 @@ const SellingPrice = () => {
                     <td className="bold-cell">{b.batchNo}</td>
                     <td>{b.itemCode}</td>
                     <td>{b.itemName}</td>
-                    <td>
-                      ₹{b.landedUnitCost?.toFixed(2)}
+                    <td style={{ textAlign: 'right' }}>
+                      {b.landedUnitCost?.toFixed(2)}
                       <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: '10px' }}>
                         {b.grnReference ? 'Local' : 'Import'}
                       </Typography>
                     </td>
-                    <td className="bold-cell">₹{b.finalSellingPrice?.toFixed(2)}</td>
-                    <td className="bold-cell" style={{ color: isLow ? RED.main : GREEN.main }}>
+                    <td className="bold-cell" style={{ textAlign: 'right' }}>{b.finalSellingPrice?.toFixed(2)}</td>
+                    <td className="bold-cell" style={{ color: isLow ? RED.main : GREEN.main, textAlign: 'right' }}>
                       {b.marginPercent?.toFixed(1)}%
                     </td>
                     <td className="actions-cell">
@@ -348,7 +337,7 @@ const SellingPrice = () => {
                           onClick={() => handleOpenEditPrice(b)}
                           sx={{ p: 1 }}
                         >
-                          <Edit3 size={22} />
+                          <Edit size={20} />
                         </IconButton>
                       </Tooltip>
                     </td>

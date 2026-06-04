@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ import {
   addQuotation
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const SalesEnquiry = () => {
   const dispatch = useDispatch();
@@ -260,8 +262,7 @@ const SalesEnquiry = () => {
             <FileText size={16} /> PDF
           </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Sales Enquiry
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -317,7 +318,7 @@ const SalesEnquiry = () => {
               filteredEnquiries.map((e) => (
                 <tr key={e.id}>
                   <td className="bold-cell">{e.id}</td>
-                  <td>{e.date}</td>
+                  <td>{formatDate(e.date)}</td>
                   <td>{e.customerName}</td>
                   <td>{e.source}</td>
                   <td>
@@ -427,8 +428,8 @@ const SalesEnquiry = () => {
                 <TableRow>
                   <TableCell>Item Name</TableCell>
                   <TableCell width="140">Qty Requested</TableCell>
-                  <TableCell width="160">Unit Price (INR)</TableCell>
-                  <TableCell width="160">Total Amount (INR)</TableCell>
+                  <TableCell width="160">Unit Price (₹)</TableCell>
+                  <TableCell width="160">Total Amount (₹)</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -498,7 +499,7 @@ const SalesEnquiry = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Lead</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -512,7 +513,7 @@ const SalesEnquiry = () => {
                 <strong>Customer:</strong> <span>{selectedEnquiry.customerName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Date Logged:</strong> <span>{selectedEnquiry.date}</span>
+                <strong>Date Logged:</strong> <span>{formatDate(selectedEnquiry.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Source Channel:</strong> <span>{selectedEnquiry.source}</span>
@@ -531,8 +532,8 @@ const SalesEnquiry = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Qty Inquired</TableCell>
-                    <TableCell align="right">Unit Price</TableCell>
-                    <TableCell align="right">Est. Total Deal</TableCell>
+                    <TableCell align="right">Unit Price (₹)</TableCell>
+                    <TableCell align="right">Est. Total Deal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -540,8 +541,8 @@ const SalesEnquiry = () => {
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.qty}</TableCell>
-                      <TableCell align="right">INR {itm.targetPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {(itm.qty * itm.targetPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.targetPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.qty * itm.targetPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -604,8 +605,8 @@ const SalesEnquiry = () => {
                     <th>Item ID</th>
                     <th>Item Name</th>
                     <th className="num-col">Requested Qty</th>
-                    <th className="num-col">Target Unit Cost</th>
-                    <th className="num-col">Target Subtotal</th>
+                    <th className="num-col">Target Unit Cost (₹)</th>
+                    <th className="num-col">Target Subtotal (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -614,13 +615,13 @@ const SalesEnquiry = () => {
                       <td>{itm.itemId}</td>
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.qty}</td>
-                      <td className="num-col">INR {itm.targetPrice.toFixed(2)}</td>
-                      <td className="num-col">INR {(itm.qty * itm.targetPrice).toFixed(2)}</td>
+                      <td className="num-col">{itm.targetPrice.toFixed(2)}</td>
+                      <td className="num-col">{(itm.qty * itm.targetPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="4">Estimated Potential Pipeline Value</td>
-                    <td className="num-col">INR {selectedEnquiry.items.reduce((sum, i) => sum + (i.qty * i.targetPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">{selectedEnquiry.items.reduce((sum, i) => sum + (i.qty * i.targetPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

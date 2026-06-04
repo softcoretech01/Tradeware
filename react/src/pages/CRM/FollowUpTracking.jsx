@@ -163,8 +163,7 @@ const FollowUpTracking = () => {
             Export Excel
           </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Schedule Follow-up
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -346,7 +345,7 @@ const FollowUpTracking = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Schedule</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 

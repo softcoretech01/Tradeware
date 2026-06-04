@@ -1,6 +1,8 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
+
   Search, Printer, ChevronRight, X
 } from 'lucide-react';
 
@@ -174,7 +176,7 @@ const ARBook = () => {
             <tbody>
               {ledgerData.map((row, idx) => (
                 <tr key={idx}>
-                  <td>{row.date}</td>
+                  <td>{formatDate(row.date)}</td>
                   <td className="link-cell"><u>{row.refNo}</u></td>
                   <td style={{ textAlign: 'right', color: '#0067b1', fontWeight: '500' }}>
                     {row.invoiceAmt.toFixed(2)}

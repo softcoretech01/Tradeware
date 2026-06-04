@@ -1,6 +1,8 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
+
   Search, Printer, Download, Share2
 } from 'lucide-react';
 
@@ -145,7 +147,7 @@ const ARBookDO = () => {
                         onChange={() => {}}
                       />
                     </td>
-                    <td>{row.date}</td>
+                    <td>{formatDate(row.date)}</td>
                     <td className="link-cell"><u>{row.refNo}</u></td>
                     <td style={{ textAlign: 'right' }}>{row.invoiceAmt.toFixed(2)}</td>
                     <td style={{ textAlign: 'right' }}>{row.debitNote.toFixed(2)}</td>

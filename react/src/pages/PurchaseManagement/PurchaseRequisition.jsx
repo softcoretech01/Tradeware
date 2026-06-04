@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +19,7 @@ import {
   deleteRequisition 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const PurchaseRequisition = () => {
   const dispatch = useDispatch();
@@ -217,7 +219,6 @@ const PurchaseRequisition = () => {
       <div className="module-header">
         <div>
           <h2>Purchase Requisition</h2>
-          <p className="subtitle">Manage internal item requests, priorities, and workflow approval paths.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -228,11 +229,8 @@ const PurchaseRequisition = () => {
           >
             Export Excel
           </Button>
-          <button className="btn-secondary" onClick={handleExportPDF}>
-            <FileText size={16} /> PDF
-          </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Requisition
+            <Plus size={16} /> New
           </button>
         </div>
       </div>
@@ -243,33 +241,17 @@ const PurchaseRequisition = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by Requisition ID, Requester..." 
+            placeholder="Search by" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="filter-selects">
-          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
-            <option value="">All Departments</option>
-            <option value="Production">Production</option>
-            <option value="R&D">R&D</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Sales">Sales</option>
-          </select>
-
           <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
             <option value="">All Priorities</option>
             <option value="High">High</option>
             <option value="Medium">Medium</option>
             <option value="Low">Low</option>
-          </select>
-
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="Draft">Draft</option>
-            <option value="Pending Approval">Pending Approval</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -282,10 +264,7 @@ const PurchaseRequisition = () => {
               <th>ID</th>
               <th>Date</th>
               <th>Requester</th>
-              <th>Department</th>
               <th>Priority</th>
-              <th>Items Requested</th>
-              <th>Status</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -298,19 +277,10 @@ const PurchaseRequisition = () => {
               filteredPRs.map((pr) => (
                 <tr key={pr.id}>
                   <td className="bold-cell">{pr.id}</td>
-                  <td>{pr.date}</td>
+                  <td>{formatDate(pr.date)}</td>
                   <td>{pr.requester}</td>
-                  <td>{pr.department}</td>
                   <td>
                     <Chip label={pr.priority} color={getPriorityColor(pr.priority)} size="small" variant="outlined" />
-                  </td>
-                  <td>
-                    <span className="items-badge">
-                      {pr.items.length} {pr.items.length === 1 ? 'item' : 'items'}
-                    </span>
-                  </td>
-                  <td>
-                    <Chip label={pr.status} color={getStatusColor(pr.status)} size="small" />
                   </td>
                   <td className="actions-cell">
                     <Tooltip title="View Details">
@@ -319,28 +289,11 @@ const PurchaseRequisition = () => {
                       </IconButton>
                     </Tooltip>
                     
-                    {pr.status === 'Draft' && (
-                      <Tooltip title="Edit">
-                        <IconButton size="small" color="primary" onClick={() => handleOpenEdit(pr)}>
-                          <Edit size={16} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-
-                    {pr.status === 'Pending Approval' && (
-                      <>
-                        <Tooltip title="Approve">
-                          <IconButton size="small" className="btn-icon-success" onClick={() => handleApprove(pr.id, 'Approved')}>
-                            <Check size={16} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Reject">
-                          <IconButton size="small" className="btn-icon-danger" onClick={() => handleApprove(pr.id, 'Rejected')}>
-                            <X size={16} />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
+                    <Tooltip title="Edit">
+                      <IconButton size="small" color="primary" onClick={() => handleOpenEdit(pr)}>
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
 
                     <Tooltip title="Print Form">
                       <IconButton size="small" onClick={() => { setSelectedPR(pr); setPrintOpen(true); }}>
@@ -383,19 +336,7 @@ const PurchaseRequisition = () => {
               fullWidth
               placeholder="e.g. Alice Smith"
             />
-            <FormControl fullWidth>
-              <InputLabel>Department</InputLabel>
-              <Select
-                value={formData.department}
-                label="Department"
-                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-              >
-                <MenuItem value="Production">Production</MenuItem>
-                <MenuItem value="R&D">R&D</MenuItem>
-                <MenuItem value="Maintenance">Maintenance</MenuItem>
-                <MenuItem value="Sales">Sales</MenuItem>
-              </Select>
-            </FormControl>
+
             <FormControl fullWidth>
               <InputLabel>Priority</InputLabel>
               <Select
@@ -487,7 +428,7 @@ const PurchaseRequisition = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Submit for Approval</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -504,7 +445,7 @@ const PurchaseRequisition = () => {
                 <strong>Department:</strong> <span>{selectedPR.department}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Date:</strong> <span>{selectedPR.date}</span>
+                <strong>Date:</strong> <span>{formatDate(selectedPR.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Priority:</strong> 
@@ -520,7 +461,7 @@ const PurchaseRequisition = () => {
                     <strong>Approved By:</strong> <span>{selectedPR.approvedBy}</span>
                   </div>
                   <div className="view-detail-row">
-                    <strong>Approval Date:</strong> <span>{selectedPR.approvalDate}</span>
+                    <strong>Approval Date:</strong> <span>{formatDate(selectedPR.approvalDate)}</span>
                   </div>
                 </>
               )}
@@ -535,8 +476,8 @@ const PurchaseRequisition = () => {
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Qty</TableCell>
                     <TableCell>UOM</TableCell>
-                    <TableCell align="right">Est. Unit Price</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Est. Unit Price (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -545,14 +486,14 @@ const PurchaseRequisition = () => {
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.qty}</TableCell>
                       <TableCell>{itm.uom}</TableCell>
-                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={4} align="right"><strong>Estimated Total Value:</strong></TableCell>
                     <TableCell align="right" className="bold-cell">
-                      INR {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
+                      {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -604,8 +545,8 @@ const PurchaseRequisition = () => {
                     <th>Item Name</th>
                     <th className="num-col">Qty</th>
                     <th>UOM</th>
-                    <th className="num-col">Est. Unit Price</th>
-                    <th className="num-col">Total Est. Value</th>
+                    <th className="num-col">Est. Unit Price (₹)</th>
+                    <th className="num-col">Total Est. Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -615,13 +556,13 @@ const PurchaseRequisition = () => {
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.qty}</td>
                       <td>{itm.uom}</td>
-                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">INR {(itm.qty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">{itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col">{(itm.qty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Estimated Grand Total</td>
-                    <td className="num-col">INR {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">{selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

@@ -1,5 +1,7 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { Search, Printer, Download, X } from 'lucide-react';
+
 
 const CashBook = () => {
   // Filter States
@@ -161,7 +163,7 @@ const CashBook = () => {
             <tbody>
               {filteredTransactions.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.date}</td>
+                  <td>{formatDate(row.date)}</td>
                   <td>{row.refNo}</td>
                   <td>{row.type}</td>
                   <td>{row.party}</td>

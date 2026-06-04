@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -9,10 +10,11 @@ import {
 } from '@mui/material';
 import {
   Search, Plus, Eye, FileSpreadsheet, FileText, Globe, DollarSign,
-  PlusCircle, Trash2, ArrowRight
+  PlusCircle, Trash2, ArrowRight, Edit
 } from 'lucide-react';
-import { addImportPO } from '../../store/batchImportSlice';
+import { addImportPO, updateImportPO, deleteImportPO } from '../../store/batchImportSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
 const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
@@ -47,6 +49,7 @@ const ImportPurchase = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState(null);
+  const [editingPOId, setEditingPOId] = useState(null);
 
   // Form Fields
   const [formSupplierId, setFormSupplierId] = useState('');
@@ -57,6 +60,35 @@ const ImportPurchase = () => {
     { itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }
   ]);
   const [formPaymentTerms, setFormPaymentTerms] = useState('Net 30');
+
+  const handleOpenCreate = () => {
+    setEditingPOId(null);
+    setFormSupplierId('');
+    setFormCurrency('USD');
+    setFormExchangeRate(83.5);
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormItems([{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
+    setFormPaymentTerms('Net 30');
+    setCreateModalOpen(true);
+  };
+
+  const handleOpenEdit = (po) => {
+    const sup = suppliers.find(s => s.name === po.supplierName);
+    setEditingPOId(po.id);
+    setFormSupplierId(sup ? sup.id : '');
+    setFormCurrency(po.currency || 'USD');
+    setFormExchangeRate(po.exchangeRate || 83.5);
+    setFormDate(po.date || new Date().toISOString().split('T')[0]);
+    setFormItems(po.items.length > 0 ? po.items : [{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
+    setFormPaymentTerms(po.paymentTerms || 'Net 30');
+    setCreateModalOpen(true);
+  };
+
+  const handleDeletePO = (id) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
+      dispatch(deleteImportPO(id));
+    }
+  };
 
   // Update default rate when currency changes
   const handleCurrencyChange = (currency) => {
@@ -159,7 +191,7 @@ const ImportPurchase = () => {
     const totalLCY = totalFCY * Number(formExchangeRate);
 
     const newPO = {
-      id: `IPO-2026-${String(importPOs.length + 1).padStart(3, '0')}`,
+      id: editingPOId || `IPO-2026-${String(importPOs.length + 1).padStart(3, '0')}`,
       date: formDate,
       supplierName,
       currency: formCurrency,
@@ -176,8 +208,13 @@ const ImportPurchase = () => {
       paymentTerms: formPaymentTerms
     };
 
-    dispatch(addImportPO(newPO));
+    if (editingPOId) {
+      dispatch(updateImportPO(newPO));
+    } else {
+      dispatch(addImportPO(newPO));
+    }
     setCreateModalOpen(false);
+    setEditingPOId(null);
 
     // Reset Form
     setFormSupplierId('');
@@ -244,9 +281,6 @@ const ImportPurchase = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Import Purchase Management
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Create and track purchasing orders for international suppliers in multiple global currencies.
-          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button 
@@ -257,59 +291,13 @@ const ImportPurchase = () => {
           >
             Export Excel
           </Button>
-          <Button
-            variant="outlined"
-            onClick={handleExportPDF}
-            startIcon={<FileText size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
-          >
-            Export PDF
-          </Button>
+          <button className="btn-primary" onClick={handleOpenCreate}>
+            <Plus size={16} /> New
+          </button>
         </Box>
       </Box>
 
-      {/* DASHBOARD SUMMARY CARDS */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: BLUE.bg }}>
-                <DollarSign size={24} style={{ color: BLUE.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Total Import Cost (LCY)</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>₹{stats.totalImportCostINR.toLocaleString()}</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: AMBER.bg }}>
-                <Globe size={24} style={{ color: AMBER.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Active Import POs</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>{stats.activeOrdersCount} POs</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: GREEN.bg }}>
-                <Globe size={24} style={{ color: GREEN.main }} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Total PO Transactions</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>{stats.totalOrders} Orders</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+
 
       {/* FILTERS PANEL */}
       <div className="filter-panel">
@@ -317,24 +305,10 @@ const ImportPurchase = () => {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Search by PO number, currency, or supplier..."
+            placeholder="Search by"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
-        </div>
-        <div className="filter-selects">
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <Select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              displayEmpty
-            >
-              <MenuItem value="All">All Statuses</MenuItem>
-              <MenuItem value="Ordered">Ordered</MenuItem>
-              <MenuItem value="Shipped">Shipped</MenuItem>
-              <MenuItem value="Cleared">Cleared</MenuItem>
-            </Select>
-          </FormControl>
         </div>
       </div>
 
@@ -349,7 +323,7 @@ const ImportPurchase = () => {
               <th>Currency</th>
               <th>Exchange Rate</th>
               <th>Foreign Value</th>
-              <th>Local Value (INR)</th>
+              <th>Local Value (₹)</th>
               <th>Status</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -359,14 +333,23 @@ const ImportPurchase = () => {
               paginatedPOs.map(po => (
                 <tr key={po.id}>
                   <td className="bold-cell">{po.id}</td>
-                  <td>{po.date}</td>
+                  <td>{formatDate(po.date)}</td>
                   <td className="bold-cell">{po.supplierName}</td>
                   <td>{po.currency}</td>
                   <td>{po.exchangeRate?.toFixed(2)}</td>
                   <td className="bold-cell">{po.totalFCY?.toLocaleString()} {po.currency}</td>
-                  <td>₹{po.totalLCY?.toLocaleString()}</td>
+                  <td>{po.totalLCY?.toLocaleString()}</td>
                   <td>{getStatusBadge(po.status)}</td>
                   <td className="actions-cell">
+                    <Tooltip title="Edit Order">
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleOpenEdit(po)}
+                        sx={{ p: 1 }}
+                      >
+                        <Edit size={20} />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="View Order Details">
                       <IconButton
                         color="primary"
@@ -374,6 +357,15 @@ const ImportPurchase = () => {
                         sx={{ p: 1 }}
                       >
                         <Eye size={22} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Order">
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeletePO(po.id)}
+                        sx={{ p: 1 }}
+                      >
+                        <Trash2 size={20} />
                       </IconButton>
                     </Tooltip>
                   </td>
@@ -611,7 +603,7 @@ const ImportPurchase = () => {
             Cancel
           </Button>
           <Button onClick={handleSavePO} variant="contained" sx={{ backgroundColor: BLUE.main }}>
-            Create Order
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -635,7 +627,7 @@ const ImportPurchase = () => {
                 <Grid item xs={6} md={2.4}>
                   <div className="view-detail-row">
                     <strong>Order Date:</strong>
-                    <span>{selectedPO.date}</span>
+                    <span>{formatDate(selectedPO.date)}</span>
                   </div>
                 </Grid>
                 <Grid item xs={6} md={2.4}>

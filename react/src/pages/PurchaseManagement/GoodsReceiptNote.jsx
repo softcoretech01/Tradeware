@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -7,7 +8,7 @@ import {
   Tooltip, Chip
 } from '@mui/material';
 import { 
-  Search, Plus, Eye, Check, X, Printer, Trash,
+  Search, Plus, Eye, Check, X, Printer, Trash, Edit,
   FileSpreadsheet, FileText, ClipboardCheck, ArrowUpRight
 } from 'lucide-react';
 import { 
@@ -17,6 +18,7 @@ import {
   deleteGRN 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const GoodsReceiptNote = () => {
   const dispatch = useDispatch();
@@ -71,6 +73,11 @@ const GoodsReceiptNote = () => {
       receivedItems: [],
       status: 'Pending QC'
     });
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (grn) => {
+    setFormData(grn);
     setFormOpen(true);
   };
 
@@ -274,7 +281,7 @@ const GoodsReceiptNote = () => {
       <div className="module-header">
         <div>
           <h2>Goods Receipt Note (GRN)</h2>
-          <p className="subtitle">Record supplier deliveries, specify batches/lot info, allocate warehouse bins, and complete QC checks.</p>
+
         </div>
         <div className="header-actions">
           <Button 
@@ -285,11 +292,8 @@ const GoodsReceiptNote = () => {
           >
             Export Excel
           </Button>
-          <button className="btn-secondary" onClick={handleExportPDF}>
-            <FileText size={16} /> PDF
-          </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Record Goods Receipt (GRN)
+            <Plus size={16} /> New
           </button>
         </div>
       </div>
@@ -300,18 +304,10 @@ const GoodsReceiptNote = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by GRN, PO Ref, Supplier..." 
+            placeholder="Search by" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
-        <div className="filter-selects">
-          <select value={qcStatusFilter} onChange={(e) => setQcStatusFilter(e.target.value)}>
-            <option value="">All QC Statuses</option>
-            <option value="Pending QC">Pending QC</option>
-            <option value="Passed">Passed</option>
-            <option value="Failed">Failed</option>
-          </select>
         </div>
       </div>
 
@@ -324,8 +320,6 @@ const GoodsReceiptNote = () => {
               <th>Date</th>
               <th>PO Ref</th>
               <th>Supplier</th>
-              <th>Items Receipt</th>
-              <th>Status</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -338,20 +332,16 @@ const GoodsReceiptNote = () => {
               filteredGRNs.map((grn) => (
                 <tr key={grn.id}>
                   <td className="bold-cell">{grn.id}</td>
-                  <td>{grn.date}</td>
+                  <td>{formatDate(grn.date)}</td>
                   <td className="text-muted">{grn.poRef}</td>
                   <td>{grn.supplierName}</td>
-                  <td>
-                    <span className="items-badge">{grn.receivedItems.length} items</span>
-                  </td>
-                  <td>
-                    <Chip 
-                      label={grn.status} 
-                      color={grn.status === 'QC Completed' ? 'success' : 'warning'} 
-                      size="small" 
-                    />
-                  </td>
                   <td className="actions-cell">
+                    <Tooltip title="Edit Record">
+                      <IconButton size="small" color="primary" onClick={() => handleOpenEdit(grn)}>
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
+
                     <Tooltip title="View Details">
                       <IconButton size="small" onClick={() => { setSelectedGRN(grn); setViewOpen(true); }}>
                         <Eye size={16} />
@@ -422,8 +412,6 @@ const GoodsReceiptNote = () => {
                     <TableCell>Item Name</TableCell>
                     <TableCell width="120">PO Qty</TableCell>
                     <TableCell width="120">Received Qty</TableCell>
-                    <TableCell width="180">Warehouse Allocation</TableCell>
-                    <TableCell width="160">Bin Location</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -440,28 +428,6 @@ const GoodsReceiptNote = () => {
                           max={item.orderedQty}
                           onChange={(e) => handleItemChange(idx, 'receivedQty', parseFloat(e.target.value) || 0)}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <select
-                          className="table-select"
-                          value={item.warehouseId}
-                          onChange={(e) => handleItemChange(idx, 'warehouseId', e.target.value)}
-                        >
-                          {warehouses.map(w => (
-                            <option key={w.id} value={w.id}>{w.name}</option>
-                          ))}
-                        </select>
-                      </TableCell>
-                      <TableCell>
-                        <select
-                          className="table-select"
-                          value={item.rack}
-                          onChange={(e) => handleItemChange(idx, 'rack', e.target.value)}
-                        >
-                          {warehouses.find(w => w.id === item.warehouseId)?.racks.map(rack => (
-                            <option key={rack} value={rack}>{rack}</option>
-                          )) || <option value="Rack A-01">Rack A-01</option>}
-                        </select>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -506,7 +472,7 @@ const GoodsReceiptNote = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Inward Goods</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 

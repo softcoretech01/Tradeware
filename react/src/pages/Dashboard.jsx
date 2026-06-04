@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   ShoppingCart, TrendingUp, Clock, AlertCircle, ArrowUpRight, Search as SearchIcon, X as CancelIcon
 } from 'lucide-react';
-import { 
-  Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button, 
+import {
+  Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Table, TableBody, TableCell, TableHead, TableRow,
   Select, MenuItem, FormControl, InputLabel, TextField, IconButton
 } from '@mui/material';
@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [appliedCurrencyFilter, setAppliedCurrencyFilter] = useState('All');
 
   // Load ERP data from store
-  let { 
+  let {
     purchaseOrders = [], salesOrders = []
   } = useSelector(state => state.erp);
 
@@ -176,21 +176,21 @@ const Dashboard = () => {
 
   // 4. Low Stock Items (Stock <= Min Stock or status is 'Low Stock' or 'Out of Stock')
   const lowStockItems = useMemo(() => {
-    return inventory.filter(item => 
-      item.availableStock <= item.minStock || 
-      item.status === 'Low Stock' || 
+    return inventory.filter(item =>
+      item.availableStock <= item.minStock ||
+      item.status === 'Low Stock' ||
       item.status === 'Out of Stock'
     );
   }, [inventory]);
 
   return (
     <div className="dashboard-container fade-in">
-      
+
       {/* Date Filter Bar */}
       <div className="filter-bar">
         <div className="filter-group">
           <label>From Date:</label>
-          <DatePicker 
+          <DatePicker
             selected={filterFrom ? new Date(filterFrom) : null}
             onChange={(date) => {
               if (date) {
@@ -209,7 +209,7 @@ const Dashboard = () => {
         </div>
         <div className="filter-group">
           <label>To Date:</label>
-          <DatePicker 
+          <DatePicker
             selected={filterTo ? new Date(filterTo) : null}
             onChange={(date) => {
               if (date) {
@@ -238,33 +238,33 @@ const Dashboard = () => {
 
       {/* 3 KPI Cards at the top */}
       <div className="kpi-grid">
-        <div className="kpi-card" onClick={() => { setDetailsPopup('sales'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view sales details">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('sales'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer', padding: '24px' }} title="Click to view sales details">
           <div className="kpi-icon-wrapper sales">
-            <TrendingUp size={24} />
+            <TrendingUp size={32} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#2563eb' }}>Sales</span>
-            <span className="kpi-value">₹{totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#2563eb', fontSize: '1.1rem' }}>Sales</span>
+            <span className="kpi-value" style={{ fontSize: '1.5rem' }}>₹{totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         </div>
 
-        <div className="kpi-card" onClick={() => { setDetailsPopup('purchases'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view purchase details">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('purchases'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer', padding: '24px' }} title="Click to view purchase details">
           <div className="kpi-icon-wrapper purchase">
-            <ShoppingCart size={24} />
+            <ShoppingCart size={32} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#475569' }}>Purchases</span>
-            <span className="kpi-value">₹{totalPurchases.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#475569', fontSize: '1.1rem' }}>Purchases</span>
+            <span className="kpi-value" style={{ fontSize: '1.5rem' }}>₹{totalPurchases.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         </div>
 
-        <div className="kpi-card" onClick={() => { setDetailsPopup('yetToBill'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer' }} title="Click to view pending bills details">
+        <div className="kpi-card" onClick={() => { setDetailsPopup('yetToBill'); setSalesPersonFilter('All'); }} style={{ cursor: 'pointer', padding: '24px' }} title="Click to view pending bills details">
           <div className="kpi-icon-wrapper yet-to-bill">
-            <Clock size={24} />
+            <Clock size={32} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#d97706' }}>Yet To Bill (Outstanding)</span>
-            <span className="kpi-value">₹{totalYetToBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span className="kpi-label" style={{ textDecoration: 'underline', color: '#d97706', fontSize: '1.1rem' }}>Yet To Bill (Outstanding)</span>
+            <span className="kpi-value" style={{ fontSize: '1.5rem' }}>₹{totalYetToBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         </div>
       </div>
@@ -300,11 +300,11 @@ const Dashboard = () => {
                     <td style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.availableStock}</td>
                     <td>{item.minStock}</td>
                     <td>
-                      <Chip 
-                        label={item.status} 
-                        color={item.status === 'Out of Stock' ? 'error' : 'warning'} 
-                        size="small" 
-                        sx={{ height: '20px', fontSize: '10px' }} 
+                      <Chip
+                        label={item.status}
+                        color={item.status === 'Out of Stock' ? 'error' : 'warning'}
+                        size="small"
+                        sx={{ height: '20px', fontSize: '10px' }}
                       />
                     </td>
                   </tr>
@@ -316,8 +316,8 @@ const Dashboard = () => {
       </div>
 
       {/* Details Popup */}
-      <Dialog 
-        open={!!detailsPopup} 
+      <Dialog
+        open={!!detailsPopup}
         onClose={() => setDetailsPopup(null)}
         maxWidth="xl"
         fullWidth
@@ -328,9 +328,9 @@ const Dashboard = () => {
         }}
       >
         <DialogTitle>
-          {detailsPopup === 'sales' ? 'Sales' : 
-           detailsPopup === 'purchases' ? 'Purchases' : 
-           'Yet To Bill (Pending Bills)'}
+          {detailsPopup === 'sales' ? 'Sales' :
+            detailsPopup === 'purchases' ? 'Purchases' :
+              'Yet To Bill (Pending Bills)'}
         </DialogTitle>
         <DialogContent dividers>
           <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -413,7 +413,7 @@ const Dashboard = () => {
               <CancelIcon size={18} />
             </IconButton>
           </div>
-          <Table size="small" sx={{ 
+          <Table size="small" sx={{
             '& thead th': { backgroundColor: '#e2e8f0', color: '#0f172a', fontWeight: '600' },
             '& tbody tr:nth-of-type(even)': { backgroundColor: '#f8fafc' },
             '& tbody tr:hover': { backgroundColor: '#f1f5f9' },
@@ -429,9 +429,9 @@ const Dashboard = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(detailsPopup === 'sales' ? filteredSalesOrders : 
-                detailsPopup === 'purchases' ? filteredPurchaseOrders : 
-                yetToBillOrders)
+              {(detailsPopup === 'sales' ? filteredSalesOrders :
+                detailsPopup === 'purchases' ? filteredPurchaseOrders :
+                  yetToBillOrders)
                 .filter(order => {
                   if (detailsPopup === 'yetToBill') {
                     if (appliedSalesPersonFilter !== 'All') {
@@ -450,22 +450,22 @@ const Dashboard = () => {
                   return true;
                 })
                 .map(order => {
-                const orderValue = order.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
-                return (
-                  <TableRow key={order.id || order.poNumber || order.soNumber}>
-                    {detailsPopup === 'yetToBill' && <TableCell>{order.salesPerson || order.createdBy || 'Admin'}</TableCell>}
-                    <TableCell>{detailsPopup === 'purchases' ? (order.poNumber || order.id) : (order.soNumber || order.id)}</TableCell>
-                    <TableCell>{formatDate(order.date || order.createdAt)}</TableCell>
-                    <TableCell>{detailsPopup === 'purchases' ? order.supplierName : order.customerName}</TableCell>
-                    <TableCell align="right">
-                      ₹{orderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {(detailsPopup === 'sales' ? filteredSalesOrders : 
-                detailsPopup === 'purchases' ? filteredPurchaseOrders : 
-                yetToBillOrders)
+                  const orderValue = order.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
+                  return (
+                    <TableRow key={order.id || order.poNumber || order.soNumber}>
+                      {detailsPopup === 'yetToBill' && <TableCell>{order.salesPerson || order.createdBy || 'Admin'}</TableCell>}
+                      <TableCell>{detailsPopup === 'purchases' ? (order.poNumber || order.id) : (order.soNumber || order.id)}</TableCell>
+                      <TableCell>{formatDate(order.date || order.createdAt)}</TableCell>
+                      <TableCell>{detailsPopup === 'purchases' ? order.supplierName : order.customerName}</TableCell>
+                      <TableCell align="right">
+                        ₹{orderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              {(detailsPopup === 'sales' ? filteredSalesOrders :
+                detailsPopup === 'purchases' ? filteredPurchaseOrders :
+                  yetToBillOrders)
                 .filter(order => {
                   if (detailsPopup === 'yetToBill') {
                     if (appliedSalesPersonFilter !== 'All') {
@@ -483,12 +483,12 @@ const Dashboard = () => {
                   }
                   return true;
                 }).length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={detailsPopup === 'yetToBill' ? 5 : 4} align="center" style={{ padding: '20px', color: '#666' }}>
-                    No records found matching your filters.
-                  </TableCell>
-                </TableRow>
-              )}
+                  <TableRow>
+                    <TableCell colSpan={detailsPopup === 'yetToBill' ? 5 : 4} align="center" style={{ padding: '20px', color: '#666' }}>
+                      No records found matching your filters.
+                    </TableCell>
+                  </TableRow>
+                )}
             </TableBody>
           </Table>
         </DialogContent>
@@ -510,7 +510,7 @@ const Dashboard = () => {
           align-items: center;
           gap: 20px;
           background: var(--surface);
-          padding: 16px 20px;
+          padding: 24px 28px;
           border-radius: var(--radius);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-sm);
@@ -578,10 +578,10 @@ const Dashboard = () => {
           background: var(--surface);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: 20px;
+          padding: 28px 24px;
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 20px;
           box-shadow: var(--shadow-sm);
           cursor: default;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -593,9 +593,9 @@ const Dashboard = () => {
         }
 
         .kpi-icon-wrapper {
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -612,16 +612,16 @@ const Dashboard = () => {
         }
 
         .kpi-label {
-          font-size: 13px;
+          font-size: 15px;
           color: var(--text-muted);
           font-weight: 500;
         }
 
         .kpi-value {
-          font-size: 22px;
+          font-size: 28px;
           font-weight: 700;
           color: var(--text-main);
-          margin: 4px 0;
+          margin: 6px 0;
         }
 
         .kpi-trend {
@@ -639,7 +639,7 @@ const Dashboard = () => {
           background: var(--surface);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: 20px;
+          padding: 28px;
           box-shadow: var(--shadow-sm);
           display: flex;
           flex-direction: column;

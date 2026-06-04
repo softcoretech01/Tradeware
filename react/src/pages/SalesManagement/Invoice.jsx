@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -7,12 +8,13 @@ import {
   Tooltip, Chip
 } from '@mui/material';
 import { 
-  Search, Plus, Eye, Printer, FileSpreadsheet, FileText, Trash
+  Search, Plus, Eye, Printer, FileSpreadsheet, FileText, Trash, Edit
 } from 'lucide-react';
 import { 
   generateInvoice 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const Invoice = () => {
   const dispatch = useDispatch();
@@ -148,7 +150,6 @@ const Invoice = () => {
       <div className="module-header">
         <div>
           <h2>Invoice Management</h2>
-          <p className="subtitle">Generate and manage tax invoices for dispatched sales orders.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -159,12 +160,8 @@ const Invoice = () => {
           >
             Export Excel
           </Button>
-          <button className="btn-secondary" onClick={handleExportPDF}>
-            <FileText size={16} /> PDF
-          </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Invoice
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -174,7 +171,7 @@ const Invoice = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by Invoice No, Customer, SO Ref..." 
+            placeholder="Search By" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -191,8 +188,8 @@ const Invoice = () => {
               <th>Customer</th>
               <th>Date</th>
               <th>Tax Type</th>
-              <th className="num-col">Tax Amount</th>
-              <th className="num-col">Grand Total</th>
+              <th className="num-col">Tax Amount (₹)</th>
+              <th className="num-col">Grand Total (₹)</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -207,7 +204,7 @@ const Invoice = () => {
                   <td className="bold-cell">{inv.id}</td>
                   <td className="text-muted">{inv.soRef}</td>
                   <td>{inv.customerName}</td>
-                  <td>{inv.date}</td>
+                  <td>{formatDate(inv.date)}</td>
                   <td>
                     <Chip 
                       label={inv.taxType} 
@@ -215,12 +212,17 @@ const Invoice = () => {
                       size="small" 
                     />
                   </td>
-                  <td className="num-col">INR {inv.taxAmount?.toFixed(2)}</td>
-                  <td className="num-col bold-cell">INR {inv.grandTotal?.toFixed(2)}</td>
+                  <td className="num-col">{inv.taxAmount?.toFixed(2)}</td>
+                  <td className="num-col bold-cell">{inv.grandTotal?.toFixed(2)}</td>
                   <td className="actions-cell">
                     <Tooltip title="View Invoice Details">
                       <IconButton size="small" onClick={() => { setSelectedInvoice(inv); setViewOpen(true); }}>
                         <Eye size={16} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit Invoice">
+                      <IconButton size="small" color="primary" onClick={() => { setSelectedInvoice(inv); setFormOpen(true); }}>
+                        <Edit size={16} />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Print Tax Invoice">
@@ -285,9 +287,9 @@ const Invoice = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Supply Qty</TableCell>
-                    <TableCell align="right">Unit Value</TableCell>
-                    <TableCell align="right">Tax (18%)</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Unit Value (₹)</TableCell>
+                    <TableCell align="right">Tax (18%) (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -298,24 +300,24 @@ const Invoice = () => {
                     <TableRow key={idx}>
                       <TableCell>{item.name} ({item.itemId})</TableCell>
                       <TableCell align="right">{item.suppliedQty}</TableCell>
-                      <TableCell align="right">INR {item.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {itemTax.toFixed(2)}</TableCell>
+                      <TableCell align="right">{item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{itemTax.toFixed(2)}</TableCell>
                       <TableCell align="right" className="bold-cell">
-                        INR {itemSubtotal.toFixed(2)}
+                        {itemSubtotal.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   )})}
                   <TableRow style={{ backgroundColor: '#f5f5f5' }}>
                     <TableCell colSpan={4} align="right"><strong>Taxable Subtotal</strong></TableCell>
-                    <TableCell align="right"><strong>INR {formData.amount.toFixed(2)}</strong></TableCell>
+                    <TableCell align="right"><strong>{formData.amount.toFixed(2)}</strong></TableCell>
                   </TableRow>
                   <TableRow style={{ backgroundColor: '#f5f5f5' }}>
                     <TableCell colSpan={4} align="right"><strong>{formData.taxType} (18%)</strong></TableCell>
-                    <TableCell align="right"><strong>INR {formData.taxAmount.toFixed(2)}</strong></TableCell>
+                    <TableCell align="right"><strong>{formData.taxAmount.toFixed(2)}</strong></TableCell>
                   </TableRow>
                   <TableRow style={{ backgroundColor: '#e3f2fd' }}>
                     <TableCell colSpan={4} align="right"><strong style={{ color: '#1565C0' }}>Grand Net Receivable</strong></TableCell>
-                    <TableCell align="right"><strong style={{ color: '#1565C0', fontSize: '1.1em' }}>INR {formData.total.toFixed(2)}</strong></TableCell>
+                    <TableCell align="right"><strong style={{ color: '#1565C0', fontSize: '1.1em' }}>₹ {formData.total.toFixed(2)}</strong></TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -324,7 +326,7 @@ const Invoice = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="success" disabled={!formData.soId}>Commit & Generate Invoice</Button>
+          <Button onClick={handleSave} variant="contained" color="success" disabled={!formData.soId}>Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -341,14 +343,14 @@ const Invoice = () => {
                 <strong>Customer Name:</strong> <span>{selectedInvoice.customerName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Invoice Date:</strong> <span>{selectedInvoice.date}</span>
+                <strong>Invoice Date:</strong> <span>{formatDate(selectedInvoice.date)}</span>
               </div>
               
               <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', margin: '12px 0' }}>
                 <strong>Tax Summary:</strong><br />
-                Taxable Value: INR {selectedInvoice.subTotal?.toFixed(2)}<br />
-                {selectedInvoice.taxType} (18%): INR {selectedInvoice.taxAmount?.toFixed(2)}<br />
-                <strong>Grand Total Receivable: INR {selectedInvoice.grandTotal?.toFixed(2)}</strong>
+                Taxable Value: ₹ {selectedInvoice.subTotal?.toFixed(2)}<br />
+                {selectedInvoice.taxType} (18%): ₹ {selectedInvoice.taxAmount?.toFixed(2)}<br />
+                <strong>Grand Total Receivable: ₹ {selectedInvoice.grandTotal?.toFixed(2)}</strong>
               </div>
 
               <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>Line Items</h4>
@@ -357,9 +359,9 @@ const Invoice = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Supplied Qty</TableCell>
-                    <TableCell align="right">Unit Price</TableCell>
-                    <TableCell align="right">Tax (18%)</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Unit Price (₹)</TableCell>
+                    <TableCell align="right">Tax (18%) (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -370,9 +372,9 @@ const Invoice = () => {
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.suppliedQty}</TableCell>
-                      <TableCell align="right">INR {itm.unitPrice?.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {itemTax?.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {itemSubtotal?.toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.unitPrice?.toFixed(2)}</TableCell>
+                      <TableCell align="right">{itemTax?.toFixed(2)}</TableCell>
+                      <TableCell align="right">{itemSubtotal?.toFixed(2)}</TableCell>
                     </TableRow>
                   )})}
                 </TableBody>
@@ -422,9 +424,9 @@ const Invoice = () => {
                     <th>Item ID</th>
                     <th>Item Name</th>
                     <th className="num-col">Qty Supplied</th>
-                    <th className="num-col">Unit Price</th>
-                    <th className="num-col">Tax (18%)</th>
-                    <th className="num-col">Taxable Value</th>
+                    <th className="num-col">Unit Price (₹)</th>
+                    <th className="num-col">Tax (18%) (₹)</th>
+                    <th className="num-col">Taxable Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -436,22 +438,22 @@ const Invoice = () => {
                       <td>{itm.itemId}</td>
                       <td>{itm.name}</td>
                       <td className="num-col">{itm.suppliedQty}</td>
-                      <td className="num-col">INR {itm.unitPrice?.toFixed(2)}</td>
-                      <td className="num-col">INR {itemTax?.toFixed(2)}</td>
-                      <td className="num-col">INR {itemSubtotal?.toFixed(2)}</td>
+                      <td className="num-col">{itm.unitPrice?.toFixed(2)}</td>
+                      <td className="num-col">{itemTax?.toFixed(2)}</td>
+                      <td className="num-col">{itemSubtotal?.toFixed(2)}</td>
                     </tr>
                   )})}
                   <tr className="subtotal-row">
                     <td colSpan="5">Subtotal Taxable Amount</td>
-                    <td className="num-col">INR {selectedInvoice.subTotal?.toFixed(2)}</td>
+                    <td className="num-col">{selectedInvoice.subTotal?.toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
                     <td colSpan="5">{selectedInvoice.taxType} (18% Tax)</td>
-                    <td className="num-col">INR {selectedInvoice.taxAmount?.toFixed(2)}</td>
+                    <td className="num-col">{selectedInvoice.taxAmount?.toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="5">Grand Net Payable Value</td>
-                    <td className="num-col">INR {selectedInvoice.grandTotal?.toFixed(2)}</td>
+                    <td className="num-col">{selectedInvoice.grandTotal?.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { updateBatchStatus } from '../../store/batchImportSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
 const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
@@ -181,14 +183,6 @@ const BatchMaintenance = () => {
           >
             Export Excel
           </Button>
-          <Button
-            variant="outlined"
-            onClick={handleExportPDF}
-            startIcon={<FileText size={18} />}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: BLUE.light, color: BLUE.light }}
-          >
-            Export PDF
-          </Button>
         </Box>
       </Box>
 
@@ -198,7 +192,7 @@ const BatchMaintenance = () => {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Search by batch, item code, item name..."
+            placeholder="Search By"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -231,7 +225,7 @@ const BatchMaintenance = () => {
               <th>Available / Initial Qty</th>
               <th>Mfg Date</th>
               <th>Expiry Date</th>
-              <th>Landed Cost (INR)</th>
+              <th>Landed Cost (₹)</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -250,16 +244,16 @@ const BatchMaintenance = () => {
                     <td>{batch.itemCode}</td>
                     <td>{batch.itemName}</td>
                     <td className="bold-cell">{batch.qty} / {batch.initialQty}</td>
-                    <td>{batch.mfgDate}</td>
+                    <td>{formatDate(batch.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <span>{batch.expiryDate}</span>
+                        <span>{formatDate(batch.expiryDate)}</span>
                         <span style={{ fontSize: '11px', color: expStatus.color.main, fontWeight: 600 }}>
                           {expStatus.label}
                         </span>
                       </Box>
                     </td>
-                    <td>₹{batch.landedUnitCost?.toFixed(2)}</td>
+                    <td>{batch.landedUnitCost?.toFixed(2)}</td>
                     <td>{getStatusBadge(batch.status)}</td>
                   </tr>
                 );

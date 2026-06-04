@@ -380,13 +380,23 @@ const RolesPermissions = () => {
             value={selectedUser.email}
             onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
           />
-          <TextField
-            label="Department"
-            variant="outlined"
-            fullWidth
-            value={selectedUser.department}
-            onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
-          />
+          <FormControl fullWidth>
+            <InputLabel>Department</InputLabel>
+            <Select
+              label="Department"
+              value={selectedUser.department}
+              onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
+            >
+              <MenuItem value="Production">Production</MenuItem>
+              <MenuItem value="R&D">R&D</MenuItem>
+              <MenuItem value="Maintenance">Maintenance</MenuItem>
+              <MenuItem value="Sales">Sales</MenuItem>
+              <MenuItem value="Management">Management</MenuItem>
+              <MenuItem value="IT">IT</MenuItem>
+              <MenuItem value="Warehouse">Warehouse</MenuItem>
+              <MenuItem value="Finance">Finance</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl fullWidth>
             <InputLabel>User Role</InputLabel>
             <Select

@@ -30,9 +30,9 @@ const Sidebar = () => {
     {
       name: 'Masters',
       icon: <Box size={20} />,
-      subItems: ['Items', 'Customers', 'Suppliers', 'Warehouse'],
+      subItems: ['Items', 'Customers', 'Suppliers'],
     },
-    { name: 'Purchase Management', icon: <ShoppingCart size={20} />, subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Quality Control', 'Landed Cost Calculation'] },
+    { name: 'Purchase Management', icon: <ShoppingCart size={20} />, subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Landed Cost Calculation'] },
     { name: 'Import Management', icon: <Globe size={20} />, subItems: ['Import Purchase Management', /* 'Shipment Tracking', */ 'Landed Cost Calculation', 'Selling Price Finalization'] },
     { name: 'Batch & Lot Management', icon: <Tag size={20} />, subItems: ['Batch Maintenance', 'Batch Stock Inquiry', 'Batch Aging Analysis'] },
     { name: 'Inventory Management', icon: <Layers size={20} />, subItems: ['Stock Overview', 'Damages'] },
@@ -40,7 +40,7 @@ const Sidebar = () => {
     {
       name: 'CRM Module',
       icon: <HeartHandshake size={20} />,
-      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Opportunity Management', 'Complaint Management', 'CRM Reports']
+      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry']
     },
 
     /* {

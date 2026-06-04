@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
@@ -9,6 +10,7 @@ import {
   History, ShoppingBag, FileText, CheckCircle2, FileSpreadsheet
 } from 'lucide-react';
 import { exportToExcel } from '../../utils/exportUtil';
+
 
 const CustomerManagement = () => {
   // Redux Selectors
@@ -375,7 +377,7 @@ const CustomerManagement = () => {
                                 <span style={{ fontWeight: 700, fontSize: '13px' }}>{item.type} : {item.ref}</span>
                                 <Chip label={item.status} size="small" sx={{ height: '18px', fontSize: '10px' }} />
                               </div>
-                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.date}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDate(item.date)}</span>
                             </div>
                             <div style={{ fontSize: '13px', color: 'var(--text-main)' }}>{item.details}</div>
                             {item.value > 0 && (

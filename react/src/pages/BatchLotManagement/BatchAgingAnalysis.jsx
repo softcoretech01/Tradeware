@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
@@ -9,6 +10,7 @@ import {
   BarChart2, Info
 } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
 const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
@@ -166,9 +168,6 @@ const BatchAgingAnalysis = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Batch Stock Aging Analysis
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Track product storage duration, identify slow-moving batches, and proactively mitigate expiration write-offs.
-          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button 
@@ -273,7 +272,7 @@ const BatchAgingAnalysis = () => {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Search by batch, code, or product name..."
+            placeholder="Search By"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -307,8 +306,6 @@ const BatchAgingAnalysis = () => {
               <th>Mfg Date</th>
               <th>Storage Duration</th>
               <th>Age Bucket</th>
-              <th>Expiry Date</th>
-              <th>Days to Expiry</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -322,7 +319,7 @@ const BatchAgingAnalysis = () => {
                     <td>{b.itemCode}</td>
                     <td>{b.itemName}</td>
                     <td className="bold-cell">{b.qty} units</td>
-                    <td>{b.mfgDate}</td>
+                    <td>{formatDate(b.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Clock size={14} style={{ color: BLUE.light }} />
@@ -346,8 +343,6 @@ const BatchAgingAnalysis = () => {
                         }}
                       />
                     </td>
-                    <td>{b.expiryDate}</td>
-                    <td>{getExpiryAlertTag(b.daysToExpiry)}</td>
                     <td>
                       <Chip
                         label={b.status}
@@ -369,7 +364,7 @@ const BatchAgingAnalysis = () => {
               })
             ) : (
               <tr>
-                <td colSpan={10} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   No batch analysis records found.
                 </td>
               </tr>

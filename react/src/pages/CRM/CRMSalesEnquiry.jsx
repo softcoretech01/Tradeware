@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ import {
 } from '../../store/erpSlice';
 import { addFollowup } from '../../store/crmSlice';
 import { exportToExcel } from '../../utils/exportUtil';
+
 
 const CRMSalesEnquiry = () => {
   const dispatch = useDispatch();
@@ -276,8 +278,7 @@ const CRMSalesEnquiry = () => {
             Export Excel
           </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Enquiry
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -335,7 +336,7 @@ const CRMSalesEnquiry = () => {
                 return (
                   <tr key={e.id}>
                     <td className="bold-cell">{e.id}</td>
-                    <td>{e.date}</td>
+                    <td>{formatDate(e.date)}</td>
                     <td>{e.customerName}</td>
                     <td>{e.source}</td>
                     <td>
@@ -520,7 +521,7 @@ const CRMSalesEnquiry = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Enquiry</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -536,7 +537,7 @@ const CRMSalesEnquiry = () => {
                   <strong>Customer:</strong> <span>{selectedEnquiry.customerName}</span>
                 </div>
                 <div className="view-detail-row">
-                  <strong>Logged Date:</strong> <span>{selectedEnquiry.date}</span>
+                  <strong>Logged Date:</strong> <span>{formatDate(selectedEnquiry.date)}</span>
                 </div>
                 <div className="view-detail-row">
                   <strong>Source:</strong> <span>{selectedEnquiry.source}</span>

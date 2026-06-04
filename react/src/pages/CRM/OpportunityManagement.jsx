@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -12,6 +13,7 @@ import {
   addOpportunity, updateOpportunity, deleteOpportunity 
 } from '../../store/crmSlice';
 import { exportToExcel } from '../../utils/exportUtil';
+
 
 const OpportunityManagement = () => {
   const dispatch = useDispatch();
@@ -163,8 +165,7 @@ const OpportunityManagement = () => {
             Export Excel
           </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> New Opportunity
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -261,7 +262,7 @@ const OpportunityManagement = () => {
                     <td style={{ fontWeight: 700, color: 'var(--accent)' }}>
                       ${opp.value?.toLocaleString()}
                     </td>
-                    <td>{opp.expectedClosingDate}</td>
+                    <td>{formatDate(opp.expectedClosingDate)}</td>
                     <td>{rep}</td>
                     <td>
                       <Chip 
@@ -391,7 +392,7 @@ const OpportunityManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Opportunity</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </div>

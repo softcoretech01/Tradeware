@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -14,6 +15,7 @@ import {
   approveInspection, rejectInspection
 } from '../../store/qcSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
 const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
@@ -139,17 +141,10 @@ const QualityControl = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button 
-            variant="outlined" 
-            startIcon={<FileSpreadsheet size={16} />} 
-            onClick={handleExportExcelLocal}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
+          <Button variant="outlined" startIcon={<FileSpreadsheet size={16} />} onClick={handleExportExcelLocal}
+            sx={{ textTransform: 'none', borderColor: '#cbd5e1', color: '#475569', mr: 1 }}
           >
             Export Excel
-          </Button>
-          <Button variant="outlined" startIcon={<FileText size={16} />} onClick={handleExportPDFLocal}
-            sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#DC2626', color: '#DC2626', '&:hover': { bgcolor: '#FEF2F2' } }}>
-            Print Report
           </Button>
         </Box>
       </Box>
@@ -214,7 +209,7 @@ const QualityControl = () => {
                 return (
                   <TableRow key={ins.id} hover>
                     <TableCell sx={{ fontWeight: 600, color: BLUE.main }}>{ins.id}</TableCell>
-                    <TableCell>{ins.date}</TableCell>
+                    <TableCell>{formatDate(ins.date)}</TableCell>
                     <TableCell sx={{ fontFamily: 'monospace', fontWeight: 500 }}>{ins.grnNo || ins.batchNo || '—'}</TableCell>
                     <TableCell>{ins.supplierName}</TableCell>
                     <TableCell>
@@ -283,7 +278,7 @@ const QualityControl = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
               <Grid container spacing={2}>
                 <Grid item xs={6}><Typography variant="caption" color="text.secondary">INSPECTION STAGE</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedInspection.stage}</Typography></Grid>
-                <Grid item xs={6}><Typography variant="caption" color="text.secondary">DATE REGISTERED</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedInspection.date}</Typography></Grid>
+                <Grid item xs={6}><Typography variant="caption" color="text.secondary">DATE REGISTERED</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{formatDate(selectedInspection.date)}</Typography></Grid>
                 <Grid item xs={6}><Typography variant="caption" color="text.secondary">GRN/BATCH/DC NO</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedInspection.grnNo || selectedInspection.batchNo || '—'}</Typography></Grid>
                 <Grid item xs={6}><Typography variant="caption" color="text.secondary">SUPPLIER/PROD LINE</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedInspection.supplierName}</Typography></Grid>
                 <Grid item xs={12}><Typography variant="caption" color="text.secondary">ITEM NAME (CODE)</Typography><Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedInspection.itemName} ({selectedInspection.itemCode})</Typography></Grid>

@@ -1,6 +1,8 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
+
   Download, TrendingDown, Wallet, Check
 } from 'lucide-react';
 
@@ -212,7 +214,7 @@ const PCBook = () => {
                   <td style={{ color: 'var(--text-muted)' }}>
                     SGD {tr.openingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td>{tr.date}</td>
+                  <td>{formatDate(tr.date)}</td>
                   <td className="bold-cell">{tr.slipNo}</td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>

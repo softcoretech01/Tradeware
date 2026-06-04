@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -19,6 +20,7 @@ import {
   deleteQuotation 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const QuotationManagement = () => {
   const dispatch = useDispatch();
@@ -300,8 +302,7 @@ const QuotationManagement = () => {
             <FileText size={16} /> PDF
           </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Create Quotation
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -362,13 +363,13 @@ const QuotationManagement = () => {
                 return (
                   <tr key={q.id}>
                     <td className="bold-cell">{q.id}</td>
-                    <td>{q.date}</td>
+                    <td>{formatDate(q.date)}</td>
                     <td className="text-muted">{q.enqRef || 'Direct Draft'}</td>
                     <td>{q.customerName}</td>
                     <td>
                       <Chip label={q.priceCategory} variant="outlined" size="small" />
                     </td>
-                    <td className="bold-cell">INR {total.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td className="bold-cell">{total.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                     <td>
                       <Chip 
                         icon={<History size={12} />} 
@@ -509,10 +510,10 @@ const QuotationManagement = () => {
                 <TableRow>
                   <TableCell>Item Name</TableCell>
                   <TableCell width="100">Qty</TableCell>
-                  <TableCell width="120">Cost (INR)</TableCell>
+                  <TableCell width="120">Cost (₹)</TableCell>
                   <TableCell width="110">Markup (%)</TableCell>
-                  <TableCell width="130">Unit Price (INR)</TableCell>
-                  <TableCell width="130">Total (INR)</TableCell>
+                  <TableCell width="130">Unit Price (₹)</TableCell>
+                  <TableCell width="130">Total (₹)</TableCell>
                   <TableCell width="60" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -568,7 +569,7 @@ const QuotationManagement = () => {
                       />
                     </TableCell>
                     <TableCell className="bold-cell">
-                      INR {(item.qty * item.unitPrice).toFixed(2)}
+                      {(item.qty * item.unitPrice).toFixed(2)}
                     </TableCell>
                     <TableCell align="center">
                       <IconButton size="small" color="error" onClick={() => handleRemoveLineItem(idx)}>
@@ -595,7 +596,7 @@ const QuotationManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Quotation</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -609,7 +610,7 @@ const QuotationManagement = () => {
                 <strong>Customer:</strong> <span>{selectedQuote.customerName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Quotation Date:</strong> <span>{selectedQuote.date}</span>
+                <strong>Quotation Date:</strong> <span>{formatDate(selectedQuote.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Validity Deadline:</strong> <span>{selectedQuote.validity}</span>
@@ -634,9 +635,9 @@ const QuotationManagement = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Qty</TableCell>
-                    <TableCell align="right">Unit Price</TableCell>
+                    <TableCell align="right">Unit Price (₹)</TableCell>
                     <TableCell align="right">Markup</TableCell>
-                    <TableCell align="right">Subtotal</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -644,15 +645,15 @@ const QuotationManagement = () => {
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
                       <TableCell align="right">{itm.qty}</TableCell>
-                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
                       <TableCell align="right">{itm.markupPct}%</TableCell>
-                      <TableCell align="right">INR {(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell colSpan={4} align="right"><strong>Quotation Total:</strong></TableCell>
                     <TableCell align="right" className="bold-cell">
-                      INR {selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
+                      {selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -672,7 +673,7 @@ const QuotationManagement = () => {
           {selectedQuote && (
             <div className="view-detail-body">
               <div style={{ marginBottom: '16px' }}>
-                <p><strong>Current Active Version:</strong> Revision {selectedQuote.revision} (Total: INR {selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)})</p>
+                <p><strong>Current Active Version:</strong> Revision {selectedQuote.revision} (Total: ₹ {selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)})</p>
               </div>
 
               {selectedQuote.revisionHistory.length === 0 ? (
@@ -688,14 +689,14 @@ const QuotationManagement = () => {
                         <strong>Revision {hist.revision}</strong>
                         <span className="text-muted" style={{ fontSize: '12px' }}>Saved: {hist.date}</span>
                       </div>
-                      <p style={{ fontSize: '13px', fontWeight: '600' }}>Voucher Total: INR {hist.total.toFixed(2)}</p>
+                      <p style={{ fontSize: '13px', fontWeight: '600' }}>Voucher Total: ₹ {hist.total.toFixed(2)}</p>
                       
                       <Table size="small" style={{ marginTop: '8px' }}>
                         <TableHead>
                           <TableRow>
                             <TableCell style={{ fontSize: '11px', padding: '4px' }}>Item</TableCell>
                             <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>Qty</TableCell>
-                            <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>Price</TableCell>
+                            <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>Price (₹)</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -703,7 +704,7 @@ const QuotationManagement = () => {
                             <TableRow key={hIdx}>
                               <TableCell style={{ fontSize: '11px', padding: '4px' }}>{hi.name || hi.itemId}</TableCell>
                               <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>{hi.qty}</TableCell>
-                              <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>INR {hi.unitPrice.toFixed(2)}</TableCell>
+                              <TableCell align="right" style={{ fontSize: '11px', padding: '4px' }}>{hi.unitPrice.toFixed(2)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -761,9 +762,9 @@ const QuotationManagement = () => {
                     <th>Item ID</th>
                     <th>Item Description</th>
                     <th className="num-col">Quantity</th>
-                    <th className="num-col">Unit Price</th>
-                    <th className="num-col">Tax (18%)</th>
-                    <th className="num-col">Subtotal</th>
+                    <th className="num-col">Unit Price (₹)</th>
+                    <th className="num-col">Tax (18%) (₹)</th>
+                    <th className="num-col">Subtotal (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -775,23 +776,23 @@ const QuotationManagement = () => {
                         <td>{itm.itemId}</td>
                         <td>{itm.name}</td>
                         <td className="num-col">{itm.qty}</td>
-                        <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
-                        <td className="num-col">INR {taxVal.toFixed(2)}</td>
-                        <td className="num-col">INR {(lineVal + taxVal).toFixed(2)}</td>
+                        <td className="num-col">{itm.unitPrice.toFixed(2)}</td>
+                        <td className="num-col">{taxVal.toFixed(2)}</td>
+                        <td className="num-col">{(lineVal + taxVal).toFixed(2)}</td>
                       </tr>
                     );
                   })}
                   <tr className="subtotal-row">
                     <td colSpan="5">Total Taxable Value</td>
-                    <td className="num-col">INR {selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col">{selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
                     <td colSpan="5">Integrated Goods & Services Tax (18%)</td>
-                    <td className="num-col">INR {(selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0) * 0.18).toFixed(2)}</td>
+                    <td className="num-col">{(selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0) * 0.18).toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="5">Quoted Offer Grand Total</td>
-                    <td className="num-col">INR {(selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0) * 1.18).toFixed(2)}</td>
+                    <td className="num-col">{(selectedQuote.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0) * 1.18).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tabs, Tab, Box, Typography, Chip, Grid, Card, CardContent } from '@mui/material';
@@ -5,6 +6,7 @@ import {
   FileSpreadsheet, FileText, ChevronRight, TrendingUp, Calendar, AlertCircle
 } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const CRMReports = () => {
   // Selectors
@@ -363,7 +365,7 @@ const CRMReports = () => {
                             size="small" 
                           />
                         </td>
-                        <td>{o.closeDate}</td>
+                        <td>{formatDate(o.closeDate)}</td>
                         <td>{o.salesperson}</td>
                         <td style={{ fontWeight: 700, color: 'var(--accent)' }}>
                           ${o.value?.toLocaleString()}

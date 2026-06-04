@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
+
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
 const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
 const RED = { main: '#B91C1C', light: '#EF4444', bg: '#FEE2E2' };
@@ -19,6 +21,7 @@ const SLATE = { main: '#475569', light: '#94A3B8', bg: '#F1F5F9' };
 
 const BatchStockInquiry = () => {
   const batches = useSelector(state => state.batchImport.batches);
+  const items = useSelector(state => state.items?.items || []);
 
   // States
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,9 +164,6 @@ const BatchStockInquiry = () => {
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Batch Stock Inquiry
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Query warehouse batch stock availability, and check sequence routing for FIFO stock dispatches.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -344,23 +344,10 @@ const BatchStockInquiry = () => {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Filter batch grid by number, code, name..."
+            placeholder="Search By"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
-        </div>
-        <div className="filter-selects">
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <Select
-              value={warehouseFilter}
-              onChange={(e) => { setWarehouseFilter(e.target.value); setCurrentPage(1); }}
-              displayEmpty
-            >
-              <MenuItem value="All">All Warehouse Locations</MenuItem>
-              <MenuItem value="Main Warehouse">Main Warehouse</MenuItem>
-              <MenuItem value="Hold Warehouse">Hold Warehouse</MenuItem>
-            </Select>
-          </FormControl>
         </div>
       </div>
 
@@ -372,12 +359,12 @@ const BatchStockInquiry = () => {
               <th>Batch No</th>
               <th>Item Code</th>
               <th>Item Name</th>
+              <th>UOM</th>
               <th>Available Stock</th>
-              <th>Landed Unit Cost</th>
-              <th>Selling Price</th>
+              <th>Landed Unit Cost (₹)</th>
+              <th>Selling Price (₹)</th>
               <th>Expiry Date</th>
               <th>Days to Expire</th>
-              <th>QC Status</th>
             </tr>
           </thead>
           <tbody>
@@ -389,21 +376,13 @@ const BatchStockInquiry = () => {
                   <td className="bold-cell">{b.batchNo}</td>
                   <td>{b.itemCode}</td>
                   <td>{b.itemName}</td>
-                  <td className="bold-cell">{b.qty} units</td>
-                  <td>₹{b.landedUnitCost?.toFixed(2)}</td>
-                  <td>₹{b.finalSellingPrice?.toFixed(2)}</td>
-                  <td>{b.expiryDate}</td>
+                  <td>{items.find(i => i.id === b.itemCode)?.uom || 'Nos'}</td>
+                  <td className="bold-cell">{b.qty}</td>
+                  <td>{b.landedUnitCost?.toFixed(2)}</td>
+                  <td>{b.finalSellingPrice?.toFixed(2)}</td>
+                  <td>{formatDate(b.expiryDate)}</td>
                   <td style={{ color: daysToExpiry < 0 ? RED.main : (daysToExpiry <= 60 ? AMBER.main : 'inherit'), fontWeight: daysToExpiry <= 60 ? 700 : 400 }}>
                     {daysToExpiry < 0 ? 'Expired' : `${daysToExpiry} days`}
-                  </td>
-                  <td>
-                    {b.status === 'Available' ? (
-                      <Chip label="Approved / Active" size="small" style={{ backgroundColor: GREEN.bg, color: GREEN.main, fontWeight: 600 }} />
-                    ) : b.status === 'On Hold' ? (
-                      <Chip label="QC Locked / On Hold" size="small" style={{ backgroundColor: AMBER.bg, color: AMBER.main, fontWeight: 600 }} />
-                    ) : (
-                      <Chip label="Expired" size="small" style={{ backgroundColor: RED.bg, color: RED.main, fontWeight: 600 }} />
-                    )}
                   </td>
                 </tr>
               )})

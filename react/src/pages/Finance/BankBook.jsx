@@ -1,5 +1,7 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { Search, X, Printer, Download } from 'lucide-react';
+
 
 const BankBook = () => {
   // Filters
@@ -196,7 +198,7 @@ const BankBook = () => {
             <tbody>
               {filteredLedger.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.date}</td>
+                  <td>{formatDate(row.date)}</td>
                   <td>{row.type}</td>
                   <td className={row.isLink ? 'link-cell' : ''}>
                     {row.isLink ? <u>{row.party}</u> : row.party}

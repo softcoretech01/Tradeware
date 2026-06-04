@@ -89,8 +89,8 @@ const InventoryMaster = () => {
 
   const stats = useMemo(() => ({
     total: inventory.reduce((s, i) => s + i.availableStock, 0),
-    low: inventory.filter(i => i.stockStatus === 'Low Stock').length,
-    outOfStock: inventory.filter(i => i.stockStatus === 'Out of Stock').length,
+    low: inventory.filter(i => i.status === 'Low Stock').length,
+    outOfStock: inventory.filter(i => i.status === 'Out of Stock').length,
     damaged: inventory.reduce((s, i) => s + i.damagedStock, 0),
     reserved: inventory.reduce((s, i) => s + i.reservedStock, 0),
     expired: inventory.reduce((s, i) => s + (i.expiredStock || 0), 0),
@@ -102,7 +102,7 @@ const InventoryMaster = () => {
     return inventory.filter(row => {
       if (warehouseFilter !== 'All' && row.warehouse !== warehouseFilter) return false;
       if (categoryFilter !== 'All' && row.category !== categoryFilter) return false;
-      if (statusFilter !== 'All' && row.stockStatus !== statusFilter) return false;
+      if (statusFilter !== 'All' && row.status !== statusFilter) return false;
       if (search) {
         const s = search.toLowerCase();
         return (
@@ -173,7 +173,7 @@ const InventoryMaster = () => {
         'Opening Stock': r.openingStock, 'Inward Qty': r.inwardQty,
         'Outward Qty': r.outwardQty, 'Available Stock': r.availableStock,
         'Reserved Stock': r.reservedStock, 'Damaged Stock': r.damagedStock,
-        'Expiry Date': r.expiryDate, 'Status': r.stockStatus,
+        'Expiry Date': r.expiryDate, 'Status': r.status,
         'Last Updated': dayjs(r.lastUpdated).format('DD/MM/YYYY HH:mm'),
       }));
       const ws = XLSX.utils.json_to_sheet(data);
@@ -186,8 +186,10 @@ const InventoryMaster = () => {
 
   const handleExportPDF = useCallback(() => {
     import('jspdf').then(jsPDFModule => {
-      import('jspdf-autotable').then(() => {
-        const doc = new jsPDFModule.default('l', 'mm', 'a4');
+      import('jspdf-autotable').then(autoTableModule => {
+        const autoTable = autoTableModule.default || autoTableModule;
+        const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+        const doc = new jsPDF('l', 'mm', 'a4');
         doc.setFontSize(16);
         doc.setTextColor(21, 101, 192);
         doc.text('Inventory Report', 14, 15);
@@ -199,10 +201,10 @@ const InventoryMaster = () => {
         const body = filtered.map(r => [
           r.itemCode, r.itemName, r.category, r.warehouse, r.batchNo, r.uom,
           r.openingStock, r.inwardQty, r.outwardQty, r.availableStock,
-          r.reservedStock, r.damagedStock, r.stockStatus,
+          r.reservedStock, r.damagedStock, r.status,
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
           head, body, startY: 28,
           styles: { fontSize: 7, cellPadding: 2 },
           headStyles: { fillColor: [21, 101, 192], textColor: 255, fontStyle: 'bold' },
@@ -291,8 +293,8 @@ const InventoryMaster = () => {
     {
       field: 'availableStock', headerName: 'Available', width: 100, type: 'number', align: 'right', headerAlign: 'right',
       renderCell: (p) => {
-        const isLow = p.row.stockStatus === 'Low Stock';
-        const isOut = p.row.stockStatus === 'Out of Stock';
+        const isLow = p.row.status === 'Low Stock';
+        const isOut = p.row.status === 'Out of Stock';
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {(isLow || isOut) && <WarningIcon sx={{ fontSize: 14, color: isOut ? '#C62828' : '#E65100' }} />}
@@ -320,7 +322,7 @@ const InventoryMaster = () => {
     },
 
     {
-      field: 'stockStatus', headerName: 'Status', width: 120,
+      field: 'status', headerName: 'Status', width: 120,
       renderCell: (p) => {
         const c = STATUS_COLORS[p.value] || STATUS_COLORS['In Stock'];
         return (
@@ -335,11 +337,16 @@ const InventoryMaster = () => {
 
 
     {
-      field: 'actions', headerName: 'Action', width: 70, sortable: false, filterable: false, align: 'center', headerAlign: 'center',
+      field: 'actions', headerName: 'Action', width: 100, sortable: false, filterable: false, align: 'center', headerAlign: 'center',
       renderCell: (p) => (
-        <IconButton size="small" onClick={(e) => handleMenuOpen(e, p.row)}>
-          <MoreIcon fontSize="small" />
-        </IconButton>
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <IconButton size="small" onClick={() => handleEdit(p.row)}>
+            <EditIcon fontSize="small" sx={{ color: BLUE.main }} />
+          </IconButton>
+          <IconButton size="small" onClick={() => handleDeleteClick(p.row)}>
+            <DeleteIcon fontSize="small" sx={{ color: '#C62828' }} />
+          </IconButton>
+        </Box>
       ),
     },
   ], []);
@@ -419,7 +426,7 @@ const InventoryMaster = () => {
           {/* Filter Bar */}
           <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid #E0E0E0', display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
-              size="small" placeholder="Search item code, name, batch…" value={search}
+              size="small" placeholder="Search By" value={search}
               onChange={e => setSearch(e.target.value)}
               InputProps={{
                 startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
@@ -447,7 +454,6 @@ const InventoryMaster = () => {
                 <MenuItem value="In Stock">In Stock</MenuItem>
                 <MenuItem value="Low Stock">Low Stock</MenuItem>
                 <MenuItem value="Out of Stock">Out of Stock</MenuItem>
-                <MenuItem value="Reserved">Reserved</MenuItem>
               </Select>
             </FormControl>
             {(search || warehouseFilter !== 'All' || categoryFilter !== 'All' || statusFilter !== 'All') && (
@@ -458,9 +464,6 @@ const InventoryMaster = () => {
               </Button>
             )}
             <Box sx={{ flex: 1 }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-              {filtered.length} of {inventory.length} records
-            </Typography>
           </Paper>
 
           {/* DataGrid */}
@@ -474,8 +477,8 @@ const InventoryMaster = () => {
               initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
               pageSizeOptions={[10, 25, 50]}
               getRowClassName={(params) => {
-                if (params.row.stockStatus === 'Out of Stock') return 'row-out-of-stock';
-                if (params.row.stockStatus === 'Low Stock') return 'row-low-stock';
+                if (params.row.status === 'Out of Stock') return 'row-out-of-stock';
+                if (params.row.status === 'Low Stock') return 'row-low-stock';
                 return '';
               }}
               sx={{

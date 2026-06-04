@@ -388,7 +388,7 @@ const initialState = {
       status: 'Issued'
     }
   ],
-  currentUser: null,
+  currentUser: localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null,
   users: [
     { id: 'usr001', name: 'Admin User', department: 'Management', role: 'Admin', email: 'admin@tradeware.com', status: 'Active', monthlyTarget: 0 },
     { id: 'usr002', name: 'Super Admin', department: 'IT', role: 'Admin', email: 'sconnor@tradeware.com', status: 'Active', monthlyTarget: 0 },
@@ -900,6 +900,11 @@ const erpSlice = createSlice({
     },
     setCurrentUser: (state, action) => {
       state.currentUser = action.payload;
+      if (action.payload) {
+        localStorage.setItem('currentUser', JSON.stringify(action.payload));
+      } else {
+        localStorage.removeItem('currentUser');
+      }
     },
     addUser: (state, action) => {
       state.users.push(action.payload);

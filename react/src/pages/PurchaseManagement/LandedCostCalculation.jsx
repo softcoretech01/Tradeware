@@ -175,10 +175,10 @@ const LandedCostCalculation = () => {
       'Item Name': it.itemName,
       'Qty': it.qty,
       'FCY Unit FOB': it.fcyUnitPrice,
-      'Total FOB (INR)': it.fobValLCY,
-      'Allocated Overhead (INR)': it.allocatedOverhead,
-      'Total Landed Cost (INR)': it.totalLandedCost,
-      'Landed Unit Cost (INR)': it.landedUnitCost
+      'Total FOB (₹)': it.fobValLCY,
+      'Allocated Overhead (₹)': it.allocatedOverhead,
+      'Total Landed Cost (₹)': it.totalLandedCost,
+      'Landed Unit Cost (₹)': it.landedUnitCost
     }));
     exportToExcel(formatted, `Landed_Cost_Allocation_${selectedGrn.id}`, 'Worksheet');
   };
@@ -191,9 +191,6 @@ const LandedCostCalculation = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
             Landed Cost Calculation
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.3 }}>
-            Allocate duty, freight, handling, and insurance overheads to received GRN items.
-          </Typography>
         </Box>
         {selectedGrn && (
           <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -203,7 +200,7 @@ const LandedCostCalculation = () => {
               startIcon={<FileSpreadsheet size={18} />}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              Export Worksheet
+              Export excel
             </Button>
             <Button
               variant="contained"
@@ -256,12 +253,12 @@ const LandedCostCalculation = () => {
       {selectedGrn && calculations && (
         <Grid container spacing={3}>
           {/* OVERHEAD EXPENSES FORM */}
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12}>
             <Card variant="outlined" sx={{ height: '100%' }}>
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1, backgroundColor: BLUE.bg }}>
                 <Calculator size={18} style={{ color: BLUE.main }} />
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: BLUE.main }}>
-                  Overhead Expenses (INR)
+                  Overhead Expenses (₹)
                 </Typography>
               </Box>
               <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -277,41 +274,41 @@ const LandedCostCalculation = () => {
                     1. Charges
                   </Typography>
                   <Grid container spacing={1.5}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Insurance (INR)"
+                        label="Insurance (₹)"
                         type="number"
                         value={insuranceCost}
                         onChange={(e) => setInsuranceCost(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Handling Charges (INR)"
+                        label="Handling Charges (₹)"
                         type="number"
                         value={handlingCharges}
                         onChange={(e) => setHandlingCharges(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Packing Charges (INR)"
+                        label="Packing Charges (₹)"
                         type="number"
                         value={packingCharges}
                         onChange={(e) => setPackingCharges(e.target.value)}
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Aging Charges (INR)"
+                        label="Aging Charges (₹)"
                         type="number"
                         value={agingCharges}
                         onChange={(e) => setAgingCharges(e.target.value)}
@@ -331,11 +328,11 @@ const LandedCostCalculation = () => {
           </Grid>
 
           {/* DYNAMIC COST ALLOCATION WORKSHEET */}
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12}>
             <Card variant="outlined">
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Landed Cost Allocation Worksheet (INR)
+                  Landed Cost Allocation Worksheet (₹)
                 </Typography>
                 <Chip
                   label={`Base Exchange Rate: 1.0`}
@@ -351,7 +348,7 @@ const LandedCostCalculation = () => {
                         <th>Item Details</th>
                         <th>Qty</th>
                         <th>Unit Price (FCY)</th>
-                        <th>FOB Value (INR)</th>
+                        <th>FOB Value (₹)</th>
                         <th>Allocated Overhead</th>
                         <th>Total Landed Cost</th>
                         <th>Landed Unit Cost</th>

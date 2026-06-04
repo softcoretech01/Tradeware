@@ -1,7 +1,9 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPettyCashSlip, approvePettyCashSlip } from '../../store/financeSlice';
 import { 
+
   Plus, Check, Trash2, Upload, FileText, CheckCircle2, Clock, X, AlertCircle
 } from 'lucide-react';
 
@@ -248,8 +250,7 @@ const PettyCash = () => {
             </div>
 
             <button type="submit" className="btn-primary" style={{ marginTop: '16px', background: 'var(--primary)', width: '100%' }}>
-              <Plus size={16} /> Submit Claim Request
-            </button>
+              <Plus size={16} /> New</button>
           </form>
         </div>
 
@@ -263,7 +264,7 @@ const PettyCash = () => {
                 <div className="pc-item-header">
                   <div>
                     <strong className="slip-no">{tr.slipNo}</strong>
-                    <span className="date-pc">{tr.date}</span>
+                    <span className="date-pc">{formatDate(tr.date)}</span>
                   </div>
                   <span className={`status-badge-pc ${tr.status.toLowerCase()}`}>
                     {tr.status === 'Approved' ? <CheckCircle2 size={12} /> : <Clock size={12} />}

@@ -125,8 +125,7 @@ const Customers = () => {
               <RotateCcw size={16} /> Cancel
             </button>
             <button className="btn btn-success" onClick={handleAddNew}>
-              <Plus size={16} /> New
-            </button>
+              <Plus size={16} /> New</button>
           </div>
         </div>
       </div>

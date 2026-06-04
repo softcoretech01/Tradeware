@@ -1,5 +1,7 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { 
+
   Search, Printer, Eye, CheckCircle2, Edit3, Trash2, MessageSquare, Plus, Download, ArrowLeft, X
 } from 'lucide-react';
 
@@ -298,8 +300,7 @@ const BankBookEntries = () => {
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn-create-green" onClick={() => { setView('create'); setEditId(null); }} style={{ margin: 0 }}>
               <div className="icon-box">
-                <Plus size={16} />
-              </div>
+                <Plus size={16} /> New</div>
               <div className="text-box">New</div>
             </button>
           </div>
@@ -376,7 +377,7 @@ const BankBookEntries = () => {
                         onChange={() => handleToggleSelectRow(row.id)}
                       />
                     </td>
-                    <td>{row.date}</td>
+                    <td>{formatDate(row.date)}</td>
                     <td>{row.bankName}</td>
                     <td>{row.party}</td>
                     <td>{row.voucher}</td>
@@ -430,7 +431,7 @@ const BankBookEntries = () => {
               <div className="modal-body">
                 <div className="view-detail-body">
                   <div className="view-detail-row">
-                    <strong>Date:</strong> <span>{selectedEntry.date}</span>
+                    <strong>Date:</strong> <span>{formatDate(selectedEntry.date)}</span>
                   </div>
                   <div className="view-detail-row">
                     <strong>Bank Account:</strong> <span>{selectedEntry.bankName}</span>

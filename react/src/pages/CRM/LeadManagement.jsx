@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -13,6 +14,7 @@ import {
   addOpportunity, addFollowup 
 } from '../../store/crmSlice';
 import { exportToExcel } from '../../utils/exportUtil';
+
 
 const LeadManagement = () => {
   const dispatch = useDispatch();
@@ -247,8 +249,7 @@ const LeadManagement = () => {
             Export Excel
           </Button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Add New Lead
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -325,7 +326,7 @@ const LeadManagement = () => {
                         ${l.opportunityValue?.toLocaleString() || '0'}
                       </td>
                       <td>{salesperson}</td>
-                      <td>{l.followUpDate}</td>
+                      <td>{formatDate(l.followUpDate)}</td>
                       <td>
                         <Chip 
                           label={l.status} 
@@ -485,7 +486,7 @@ const LeadManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save Lead</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 

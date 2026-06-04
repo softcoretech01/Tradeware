@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -7,7 +8,7 @@ import {
   Tooltip, Chip
 } from '@mui/material';
 import { 
-  Search, Plus, Eye, Check, X, Printer, Trash,
+  Search, Plus, Eye, Check, X, Printer, Trash, Edit,
   FileSpreadsheet, FileText, FileSpreadsheet as DebitIcon
 } from 'lucide-react';
 import { 
@@ -16,6 +17,7 @@ import {
   deletePurchaseReturn 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const PurchaseReturn = () => {
   const dispatch = useDispatch();
@@ -56,6 +58,11 @@ const PurchaseReturn = () => {
       debitNoteGenerated: false,
       debitNoteDetails: null
     });
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (ret) => {
+    setFormData(ret);
     setFormOpen(true);
   };
 
@@ -119,7 +126,7 @@ const PurchaseReturn = () => {
   };
 
   const handleCreateDebitNote = (ret) => {
-    const amount = ret.returnedItems.reduce((acc, curr) => acc + (curr.returnedQty * curr.unitPrice), 0);
+    const amount = ret.returnedItems.reduce((acc, curr) => acc + (curr.returnedQty * (curr.unitPrice || 0)), 0);
     const taxAmount = amount * 0.18; // Standard 18% tax refund
     const total = amount + taxAmount;
     
@@ -133,7 +140,7 @@ const PurchaseReturn = () => {
 
     alert(`Debit Note generated successfully for ${ret.id}!`);
     // Auto update selected state to refresh view dialog
-    setSelectedReturn(prev => ({
+    setSelectedReturn(prev => prev ? {
       ...prev,
       debitNoteGenerated: true,
       debitNoteDetails: {
@@ -143,7 +150,7 @@ const PurchaseReturn = () => {
         total,
         date: new Date().toISOString().split('T')[0]
       }
-    }));
+    } : null);
   };
 
   const handleDelete = (id) => {
@@ -195,7 +202,6 @@ const PurchaseReturn = () => {
       <div className="module-header">
         <div>
           <h2>Purchase Return</h2>
-          <p className="subtitle">Manage goods returns, process QC failures, and issue Debit Note credits.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -206,11 +212,8 @@ const PurchaseReturn = () => {
           >
             Export Excel
           </Button>
-          <button className="btn-secondary" onClick={handleExportPDF}>
-            <FileText size={16} /> PDF
-          </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Record Goods Return
+            <Plus size={16} /> New
           </button>
         </div>
       </div>
@@ -221,7 +224,7 @@ const PurchaseReturn = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by Return ID, GRN, Supplier..." 
+            placeholder="Search by" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -244,7 +247,6 @@ const PurchaseReturn = () => {
               <th>Date</th>
               <th>GRN Ref</th>
               <th>Supplier</th>
-              <th>Returned Items</th>
               <th>Debit Note Status</th>
               <th>Refund Total</th>
               <th className="actions-column">Actions</th>
@@ -259,12 +261,9 @@ const PurchaseReturn = () => {
               filteredReturns.map((ret) => (
                 <tr key={ret.id}>
                   <td className="bold-cell">{ret.id}</td>
-                  <td>{ret.date}</td>
+                  <td>{formatDate(ret.date)}</td>
                   <td className="text-muted">{ret.grnRef}</td>
                   <td>{ret.supplierName}</td>
-                  <td>
-                    <span className="items-badge">{ret.returnedItems.length} items</span>
-                  </td>
                   <td>
                     <Chip 
                       label={ret.debitNoteGenerated ? 'Debit Note Created' : 'Pending Debit Note'} 
@@ -273,9 +272,15 @@ const PurchaseReturn = () => {
                     />
                   </td>
                   <td className="bold-cell">
-                    {ret.debitNoteGenerated ? `INR ${ret.debitNoteDetails.total.toFixed(2)}` : 'INR 0.00'}
+                    {ret.debitNoteGenerated ? ret.debitNoteDetails.total.toFixed(2) : '0.00'}
                   </td>
                   <td className="actions-cell">
+                    <Tooltip title="Edit Record">
+                      <IconButton size="small" color="primary" onClick={() => handleOpenEdit(ret)}>
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
+
                     <Tooltip title="View Return Details">
                       <IconButton size="small" onClick={() => { setSelectedReturn(ret); setViewOpen(true); }}>
                         <Eye size={16} />
@@ -390,7 +395,7 @@ const PurchaseReturn = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Create Return Voucher</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -407,7 +412,7 @@ const PurchaseReturn = () => {
                 <strong>Supplier:</strong> <span>{selectedReturn.supplierName}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Return Date:</strong> <span>{selectedReturn.date}</span>
+                <strong>Return Date:</strong> <span>{formatDate(selectedReturn.date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Debit Note status:</strong> 
@@ -418,9 +423,9 @@ const PurchaseReturn = () => {
                 <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', margin: '12px 0' }}>
                   <strong>Debit Note Details:</strong><br />
                   Voucher Number: {selectedReturn.debitNoteDetails.id}<br />
-                  Credit Value: INR {selectedReturn.debitNoteDetails.amount.toFixed(2)}<br />
-                  Refund Tax (18%): INR {selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}<br />
-                  <strong>Grand Refund Credit: INR {selectedReturn.debitNoteDetails.total.toFixed(2)}</strong>
+                  Credit Value: ₹ {selectedReturn.debitNoteDetails.amount.toFixed(2)}<br />
+                  Refund Tax (18%): ₹ {selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}<br />
+                  <strong>Grand Refund Credit: ₹ {selectedReturn.debitNoteDetails.total.toFixed(2)}</strong>
                 </div>
               )}
 
@@ -430,8 +435,8 @@ const PurchaseReturn = () => {
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell align="right">Qty Returned</TableCell>
-                    <TableCell align="right">Unit Cost</TableCell>
-                    <TableCell align="right">Refund Subtotal</TableCell>
+                    <TableCell align="right">Unit Cost (₹)</TableCell>
+                    <TableCell align="right">Refund Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -442,8 +447,8 @@ const PurchaseReturn = () => {
                         <span className="text-muted" style={{ fontSize: '11px' }}>Reason: {itm.reason}</span>
                       </TableCell>
                       <TableCell align="right">{itm.returnedQty}</TableCell>
-                      <TableCell align="right">INR {itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">INR {(itm.returnedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.unitPrice || 0).toFixed(2)}</TableCell>
+                      <TableCell align="right">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -506,8 +511,8 @@ const PurchaseReturn = () => {
                     <th>Item ID</th>
                     <th>Returned Items & Specs</th>
                     <th className="num-col">Qty Returned</th>
-                    <th className="num-col">Unit Price</th>
-                    <th className="num-col">Taxable Value</th>
+                    <th className="num-col">Unit Price (₹)</th>
+                    <th className="num-col">Taxable Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -519,21 +524,21 @@ const PurchaseReturn = () => {
                         <span style={{ fontSize: '11px', color: '#64748b' }}>Reason: {itm.reason}</span>
                       </td>
                       <td className="num-col">{itm.returnedQty}</td>
-                      <td className="num-col">INR {itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">INR {(itm.returnedQty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col">{(itm.unitPrice || 0).toFixed(2)}</td>
+                      <td className="num-col">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="subtotal-row">
                     <td colSpan="4">Subtotal Taxable Amount</td>
-                    <td className="num-col">INR {selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
+                    <td className="num-col">{selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
                     <td colSpan="4">Integrated Tax Credit (18%)</td>
-                    <td className="num-col">INR {selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
+                    <td className="num-col">{selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="4">Total Adjusting Credit Value</td>
-                    <td className="num-col">INR {selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
+                    <td className="num-col">{selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

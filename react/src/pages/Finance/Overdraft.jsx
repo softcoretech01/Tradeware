@@ -95,8 +95,7 @@ const Overdraft = () => {
         {!addMode && !editMode && (
           <div className="header-actions">
             <button className="btn-primary" onClick={handleOpenAdd}>
-              <Plus size={16} /> Register Overdraft Line
-            </button>
+              <Plus size={16} /> New</button>
           </div>
         )}
       </div>

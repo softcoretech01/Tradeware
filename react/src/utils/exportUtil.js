@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Exports JSON data to Excel spreadsheet.
@@ -51,7 +51,7 @@ export const exportToPDF = (columns, data, fileName = 'export', title = 'Documen
     })
   );
 
-  doc.autoTable({
+  autoTable(doc, {
     head: [headers],
     body: rows,
     startY: 25,

@@ -1,3 +1,4 @@
+import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -15,6 +16,7 @@ import {
   deleteCustomerPO 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
+
 
 const CustomerPO = () => {
   const dispatch = useDispatch();
@@ -164,8 +166,7 @@ const CustomerPO = () => {
             <FileText size={16} /> PDF
           </button>
           <button className="btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Register Customer PO
-          </button>
+            <Plus size={16} /> New</button>
         </div>
       </div>
 
@@ -200,7 +201,7 @@ const CustomerPO = () => {
               <th>Client PO Number</th>
               <th>Customer</th>
               <th>Date</th>
-              <th>PO Value</th>
+              <th>PO Value (₹)</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -216,8 +217,8 @@ const CustomerPO = () => {
                   <td className="text-muted">{cpo.qtRef}</td>
                   <td className="bold-cell">{cpo.customerPoRef}</td>
                   <td>{cpo.customerName}</td>
-                  <td>{cpo.date}</td>
-                  <td className="bold-cell">INR {cpo.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                  <td>{formatDate(cpo.date)}</td>
+                  <td className="bold-cell">{cpo.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                   <td className="actions-cell">
                     <Tooltip title="View CPO Details">
                       <IconButton size="small" onClick={() => { setSelectedCPO(cpo); setViewOpen(true); }}>
@@ -306,7 +307,7 @@ const CustomerPO = () => {
             />
 
             <TextField
-              label="Order Total Value (INR)"
+              label="Order Total Value (₹)"
               value={formData.amount}
               fullWidth
               disabled
@@ -329,7 +330,7 @@ const CustomerPO = () => {
                 <TableBody>
                   {formData.deliverySchedules.map((s, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{s.date}</TableCell>
+                      <TableCell>{formatDate(s.date)}</TableCell>
                       <TableCell>{s.qty}</TableCell>
                     </TableRow>
                   ))}
@@ -340,7 +341,7 @@ const CustomerPO = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Register PO</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -360,10 +361,10 @@ const CustomerPO = () => {
                 <strong>External PO Number:</strong> <span>{selectedCPO.customerPoRef}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Date Registered:</strong> <span>{selectedCPO.date}</span>
+                <strong>Date Registered:</strong> <span>{formatDate(selectedCPO.date)}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Order Value Total:</strong> <span>INR {selectedCPO.amount.toLocaleString()}</span>
+                <strong>Order Value Total:</strong> <span>₹ {selectedCPO.amount.toLocaleString()}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Payment Terms:</strong> <span>{selectedCPO.paymentTerms}</span>
@@ -380,7 +381,7 @@ const CustomerPO = () => {
                 <TableBody>
                   {selectedCPO.deliverySchedules.map((s, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{s.date}</TableCell>
+                      <TableCell>{formatDate(s.date)}</TableCell>
                       <TableCell align="right">{s.qty}</TableCell>
                     </TableRow>
                   ))}
@@ -423,7 +424,7 @@ const CustomerPO = () => {
                 <div>
                   <p><strong>CLIENT PO REF:</strong> {selectedCPO.customerPoRef}</p>
                   <p><strong>QUOTATION REFERENCE:</strong> {selectedCPO.qtRef}</p>
-                  <p><strong>PO VALUE:</strong> INR {selectedCPO.amount.toFixed(2)}</p>
+                  <p><strong>PO VALUE:</strong> ₹ {selectedCPO.amount.toFixed(2)}</p>
                 </div>
               </div>
 
@@ -438,7 +439,7 @@ const CustomerPO = () => {
                 <tbody>
                   {selectedCPO.deliverySchedules.map((s, idx) => (
                     <tr key={idx}>
-                      <td>{s.date}</td>
+                      <td>{formatDate(s.date)}</td>
                       <td className="num-col">{s.qty}</td>
                     </tr>
                   ))}
