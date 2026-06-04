@@ -168,8 +168,8 @@ const Customers = () => {
               {paginatedCustomers.length > 0 ? (
                 paginatedCustomers.map(customer => (
                   <tr key={customer.id}>
-                    <td className="code-cell">{customer.id}</td>
-                    <td className="bold-cell">{customer.name}</td>
+                    <td className="code-cell ">{customer.id}</td>
+                    <td className="bold-cell ">{customer.name}</td>
                     <td>{customer.email || '-'}</td>
                     <td>{customer.phone || '-'}</td>
                     <td><span className="badge badge-gray">{customer.type}</span></td>

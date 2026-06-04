@@ -321,9 +321,9 @@ const ImportPurchase = () => {
               <th>Order Date</th>
               <th>Supplier Name</th>
               <th>Currency</th>
-              <th>Exchange Rate</th>
-              <th>Foreign Value</th>
-              <th>Local Value (₹)</th>
+              <th className="text-right">Exchange Rate</th>
+              <th className="text-right">Foreign Value</th>
+              <th className="text-right">Local Value (₹)</th>
               <th>Status</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -332,13 +332,13 @@ const ImportPurchase = () => {
             {paginatedPOs.length > 0 ? (
               paginatedPOs.map(po => (
                 <tr key={po.id}>
-                  <td className="bold-cell">{po.id}</td>
+                  <td className="bold-cell ">{po.id}</td>
                   <td>{formatDate(po.date)}</td>
-                  <td className="bold-cell">{po.supplierName}</td>
-                  <td>{po.currency}</td>
-                  <td>{po.exchangeRate?.toFixed(2)}</td>
-                  <td className="bold-cell">{po.totalFCY?.toLocaleString()} {po.currency}</td>
-                  <td>{po.totalLCY?.toLocaleString()}</td>
+                  <td className="bold-cell ">{po.supplierName}</td>
+                  <td >{po.currency}</td>
+                  <td className="text-right">{po.exchangeRate?.toFixed(2)}</td>
+                  <td className="bold-cell text-right">{po.totalFCY?.toLocaleString()} {po.currency}</td>
+                  <td className="text-right">{po.totalLCY?.toLocaleString()}</td>
                   <td>{getStatusBadge(po.status)}</td>
                   <td className="actions-cell">
                     <Tooltip title="Edit Order">
@@ -412,9 +412,9 @@ const ImportPurchase = () => {
       )}
 
       {/* CREATE IMPORT PO DIALOG */}
-      <Dialog open={createModalOpen} onClose={() => setCreateModalOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={createModalOpen} onClose={() => setCreateModalOpen(false)} maxWidth="lg" fullWidth>
         <DialogTitle className="dialog-title">
-          Create New Import Purchase Order
+          {editingPOId ? 'Edit' : 'Create'}
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
@@ -518,8 +518,8 @@ const ImportPurchase = () => {
                   <TableHead sx={{ backgroundColor: SLATE.bg }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 700, width: '40%' }}>Item Description</TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: '20%' }}>Quantity</TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: '20%' }}>FCY Unit Price</TableCell>
+                      <TableCell className="text-right" sx={{ fontWeight: 700, width: '20%' }}>Quantity</TableCell>
+                      <TableCell  sx={{ fontWeight: 700, width: '20%' }}>FCY Unit Price</TableCell>
                       <TableCell sx={{ fontWeight: 700, width: '20%', textAlign: 'right' }}>Total (FCY)</TableCell>
                       <TableCell sx={{ width: '50px' }}></TableCell>
                     </TableRow>
@@ -543,7 +543,7 @@ const ImportPurchase = () => {
                             ))}
                           </Select>
                         </TableCell>
-                        <TableCell>
+                        <TableCell >
                           <TextField
                             size="small"
                             type="number"
@@ -659,21 +659,21 @@ const ImportPurchase = () => {
                     <tr>
                       <th>Item Code</th>
                       <th>Item Description</th>
-                      <th>Quantity</th>
-                      <th>FCY Unit Price</th>
-                      <th className="num-col">Total FCY</th>
-                      <th className="num-col">Total INR</th>
+                      <th className="text-right">Quantity</th>
+                      <th className="text-right">FCY Unit Price</th>
+                      <th className="num-col text-right">Total FCY</th>
+                      <th className="num-col text-right">Total INR</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedPO.items.map((it, idx) => (
                       <tr key={idx}>
-                        <td>{it.itemCode}</td>
-                        <td className="bold-cell">{it.itemName}</td>
-                        <td>{it.qty}</td>
-                        <td>{it.fcyUnitPrice?.toFixed(2)} {selectedPO.currency}</td>
-                        <td className="num-col">{(it.qty * it.fcyUnitPrice).toFixed(2)} {selectedPO.currency}</td>
-                        <td className="num-col">₹{(it.qty * it.fcyUnitPrice * selectedPO.exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td >{it.itemCode}</td>
+                        <td className="bold-cell ">{it.itemName}</td>
+                        <td className="text-right">{it.qty}</td>
+                        <td className="text-right">{it.fcyUnitPrice?.toFixed(2)} {selectedPO.currency}</td>
+                        <td className="num-col text-right">{(it.qty * it.fcyUnitPrice).toFixed(2)} {selectedPO.currency}</td>
+                        <td className="num-col text-right">₹{(it.qty * it.fcyUnitPrice * selectedPO.exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
                   </tbody>

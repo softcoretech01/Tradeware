@@ -40,7 +40,7 @@ const Sidebar = () => {
     {
       name: 'CRM Module',
       icon: <HeartHandshake size={20} />,
-      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry']
+      subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Existing Leads']
     },
 
     /* {

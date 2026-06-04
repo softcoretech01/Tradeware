@@ -217,8 +217,8 @@ const FollowUpTracking = () => {
             ) : (
               filteredFollowups.map(f => (
                 <tr key={f.id}>
-                  <td className="bold-cell">{f.id}</td>
-                  <td style={{ fontWeight: 600 }}>{f.entityName}</td>
+                  <td className="bold-cell ">{f.id}</td>
+                  <td style={{ fontWeight: 600 }} >{f.entityName}</td>
                   <td>
                     <Chip label={`${f.entityType} (${f.entityId})`} size="small" variant="outlined" />
                   </td>
@@ -230,7 +230,7 @@ const FollowUpTracking = () => {
                       <span style={{ fontSize: '13px' }}>{f.type}</span>
                     </Box>
                   </td>
-                  <td>
+                  <td >
                     {new Date(f.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                   </td>
                   <td style={{ maxWidth: '280px' }}>

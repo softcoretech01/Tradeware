@@ -11,7 +11,7 @@ import {
   Search, Plus, Eye, Printer, FileSpreadsheet, FileText, Trash, Edit
 } from 'lucide-react';
 import { 
-  generateInvoice 
+  generateInvoice, updateInvoice 
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
@@ -29,6 +29,7 @@ const Invoice = () => {
 
   // Dialogs
   const [formOpen, setFormOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -111,6 +112,16 @@ const Invoice = () => {
     setFormOpen(false);
   };
 
+const handleEditSave = () => {
+    if (!formData.soId) {
+      alert('Sales Order reference is required.');
+      return;
+    }
+
+    dispatch(updateInvoice(formData));
+    setEditOpen(false);
+  };
+
   // Filter
   const filteredInvoices = invoices.filter(inv => {
     return inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,8 +199,8 @@ const Invoice = () => {
               <th>Customer</th>
               <th>Date</th>
               <th>Tax Type</th>
-              <th className="num-col">Tax Amount (₹)</th>
-              <th className="num-col">Grand Total (₹)</th>
+              <th className="num-col text-right">Tax Amount (₹)</th>
+              <th className="num-col text-right">Grand Total (₹)</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -201,27 +212,41 @@ const Invoice = () => {
             ) : (
               filteredInvoices.map((inv) => (
                 <tr key={inv.id}>
-                  <td className="bold-cell">{inv.id}</td>
-                  <td className="text-muted">{inv.soRef}</td>
-                  <td>{inv.customerName}</td>
+                  <td className="bold-cell ">{inv.id}</td>
+                  <td className="text-muted ">{inv.soRef}</td>
+                  <td >{inv.customerName}</td>
                   <td>{formatDate(inv.date)}</td>
-                  <td>
+                  <td >
                     <Chip 
                       label={inv.taxType} 
                       color={inv.taxType === 'SGST' ? 'secondary' : 'primary'} 
                       size="small" 
                     />
                   </td>
-                  <td className="num-col">{inv.taxAmount?.toFixed(2)}</td>
-                  <td className="num-col bold-cell">{inv.grandTotal?.toFixed(2)}</td>
-                  <td className="actions-cell">
+                  <td className="num-col text-right">{inv.taxAmount?.toFixed(2)}</td>
+                  <td className="num-col bold-cell text-right">{inv.grandTotal?.toFixed(2)}</td>
+                  <td className="actions-cell ">
                     <Tooltip title="View Invoice Details">
                       <IconButton size="small" onClick={() => { setSelectedInvoice(inv); setViewOpen(true); }}>
                         <Eye size={16} />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Edit Invoice">
-                      <IconButton size="small" color="primary" onClick={() => { setSelectedInvoice(inv); setFormOpen(true); }}>
+                      <IconButton size="small" color="primary" onClick={() => { 
+                        setSelectedInvoice(inv); 
+                        setFormData({
+                          invoiceId: inv.id,
+                          soId: inv.soRef,
+                          cpoRef: inv.cpoRef,
+                          customerName: inv.customerName,
+                          amount: inv.subTotal || inv.amount || 0,
+                          taxAmount: inv.taxAmount || 0,
+                          taxType: inv.taxType || 'IGST',
+                          total: inv.grandTotal || inv.total || 0,
+                          items: inv.items || []
+                        }); 
+                        setEditOpen(true); 
+                      }}>
                         <Edit size={16} />
                       </IconButton>
                     </Tooltip>
@@ -240,7 +265,9 @@ const Invoice = () => {
 
       {/* CREATE INVOICE DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle className="dialog-title">Generate Tax Invoice</DialogTitle>
+        <DialogTitle className="dialog-title">
+          Invoice
+        </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
             <FormControl fullWidth>
@@ -286,8 +313,8 @@ const Invoice = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Supply Qty</TableCell>
-                    <TableCell align="right">Unit Value (₹)</TableCell>
+                    <TableCell className="text-right" align="right">Supply Qty</TableCell>
+                    <TableCell className="text-right" align="right">Unit Value (₹)</TableCell>
                     <TableCell align="right">Tax (18%) (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
@@ -299,25 +326,25 @@ const Invoice = () => {
                     return (
                     <TableRow key={idx}>
                       <TableCell>{item.name} ({item.itemId})</TableCell>
-                      <TableCell align="right">{item.suppliedQty}</TableCell>
-                      <TableCell align="right">{item.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">{itemTax.toFixed(2)}</TableCell>
-                      <TableCell align="right" className="bold-cell">
+                      <TableCell className="text-right" align="right">{item.suppliedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itemTax.toFixed(2)}</TableCell>
+                      <TableCell align="right" className="bold-cell text-right">
                         {itemSubtotal.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   )})}
                   <TableRow style={{ backgroundColor: '#f5f5f5' }}>
                     <TableCell colSpan={4} align="right"><strong>Taxable Subtotal</strong></TableCell>
-                    <TableCell align="right"><strong>{formData.amount.toFixed(2)}</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong>{formData.amount.toFixed(2)}</strong></TableCell>
                   </TableRow>
                   <TableRow style={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell colSpan={4} align="right"><strong>{formData.taxType} (18%)</strong></TableCell>
-                    <TableCell align="right"><strong>{formData.taxAmount.toFixed(2)}</strong></TableCell>
+                    <TableCell colSpan={4} align="right" ><strong>{formData.taxType} (18%)</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong>{formData.taxAmount.toFixed(2)}</strong></TableCell>
                   </TableRow>
                   <TableRow style={{ backgroundColor: '#e3f2fd' }}>
                     <TableCell colSpan={4} align="right"><strong style={{ color: '#1565C0' }}>Grand Net Receivable</strong></TableCell>
-                    <TableCell align="right"><strong style={{ color: '#1565C0', fontSize: '1.1em' }}>₹ {formData.total.toFixed(2)}</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong style={{ color: '#1565C0', fontSize: '1.1em' }}>₹ {formData.total.toFixed(2)}</strong></TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -327,6 +354,100 @@ const Invoice = () => {
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
           <Button onClick={handleSave} variant="contained" color="success" disabled={!formData.soId}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
+{/* EDIT INVOICE DIALOG */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle className="dialog-title">
+          Edit
+        </DialogTitle>
+        <DialogContent dividers>
+          <div className="dialog-grid">
+            <FormControl fullWidth>
+              <InputLabel>Select Pending Sales Order</InputLabel>
+              <Select
+                value={formData.soId}
+                label="Select Pending Sales Order"
+                onChange={(e) => handleSOChange(e.target.value)}
+              >
+                {pendingSOs.length === 0 && <MenuItem value="" disabled>No pending sales orders</MenuItem>}
+                {pendingSOs.map(so => (
+                  <MenuItem key={so.id} value={so.id}>{so.id} (Client: {so.customerName})</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Invoice Number (Auto-assigned)"
+              value={formData.invoiceId}
+              fullWidth
+              disabled
+            />
+
+            <TextField
+              label="Customer Name"
+              value={formData.customerName}
+              fullWidth
+              disabled
+            />
+
+            <TextField
+              label="Tax Type"
+              value={formData.soId ? (formData.taxType + " (18%)") : ''}
+              fullWidth
+              disabled
+            />
+          </div>
+
+          {formData.items.length > 0 && (
+            <div className="line-items-section" style={{ marginTop: '20px' }}>
+              <h4>Supplied Line Items</h4>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Item Name</TableCell>
+                    <TableCell className="text-right" align="right">Supply Qty</TableCell>
+                    <TableCell className="text-right" align="right">Unit Value (₹)</TableCell>
+                    <TableCell align="right">Tax (18%) (₹)</TableCell>
+                    <TableCell align="right">Subtotal (₹)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {formData.items.map((item, idx) => {
+                    const itemSubtotal = item.suppliedQty * item.unitPrice;
+                    const itemTax = itemSubtotal * 0.18;
+                    return (
+                    <TableRow key={idx}>
+                      <TableCell>{item.name} ({item.itemId})</TableCell>
+                      <TableCell className="text-right" align="right">{item.suppliedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itemTax.toFixed(2)}</TableCell>
+                      <TableCell align="right" className="bold-cell text-right">
+                        {itemSubtotal.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  )})}
+                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                    <TableCell colSpan={4} align="right"><strong>Taxable Subtotal</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong>{formData.amount.toFixed(2)}</strong></TableCell>
+                  </TableRow>
+                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                    <TableCell colSpan={4} align="right" ><strong>{formData.taxType} (18%)</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong>{formData.taxAmount.toFixed(2)}</strong></TableCell>
+                  </TableRow>
+                  <TableRow style={{ backgroundColor: '#e3f2fd' }}>
+                    <TableCell colSpan={4} align="right"><strong style={{ color: '#1565C0' }}>Grand Net Receivable</strong></TableCell>
+                    <TableCell className="text-right" align="right"><strong style={{ color: '#1565C0', fontSize: '1.1em' }}>₹ {formData.total.toFixed(2)}</strong></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="success" disabled={!formData.soId}>Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -358,8 +479,8 @@ const Invoice = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Supplied Qty</TableCell>
-                    <TableCell align="right">Unit Price (₹)</TableCell>
+                    <TableCell className="text-right" align="right">Supplied Qty</TableCell>
+                    <TableCell className="text-right" align="right">Unit Price (₹)</TableCell>
                     <TableCell align="right">Tax (18%) (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
@@ -371,10 +492,10 @@ const Invoice = () => {
                     return (
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                      <TableCell align="right">{itm.suppliedQty}</TableCell>
-                      <TableCell align="right">{itm.unitPrice?.toFixed(2)}</TableCell>
-                      <TableCell align="right">{itemTax?.toFixed(2)}</TableCell>
-                      <TableCell align="right">{itemSubtotal?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.suppliedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.unitPrice?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itemTax?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itemSubtotal?.toFixed(2)}</TableCell>
                     </TableRow>
                   )})}
                 </TableBody>
@@ -423,10 +544,10 @@ const Invoice = () => {
                   <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
-                    <th className="num-col">Qty Supplied</th>
-                    <th className="num-col">Unit Price (₹)</th>
+                    <th className="num-col text-right">Qty Supplied</th>
+                    <th className="num-col text-right">Unit Price (₹)</th>
                     <th className="num-col">Tax (18%) (₹)</th>
-                    <th className="num-col">Taxable Value (₹)</th>
+                    <th className="num-col text-right">Taxable Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -435,25 +556,25 @@ const Invoice = () => {
                     const itemTax = itemSubtotal * 0.18;
                     return (
                     <tr key={idx}>
-                      <td>{itm.itemId}</td>
-                      <td>{itm.name}</td>
-                      <td className="num-col">{itm.suppliedQty}</td>
-                      <td className="num-col">{itm.unitPrice?.toFixed(2)}</td>
-                      <td className="num-col">{itemTax?.toFixed(2)}</td>
-                      <td className="num-col">{itemSubtotal?.toFixed(2)}</td>
+                      <td >{itm.itemId}</td>
+                      <td >{itm.name}</td>
+                      <td className="num-col text-right">{itm.suppliedQty}</td>
+                      <td className="num-col text-right">{itm.unitPrice?.toFixed(2)}</td>
+                      <td className="num-col text-right">{itemTax?.toFixed(2)}</td>
+                      <td className="num-col text-right">{itemSubtotal?.toFixed(2)}</td>
                     </tr>
                   )})}
                   <tr className="subtotal-row">
                     <td colSpan="5">Subtotal Taxable Amount</td>
-                    <td className="num-col">{selectedInvoice.subTotal?.toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedInvoice.subTotal?.toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
-                    <td colSpan="5">{selectedInvoice.taxType} (18% Tax)</td>
-                    <td className="num-col">{selectedInvoice.taxAmount?.toFixed(2)}</td>
+                    <td colSpan="5" >{selectedInvoice.taxType} (18% Tax)</td>
+                    <td className="num-col text-right">{selectedInvoice.taxAmount?.toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="5">Grand Net Payable Value</td>
-                    <td className="num-col">{selectedInvoice.grandTotal?.toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedInvoice.grandTotal?.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

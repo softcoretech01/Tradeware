@@ -271,7 +271,7 @@ const LandedCostCalculation = () => {
                 {/* Charges (Modified per request) */}
                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
-                    1. Charges
+                    Charges
                   </Typography>
                   <Grid container spacing={1.5}>
                     <Grid item xs={12} sm={6} md={3}>
@@ -346,12 +346,12 @@ const LandedCostCalculation = () => {
                     <thead>
                       <tr>
                         <th>Item Details</th>
-                        <th>Qty</th>
-                        <th>Unit Price (FCY)</th>
-                        <th>FOB Value (₹)</th>
-                        <th>Allocated Overhead</th>
-                        <th>Total Landed Cost</th>
-                        <th>Landed Unit Cost</th>
+                        <th className="text-right">Qty</th>
+                        <th className="text-right">Unit Price</th>
+                        <th className="text-right">Value (₹)</th>
+                        <th className="text-right">Allocated Overhead</th>
+                        <th className="text-right">Total Landed Cost</th>
+                        <th className="text-right">Landed Unit Cost</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -361,17 +361,17 @@ const LandedCostCalculation = () => {
                             <Typography variant="body2" sx={{ fontWeight: 700 }}>{it.itemName}</Typography>
                             <Typography variant="caption" color="text.secondary">{it.itemCode}</Typography>
                           </td>
-                          <td>{it.qty}</td>
-                          <td>{it.fcyUnitPrice?.toFixed(2)}</td>
-                          <td>₹{it.fobValLCY?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                          <td style={{ color: AMBER.main, fontWeight: 500 }}>
-                            ₹{it.allocatedOverhead?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          <td className="text-right">{it.qty}</td>
+                          <td className="text-right">{it.fcyUnitPrice?.toFixed(2)}</td>
+                          <td className="text-right">{it.fobValLCY?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                          <td className="text-right" style={{ color: AMBER.main, fontWeight: 500 }}>
+                            {it.allocatedOverhead?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
-                          <td className="bold-cell">
-                            ₹{it.totalLandedCost?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          <td className="bold-cell text-right">
+                            {it.totalLandedCost?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
-                          <td className="bold-cell" style={{ color: BLUE.main }}>
-                            ₹{it.landedUnitCost?.toFixed(2)}
+                          <td className="bold-cell text-right" style={{ color: BLUE.main }}>
+                            {it.landedUnitCost?.toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -383,7 +383,7 @@ const LandedCostCalculation = () => {
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0' }}>
                   <Box sx={{ width: '360px', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                      <Typography color="text.secondary">Total FOB Goods Value:</Typography>
+                      <Typography color="text.secondary">Total Goods Value:</Typography>
                       <Typography sx={{ fontWeight: 600 }}>₹{calculations.totalFobLCY?.toLocaleString()}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>

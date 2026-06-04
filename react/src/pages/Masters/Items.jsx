@@ -167,10 +167,10 @@ const Items = () => {
               {paginatedItems.length > 0 ? (
                 paginatedItems.map(item => (
                   <tr key={item.id}>
-                    <td className="code-cell">{item.id}</td>
+                    <td className="code-cell ">{item.id}</td>
                     <td><span className="badge badge-gray">{item.group}</span></td>
-                    <td>{item.category}</td>
-                    <td>{item.name}</td>
+                    <td >{item.category}</td>
+                    <td >{item.name}</td>
                     <td>{item.brand || '-'}</td>
                     <td>{item.uom || 'PCS'}</td>
                     <td>

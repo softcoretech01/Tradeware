@@ -814,6 +814,23 @@ const erpSlice = createSlice({
         });
       }
     },
+    
+    updateInvoice: (state, action) => {
+      const idx = state.invoices.findIndex(inv => inv.id === action.payload.invoiceId);
+      if (idx !== -1) {
+        state.invoices[idx] = {
+          ...state.invoices[idx],
+          soRef: action.payload.soId,
+          cpoRef: action.payload.cpoRef,
+          customerName: action.payload.customerName,
+          items: action.payload.items,
+          subTotal: action.payload.amount,
+          taxType: action.payload.taxType,
+          taxAmount: action.payload.taxAmount,
+          grandTotal: action.payload.total
+        };
+      }
+    },
     deleteSalesOrder: (state, action) => {
       state.salesOrders = state.salesOrders.filter(so => so.id !== action.payload);
     },
@@ -1004,7 +1021,7 @@ export const {
   addSalesEnquiry, updateSalesEnquiry, convertEnquiry, deleteSalesEnquiry,
   addQuotation, updateQuotation, reviseQuotation, approveQuotation, deleteQuotation,
   addCustomerPO, deleteCustomerPO,
-  addSalesOrder, updateSalesOrder, updateSODeliveryQty, generateInvoice, deleteSalesOrder,
+  addSalesOrder, updateSalesOrder, updateSODeliveryQty, generateInvoice, updateInvoice, deleteSalesOrder,
   addDeliveryChallan, updateDeliveryChallan, deleteDeliveryChallan, updateDispatchStatus, addMaterialIssue,
   setCurrentUser, addUser, updateUser, updatePermissions, addWorkflow, updateWorkflow, processApproval, uploadDocument, deleteDocument, addApprovalRequest
 } = erpSlice.actions;

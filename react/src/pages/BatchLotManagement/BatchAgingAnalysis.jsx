@@ -302,7 +302,7 @@ const BatchAgingAnalysis = () => {
               <th>Batch No</th>
               <th>Item Code</th>
               <th>Item Name</th>
-              <th>Available Qty</th>
+              <th className="text-right">Available Qty</th>
               <th>Mfg Date</th>
               <th>Storage Duration</th>
               <th>Age Bucket</th>
@@ -315,10 +315,10 @@ const BatchAgingAnalysis = () => {
                 const isDead = b.ageDays > 90;
                 return (
                   <tr key={b.batchNo} style={{ backgroundColor: isDead ? 'rgba(239, 68, 68, 0.02)' : 'inherit' }}>
-                    <td className="bold-cell">{b.batchNo}</td>
-                    <td>{b.itemCode}</td>
-                    <td>{b.itemName}</td>
-                    <td className="bold-cell">{b.qty} units</td>
+                    <td className="bold-cell ">{b.batchNo}</td>
+                    <td >{b.itemCode}</td>
+                    <td >{b.itemName}</td>
+                    <td className="bold-cell text-right">{b.qty} units</td>
                     <td>{formatDate(b.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

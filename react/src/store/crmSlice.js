@@ -194,7 +194,15 @@ const initialState = {
       dateLogged: '2026-05-25',
       dateResolved: null
     }
-  ]
+  ],
+  existingLeadsFollowups: {
+    'CUST-1': {
+      date: '2026-06-01',
+      details: 'Called customer to discuss new requirements',
+      nextAction: 'Send updated catalog',
+      nextFollowUpDate: '2026-06-10'
+    }
+  }
 };
 
 export const crmSlice = createSlice({
@@ -264,6 +272,10 @@ export const crmSlice = createSlice({
         c.resolutionNotes = resolutionNotes;
         c.dateResolved = new Date().toISOString().split('T')[0];
       }
+    },
+    updateExistingLeadFollowup: (state, action) => {
+      const { customerId, data } = action.payload;
+      state.existingLeadsFollowups[customerId] = data;
     }
   }
 });
@@ -272,7 +284,8 @@ export const {
   addLead, updateLead, deleteLead,
   addOpportunity, updateOpportunity, deleteOpportunity,
   addFollowup, updateFollowup, deleteFollowup, completeFollowup,
-  addComplaint, updateComplaint, resolveComplaint
+  addComplaint, updateComplaint, resolveComplaint,
+  updateExistingLeadFollowup
 } = crmSlice.actions;
 
 export default crmSlice.reducer;

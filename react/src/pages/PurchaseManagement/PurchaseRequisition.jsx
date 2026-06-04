@@ -276,9 +276,9 @@ const PurchaseRequisition = () => {
             ) : (
               filteredPRs.map((pr) => (
                 <tr key={pr.id}>
-                  <td className="bold-cell">{pr.id}</td>
+                  <td className="bold-cell ">{pr.id}</td>
                   <td>{formatDate(pr.date)}</td>
-                  <td>{pr.requester}</td>
+                  <td >{pr.requester}</td>
                   <td>
                     <Chip label={pr.priority} color={getPriorityColor(pr.priority)} size="small" variant="outlined" />
                   </td>
@@ -317,7 +317,7 @@ const PurchaseRequisition = () => {
       {/* CREATE / EDIT DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          {requisitions.some(r => r.id === formData.id) ? 'Edit Requisition' : 'Create Purchase Requisition'} ({formData.id})
+          {requisitions.some(r => r.id === formData.id) ? 'Edit' : 'Create'}
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
@@ -364,7 +364,7 @@ const PurchaseRequisition = () => {
                 <TableRow>
                   <TableCell>Item Name</TableCell>
                   <TableCell width="120">Available Stock</TableCell>
-                  <TableCell width="120">Qty</TableCell>
+                  <TableCell className="text-right" width="120">Qty</TableCell>
                   <TableCell width="120">UOM</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
@@ -386,7 +386,7 @@ const PurchaseRequisition = () => {
                     <TableCell>
                       {inventory.find(inv => inv.itemCode === item.itemId)?.availableStock || 0}
                     </TableCell>
-                    <TableCell>
+                    <TableCell >
                       <input 
                         type="number" 
                         className="table-input"
@@ -474,9 +474,9 @@ const PurchaseRequisition = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Qty</TableCell>
+                    <TableCell className="text-right" align="right">Qty</TableCell>
                     <TableCell>UOM</TableCell>
-                    <TableCell align="right">Est. Unit Price (₹)</TableCell>
+                    <TableCell  align="right">Est. Unit Price (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
@@ -484,15 +484,15 @@ const PurchaseRequisition = () => {
                   {selectedPR.items.map((itm, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                      <TableCell align="right">{itm.qty}</TableCell>
-                      <TableCell>{itm.uom}</TableCell>
-                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">{(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell align="right" className="text-right">{itm.qty}</TableCell>
+                      <TableCell >{itm.uom}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
-                    <TableCell colSpan={4} align="right"><strong>Estimated Total Value:</strong></TableCell>
-                    <TableCell align="right" className="bold-cell">
+                    <TableCell className="text-right" colSpan={4} align="right"><strong>Estimated Total Value:</strong></TableCell>
+                    <TableCell align="right" className="bold-cell text-right">
                       {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
@@ -543,26 +543,26 @@ const PurchaseRequisition = () => {
                   <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
-                    <th className="num-col">Qty</th>
+                    <th className="num-col text-right">Qty</th>
                     <th>UOM</th>
-                    <th className="num-col">Est. Unit Price (₹)</th>
-                    <th className="num-col">Total Est. Value (₹)</th>
+                    <th className="num-col text-right">Est. Unit Price (₹)</th>
+                    <th className="num-col text-right">Total Est. Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedPR.items.map((itm, idx) => (
                     <tr key={idx}>
-                      <td>{itm.itemId}</td>
-                      <td>{itm.name}</td>
-                      <td className="num-col">{itm.qty}</td>
-                      <td>{itm.uom}</td>
-                      <td className="num-col">{itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">{(itm.qty * itm.unitPrice).toFixed(2)}</td>
+                      <td >{itm.itemId}</td>
+                      <td >{itm.name}</td>
+                      <td className="num-col text-right">{itm.qty}</td>
+                      <td >{itm.uom}</td>
+                      <td className="num-col text-right">{itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col text-right">{(itm.qty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Estimated Grand Total</td>
-                    <td className="num-col">{selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

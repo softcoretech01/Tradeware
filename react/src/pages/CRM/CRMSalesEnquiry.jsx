@@ -191,7 +191,7 @@ const CRMSalesEnquiry = () => {
     dispatch(addQuotation(newQuotation));
     dispatch(convertEnquiry(enq.id));
 
-    alert(`Enquiry ${enq.id} converted successfully to draft Quotation ${newQuotation.id}!`);
+    alert(`Enquiry ${enq.id} converted successfully to Sales Order!`);
     navigate('/sales-orders/quotation-management');
   };
 
@@ -266,7 +266,6 @@ const CRMSalesEnquiry = () => {
       <div className="module-header">
         <div>
           <h2>Sales Enquiry</h2>
-          <p className="subtitle">Record customer product requirements, specify quantities and target price parameters, and assign follow-up tasks.</p>
         </div>
         <div className="header-actions">
           <Button 
@@ -288,7 +287,7 @@ const CRMSalesEnquiry = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by Enquiry No, Customer..." 
+            placeholder="Search By" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -305,7 +304,7 @@ const CRMSalesEnquiry = () => {
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="Active">Active</option>
-            <option value="Converted">Converted to Quote</option>
+            <option value="Converted">Converted to Sales Order</option>
           </select>
         </div>
       </div>
@@ -320,7 +319,7 @@ const CRMSalesEnquiry = () => {
               <th>Customer</th>
               <th>Source</th>
               <th>Requested Items</th>
-              <th>Est. Deal Value</th>
+              <th className="text-right">Est. Deal Value (₹)</th>
               <th>Status</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -335,19 +334,19 @@ const CRMSalesEnquiry = () => {
                 const dealValue = e.items.reduce((sum, item) => sum + (item.qty * item.targetPrice), 0);
                 return (
                   <tr key={e.id}>
-                    <td className="bold-cell">{e.id}</td>
+                    <td className="bold-cell ">{e.id}</td>
                     <td>{formatDate(e.date)}</td>
-                    <td>{e.customerName}</td>
-                    <td>{e.source}</td>
+                    <td >{e.customerName}</td>
+                    <td >{e.source}</td>
                     <td>
                       <span className="items-badge">{e.items.length} items</span>
                     </td>
-                    <td style={{ fontWeight: 600, color: 'var(--accent)' }}>
-                      ${dealValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    <td style={{ fontWeight: 600, color: 'var(--accent)' }} className="text-right">
+                      {dealValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td>
                       <Chip 
-                        label={e.status === 'Converted' ? 'Converted to Quote' : e.status} 
+                        label={e.status === 'Converted' ? 'Converted to Sales Order' : e.status} 
                         color={e.status === 'Converted' ? 'success' : 'primary'} 
                         size="small" 
                       />
@@ -371,7 +370,7 @@ const CRMSalesEnquiry = () => {
                               <Calendar size={16} />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Convert to Quotation">
+                          <Tooltip title="Convert to Sales Order">
                             <IconButton size="small" className="btn-icon-success" onClick={() => handleConvertToQuotation(e)}>
                               <ArrowRight size={16} />
                             </IconButton>
@@ -396,7 +395,7 @@ const CRMSalesEnquiry = () => {
       {/* CREATE & EDIT FORM DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          {salesEnquiries.some(e => e.id === formData.id) ? 'Edit Sales Enquiry' : 'Log Sales Enquiry'} ({formData.id})
+          {salesEnquiries.some(e => e.id === formData.id) ? 'Edit' : 'Log Sales Enquiry'} ({formData.id})
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
@@ -449,9 +448,9 @@ const CRMSalesEnquiry = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Item Name</TableCell>
-                  <TableCell width="140">Qty Requested</TableCell>
-                  <TableCell width="160">Unit Price ($)</TableCell>
-                  <TableCell width="160">Total Amount ($)</TableCell>
+                  <TableCell className="text-right" width="140">Qty Requested</TableCell>
+                  <TableCell className="text-right" width="160">Unit Price</TableCell>
+                  <TableCell className="text-right" width="160">Total Amount</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -469,7 +468,7 @@ const CRMSalesEnquiry = () => {
                         ))}
                       </select>
                     </TableCell>
-                    <TableCell>
+                    <TableCell >
                       <input 
                         type="number" 
                         className="table-input"
@@ -488,7 +487,7 @@ const CRMSalesEnquiry = () => {
                         onChange={(e) => handleItemChange(idx, 'targetPrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <input 
                         type="text" 
                         className="table-input"
@@ -551,18 +550,18 @@ const CRMSalesEnquiry = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Item Name</TableCell>
-                      <TableCell align="right">Qty</TableCell>
-                      <TableCell align="right">Unit Price</TableCell>
-                      <TableCell align="right">Total</TableCell>
+                      <TableCell className="text-right" align="right">Qty</TableCell>
+                      <TableCell className="text-right" align="right">Unit Price</TableCell>
+                      <TableCell className="text-right" align="right">Total</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {selectedEnquiry.items.map((itm, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                        <TableCell align="right">{itm.qty}</TableCell>
-                        <TableCell align="right">${itm.targetPrice.toFixed(2)}</TableCell>
-                        <TableCell align="right">${(itm.qty * itm.targetPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                        <TableCell align="right" className="text-right">{itm.qty}</TableCell>
+                        <TableCell className="text-right" align="right">{itm.targetPrice.toFixed(2)}</TableCell>
+                        <TableCell className="text-right" align="right">{(itm.qty * itm.targetPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

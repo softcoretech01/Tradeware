@@ -162,7 +162,7 @@ const BatchMaintenance = () => {
       { field: 'status', headerName: 'Status' },
       { field: 'warehouse', headerName: 'Warehouse' }
     ];
-    exportToPDF(cols, filteredBatches, `Batch_Maintenance_Report_${new Date().toISOString().split('T')[0]}`, 'Batch & Lot Maintenance List');
+    exportToPDF(cols, filteredBatches, `Batch_Maintenance_Report_${new Date().toISOString().split('T')[0]}`, 'Batch Maintenance List');
   };
 
   return (
@@ -171,7 +171,7 @@ const BatchMaintenance = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
-            Batch & Lot Maintenance
+            Batch Maintenance
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -222,10 +222,10 @@ const BatchMaintenance = () => {
               <th>Batch No</th>
               <th>Item Code</th>
               <th>Item Name</th>
-              <th>Available / Initial Qty</th>
+              <th className="text-right">Available Qty</th>
               <th>Mfg Date</th>
               <th>Expiry Date</th>
-              <th>Landed Cost (₹)</th>
+              <th className="text-right">Landed Cost (₹)</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -241,9 +241,9 @@ const BatchMaintenance = () => {
                         {batch.batchNo}
                       </Box>
                     </td>
-                    <td>{batch.itemCode}</td>
-                    <td>{batch.itemName}</td>
-                    <td className="bold-cell">{batch.qty} / {batch.initialQty}</td>
+                    <td >{batch.itemCode}</td>
+                    <td >{batch.itemName}</td>
+                    <td className="bold-cell  text-right">{batch.qty}</td>
                     <td>{formatDate(batch.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -253,7 +253,7 @@ const BatchMaintenance = () => {
                         </span>
                       </Box>
                     </td>
-                    <td>{batch.landedUnitCost?.toFixed(2)}</td>
+                    <td className="text-right">{batch.landedUnitCost?.toFixed(2)}</td>
                     <td>{getStatusBadge(batch.status)}</td>
                   </tr>
                 );

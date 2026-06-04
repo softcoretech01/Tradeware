@@ -82,7 +82,7 @@ table {
 .module-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -166,7 +166,7 @@ table {
   flex-wrap: wrap;
   gap: 16px;
   background-color: var(--surface);
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
@@ -258,13 +258,13 @@ table {
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.05em;
-  padding: 14px 20px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .erp-table td {
-  padding: 14px 20px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   color: var(--text-main);
   vertical-align: middle;
@@ -364,14 +364,14 @@ table {
 .dialog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .line-items-section {
-  margin-top: 24px;
+  margin-top: 16px;
   border-top: 1px solid var(--border);
-  padding-top: 20px;
+  padding-top: 16px;
 }
 
 .section-title-row {
@@ -554,4 +554,17 @@ table {
     top: 0;
     width: 100%;
   }
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+/* Ensure all number columns and inputs are right-aligned */
+.num-col {
+  text-align: right !important;
+}
+
+input[type="number"], .MuiInputBase-input[type="number"] {
+  text-align: right !important;
 }

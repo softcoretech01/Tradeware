@@ -77,7 +77,7 @@ const LandedCost = () => {
 
     const exchangeRate = selectedShipment.exchangeRate;
 
-    // Calculate FOB value for each item in local currency (LCY/INR)
+    // Calculate FOB value for each item in local currency (LCY/₹)
     const itemsWithFobVal = selectedShipment.items.map(item => {
       const fobValLCY = item.qty * item.fcyUnitPrice * exchangeRate;
       return {
@@ -229,10 +229,10 @@ const LandedCost = () => {
       'Item Name': it.itemName,
       'Qty': it.qty,
       'FCY Unit FOB': it.fcyUnitPrice,
-      'Total FOB (INR)': it.fobValLCY,
-      'Allocated Overhead (INR)': it.allocatedOverhead,
-      'Total Landed Cost (INR)': it.totalLandedCost,
-      'Landed Unit Cost (INR)': it.landedUnitCost
+      'Total FOB (₹)': it.fobValLCY,
+      'Allocated Overhead (₹)': it.allocatedOverhead,
+      'Total Landed Cost (₹)': it.totalLandedCost,
+      'Landed Unit Cost (₹)': it.landedUnitCost
     }));
     exportToExcel(formatted, `Landed_Cost_Allocation_${selectedShipment.id}`, 'Worksheet');
   };
@@ -312,7 +312,7 @@ const LandedCost = () => {
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1, backgroundColor: BLUE.bg }}>
                 <Calculator size={18} style={{ color: BLUE.main }} />
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: BLUE.main }}>
-                  India Customs & Import Expenses (INR)
+                  India Customs & Import Expenses (₹)
                 </Typography>
               </Box>
               <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -323,7 +323,7 @@ const LandedCost = () => {
                 {/* Customs Duties Section */}
                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
-                    1. Customs Duty & Cess
+                    Customs Duty & Cess
                   </Typography>
                   <Grid container spacing={1.5} alignItems="center">
                     <Grid item xs={12} sm={6} md={3}>
@@ -391,14 +391,14 @@ const LandedCost = () => {
                 {/* Freight Section */}
                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
-                    2. Freight & Transportation
+                    Freight & Transportation
                   </Typography>
                   <Grid container spacing={1.5}>
                     <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Sea Freight (INR)"
+                        label="Sea Freight (₹)"
                         type="number"
                         value={seaFreight}
                         onChange={(e) => setSeaFreight(e.target.value)}
@@ -408,7 +408,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Road Freight (INR)"
+                        label="Road Freight (₹)"
                         type="number"
                         value={roadFreight}
                         onChange={(e) => setRoadFreight(e.target.value)}
@@ -418,7 +418,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Local Transport / Cartage (INR)"
+                        label="Local Transport / Cartage (₹)"
                         type="number"
                         value={localTransport}
                         onChange={(e) => setLocalTransport(e.target.value)}
@@ -430,14 +430,14 @@ const LandedCost = () => {
                 {/* Port & Liner Charges */}
                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
-                    3. Port & Other Charges
+                    Port & Other Charges
                   </Typography>
                   <Grid container spacing={1.5}>
                     <Grid item xs={12} sm={6} md={2}>
                       <TextField
                         fullWidth
                         size="small"
-                        label="Liner Charges (INR)"
+                        label="Liner Charges (₹)"
                         type="number"
                         value={linerCharges}
                         onChange={(e) => setLinerCharges(e.target.value)}
@@ -447,7 +447,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Insurance (INR)"
+                        label="Insurance (₹)"
                         type="number"
                         value={insuranceCost}
                         onChange={(e) => setInsuranceCost(e.target.value)}
@@ -457,7 +457,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Handling Charges (INR)"
+                        label="Handling Charges (₹)"
                         type="number"
                         value={handlingCharges}
                         onChange={(e) => setHandlingCharges(e.target.value)}
@@ -467,7 +467,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Packing Charges (INR)"
+                        label="Packing Charges (₹)"
                         type="number"
                         value={packingCharges}
                         onChange={(e) => setPackingCharges(e.target.value)}
@@ -477,7 +477,7 @@ const LandedCost = () => {
                       <TextField
                         fullWidth
                         size="small"
-                        label="Aging Charges (INR)"
+                        label="Aging Charges (₹)"
                         type="number"
                         value={agingCharges}
                         onChange={(e) => setAgingCharges(e.target.value)}
@@ -501,10 +501,10 @@ const LandedCost = () => {
             <Card variant="outlined">
               <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Landed Cost Allocation Worksheet (INR)
+                  Landed Cost Allocation Worksheet (₹)
                 </Typography>
                 <Chip
-                  label={`PO Rate: USD/INR = ₹${selectedShipment.exchangeRate}`}
+                  label={`PO Rate: USD/₹ = ₹${selectedShipment.exchangeRate}`}
                   size="small"
                   style={{ backgroundColor: SLATE.bg, color: SLATE.main, fontWeight: 600 }}
                 />
@@ -515,12 +515,12 @@ const LandedCost = () => {
                     <thead>
                       <tr>
                         <th>Item Details</th>
-                        <th>Qty</th>
-                        <th>FOB Price (FCY)</th>
-                        <th>FOB Value (INR)</th>
-                        <th>Allocated Overhead</th>
-                        <th>Total Landed Cost</th>
-                        <th>Landed Unit Cost</th>
+                        <th className="text-right">Qty</th>
+                        <th className="text-right">Unit Price</th>
+                        <th className="text-right">Value (₹)</th>
+                        <th className="text-right">Allocated Overhead</th>
+                        <th className="text-right">Total Landed Cost</th>
+                        <th className="text-right">Landed Unit Cost</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -530,17 +530,17 @@ const LandedCost = () => {
                             <Typography variant="body2" sx={{ fontWeight: 700 }}>{it.itemName}</Typography>
                             <Typography variant="caption" color="text.secondary">{it.itemCode}</Typography>
                           </td>
-                          <td>{it.qty}</td>
-                          <td>{it.fcyUnitPrice?.toFixed(2)} {selectedShipment.currency}</td>
-                          <td>₹{it.fobValLCY?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                          <td style={{ color: AMBER.main, fontWeight: 500 }}>
-                            ₹{it.allocatedOverhead?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          <td className="text-right">{it.qty}</td>
+                          <td className="text-right">{it.fcyUnitPrice?.toFixed(2)} {selectedShipment.currency}</td>
+                          <td className="text-right">{it.fobValLCY?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                          <td className="text-right" style={{ color: AMBER.main, fontWeight: 500 }}>
+                            {it.allocatedOverhead?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
-                          <td className="bold-cell">
-                            ₹{it.totalLandedCost?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          <td className="bold-cell text-right">
+                            {it.totalLandedCost?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
-                          <td className="bold-cell" style={{ color: BLUE.main }}>
-                            ₹{it.landedUnitCost?.toFixed(2)}
+                          <td className="bold-cell text-right" style={{ color: BLUE.main }}>
+                            {it.landedUnitCost?.toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -552,7 +552,7 @@ const LandedCost = () => {
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0' }}>
                   <Box sx={{ width: '360px', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                      <Typography color="text.secondary">Total FOB Goods Value:</Typography>
+                      <Typography color="text.secondary">Total Goods Value:</Typography>
                       <Typography sx={{ fontWeight: 600 }}>₹{calculations.totalFobLCY?.toLocaleString()}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>

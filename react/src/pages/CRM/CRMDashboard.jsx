@@ -253,7 +253,7 @@ const CRMDashboard = () => {
                           <span>{f.type}</span>
                         </Box>
                       </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                      <td style={{ whiteSpace: 'nowrap' }} >
                         {new Date(f.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                       <td>

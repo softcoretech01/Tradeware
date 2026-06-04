@@ -1,22 +1,22 @@
 import { formatDate } from '../../utils/dateUtils';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-  Dialog, DialogTitle, DialogContent, DialogActions, 
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Select, MenuItem, FormControl, InputLabel,
-  Table, TableHead, TableRow, TableCell, TableBody, IconButton, 
+  Table, TableHead, TableRow, TableCell, TableBody, IconButton,
   Tooltip, Chip
 } from '@mui/material';
-import { 
+import {
   Search, Plus, Eye, Edit, Trash, Check, X, Printer,
   FileSpreadsheet, FileText, Receipt, PackageCheck
 } from 'lucide-react';
-import { 
-  addSalesOrder, 
-  updateSalesOrder, 
+import {
+  addSalesOrder,
+  updateSalesOrder,
   updateSODeliveryQty,
-  generateInvoice, 
-  deleteSalesOrder 
+  generateInvoice,
+  deleteSalesOrder
 } from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
@@ -27,6 +27,8 @@ const SalesOrder = () => {
   // Store Selectors
   const salesOrders = useSelector(state => state.erp.salesOrders);
   const customerPOs = useSelector(state => state.erp.customerPOs);
+  const customers = useSelector(state => state.customers.customers);
+  const itemsMaster = useSelector(state => state.items.items);
   const quotations = useSelector(state => state.erp.quotations);
   const warehouses = useSelector(state => state.locations.warehouses);
 
@@ -36,6 +38,7 @@ const SalesOrder = () => {
 
   // Dialogs
   const [formOpen, setFormOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -61,7 +64,7 @@ const SalesOrder = () => {
       cpoRef: '',
       customerName: '',
       date: new Date().toISOString().split('T')[0],
-      items: [],
+      items: [{ itemId: '', name: '', orderedQty: 1, suppliedQty: 1, pendingQty: 0, unitPrice: 0 }],
       warehouse: warehouses[0]?.name || 'SINGAPORE CENTRAL WAREHOUSE',
       deliveryStatus: 'Pending',
       deliverySchedule: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString().split('T')[0],
@@ -102,26 +105,35 @@ const SalesOrder = () => {
   };
 
   const handleItemChange = (idx, field, value) => {
-    const updated = [...formData.items];
-    if (field === 'suppliedQty') {
-      const sup = parseFloat(value) || 0;
-      updated[idx] = {
-        ...updated[idx],
-        suppliedQty: sup,
-        pendingQty: Math.max(0, updated[idx].orderedQty - sup)
-      };
-    } else {
-      updated[idx] = {
-        ...updated[idx],
-        [field]: value
-      };
-    }
-    setFormData(prev => ({ ...prev, items: updated }));
+    setFormData(prev => {
+      const updated = [...prev.items];
+      if (field === 'suppliedQty') {
+        const sup = parseFloat(value) || 0;
+        updated[idx] = {
+          ...updated[idx],
+          suppliedQty: sup,
+          pendingQty: Math.max(0, updated[idx].orderedQty - sup)
+        };
+      } else if (field === 'orderedQty') {
+        const ord = parseFloat(value) || 0;
+        updated[idx] = {
+          ...updated[idx],
+          orderedQty: ord,
+          pendingQty: Math.max(0, ord - (updated[idx].suppliedQty || 0))
+        };
+      } else {
+        updated[idx] = {
+          ...updated[idx],
+          [field]: value
+        };
+      }
+      return { ...prev, items: updated };
+    });
   };
 
   const handleSave = () => {
-    if (!formData.cpoRef) {
-      alert('Customer PO reference is required.');
+    if (!formData.customerName) {
+      alert('Client Name is required.');
       return;
     }
     if (formData.items.length === 0) {
@@ -131,6 +143,20 @@ const SalesOrder = () => {
 
     dispatch(addSalesOrder(formData));
     setFormOpen(false);
+  };
+
+const handleEditSave = () => {
+    if (!formData.customerName) {
+      alert('Client Name is required.');
+      return;
+    }
+    if (formData.items.length === 0) {
+      alert('No line items found for the order.');
+      return;
+    }
+
+    dispatch(updateSalesOrder(formData));
+    setEditOpen(false);
   };
 
   const handleOpenInvoiceModal = (so) => {
@@ -146,8 +172,8 @@ const SalesOrder = () => {
   // Filter
   const filteredSOs = salesOrders.filter(so => {
     const matchesSearch = so.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          so.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          so.cpoRef.toLowerCase().includes(searchTerm.toLowerCase());
+      so.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      so.cpoRef.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDelivery = deliveryFilter ? so.deliveryStatus === deliveryFilter : true;
 
@@ -187,9 +213,9 @@ const SalesOrder = () => {
           <h2>Sales Order Management</h2>
         </div>
         <div className="header-actions">
-          <Button 
-            variant="outlined" 
-            startIcon={<FileSpreadsheet size={16} />} 
+          <Button
+            variant="outlined"
+            startIcon={<FileSpreadsheet size={16} />}
             onClick={handleExportExcel}
             sx={{ textTransform: 'none', fontWeight: 600, borderColor: '#2E7D32', color: '#2E7D32', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' }, borderRadius: 2 }}
           >
@@ -207,9 +233,9 @@ const SalesOrder = () => {
       <div className="filter-panel">
         <div className="search-bar">
           <Search size={18} />
-          <input 
-            type="text" 
-            placeholder="Search By" 
+          <input
+            type="text"
+            placeholder="Search By"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -230,7 +256,7 @@ const SalesOrder = () => {
           <thead>
             <tr>
               <th>Sales Order No</th>
-              <th>CPO Ref</th>
+              
               <th>Customer</th>
               <th>Date</th>
               <th>Warehouse Origin</th>
@@ -242,28 +268,28 @@ const SalesOrder = () => {
           <tbody>
             {filteredSOs.length === 0 ? (
               <tr>
-                <td colSpan="8" className="table-empty">No Sales Orders logged matching parameters.</td>
+                <td colSpan="7" className="table-empty">No Sales Orders logged matching parameters.</td>
               </tr>
             ) : (
               filteredSOs.map((so) => (
                 <tr key={so.id}>
-                  <td className="bold-cell">{so.id}</td>
-                  <td className="text-muted">{so.cpoRef}</td>
-                  <td>{so.customerName}</td>
+                  <td className="bold-cell ">{so.id}</td>
+                  
+                  <td >{so.customerName}</td>
                   <td>{formatDate(so.date)}</td>
-                  <td>{so.warehouse}</td>
+                  <td >{so.warehouse}</td>
                   <td>
-                    <Chip 
-                      label={so.deliveryStatus} 
-                      color={so.deliveryStatus === 'Fully Shipped' ? 'success' : so.deliveryStatus === 'Partially Shipped' ? 'primary' : 'default'} 
-                      size="small" 
+                    <Chip
+                      label={so.deliveryStatus}
+                      color={so.deliveryStatus === 'Fully Shipped' ? 'success' : so.deliveryStatus === 'Partially Shipped' ? 'primary' : 'default'}
+                      size="small"
                     />
                   </td>
                   <td>
-                    <Chip 
-                      label={so.invoiceGenerated ? 'Invoice Generated' : 'Pending Invoice'} 
-                      color={so.invoiceGenerated ? 'success' : 'warning'} 
-                      size="small" 
+                    <Chip
+                      label={so.invoiceGenerated ? 'Invoice Generated' : 'Pending Invoice'}
+                      color={so.invoiceGenerated ? 'success' : 'warning'}
+                      size="small"
                     />
                   </td>
                   <td className="actions-cell">
@@ -274,7 +300,7 @@ const SalesOrder = () => {
                     </Tooltip>
 
                     <Tooltip title="Edit Order">
-                      <IconButton size="small" color="primary" onClick={() => { setSelectedSO(so); setFormOpen(true); }}>
+                      <IconButton size="small" color="primary" onClick={() => { setSelectedSO(so); setFormData(so); setEditOpen(true); }}>
                         <Edit size={16} />
                       </IconButton>
                     </Tooltip>
@@ -293,22 +319,26 @@ const SalesOrder = () => {
       </div>
 
       {/* CREATE SO DIALOG */}
-      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle className="dialog-title">Create Sales Dispatch Order</DialogTitle>
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="lg" fullWidth>
+        <DialogTitle className="dialog-title">
+          Create
+        </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
             <FormControl fullWidth>
-              <InputLabel>Reference Customer PO</InputLabel>
+              <InputLabel>Customer</InputLabel>
               <Select
-                value={formData.cpoRef}
-                label="Reference Customer PO"
-                onChange={(e) => handleCPOChange(e.target.value)}
+                value={formData.customerName}
+                label="Customer"
+                onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
               >
-                {customerPOs.map(cpo => (
-                  <MenuItem key={cpo.id} value={cpo.id}>{cpo.id} (Client: {cpo.customerName})</MenuItem>
+                <MenuItem value=""><em>Select Customer</em></MenuItem>
+                {customers.map(c => (
+                  <MenuItem key={c.id} value={c.name}>{c.name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
+            
 
             <TextField
               label="Sales Order Date"
@@ -342,37 +372,70 @@ const SalesOrder = () => {
             />
           </div>
 
-          <div style={{ marginTop: '16px' }}>
-            <TextField
-              label="Client Name"
-              value={formData.customerName}
-              fullWidth
-              disabled
-            />
-          </div>
 
-          {formData.items.length > 0 && (
+
+          {(true) && (
             <div className="line-items-section" style={{ marginTop: '20px' }}>
-              <h4>Dispatch Allocation & Quantity Tracking</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4>Dispatch Allocation & Quantity Tracking</h4>
+                <Button 
+                    size="small" 
+                    startIcon={<Plus size={16} />}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        items: [...prev.items, { itemId: '', name: '', orderedQty: 1, suppliedQty: 1, pendingQty: 0, unitPrice: 0 }]
+                      }))
+                    }}
+                  >Add Item</Button>
+              </div>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell width="120">Ordered Qty</TableCell>
-                    <TableCell width="120">Supply Qty</TableCell>
-                    <TableCell width="120">Pending Qty</TableCell>
-                    <TableCell width="140">Unit Value (₹)</TableCell>
-                    <TableCell width="140">Total Value (₹)</TableCell>
+                    <TableCell className="text-right" width="120">Ordered Qty</TableCell>
+                    <TableCell className="text-right" width="120">Supply Qty</TableCell>
+                    <TableCell className="text-right" width="120">Pending Qty</TableCell>
+                    <TableCell className="text-right" width="140">Unit Value (₹)</TableCell>
+                    <TableCell className="text-right" width="140">Total Value (₹)</TableCell>
+                    <TableCell width="60">Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {formData.items.map((item, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{item.name} ({item.itemId})</TableCell>
-                      <TableCell>{item.orderedQty}</TableCell>
                       <TableCell>
-                        <input 
-                          type="number" 
+                      <select
+                          className="table-select"
+                          style={{ width: '100%', minWidth: '180px', padding: '8px', fontSize: '14px' }}
+                          value={item.itemId}
+                          onChange={(e) => {
+                            const selectedItem = itemsMaster.find(i => i.id === e.target.value);
+                            handleItemChange(idx, 'itemId', e.target.value);
+                            if (selectedItem) {
+                              handleItemChange(idx, 'name', selectedItem.name);
+                              handleItemChange(idx, 'unitPrice', selectedItem.standardPrice);
+                            }
+                          }}
+                        >
+                          <option value="">Select Item</option>
+                          {itemsMaster.map(itm => (
+                            <option key={itm.id} value={itm.id}>{itm.name} ({itm.id})</option>
+                          ))}
+                        </select>
+                    </TableCell>
+                      <TableCell >
+                      <input
+                          type="number"
+                          className="table-input"
+                          value={item.orderedQty}
+                          min="1"
+                          onChange={(e) => handleItemChange(idx, 'orderedQty', parseFloat(e.target.value) || 0)}
+                        />
+                    </TableCell>
+                      <TableCell >
+                        <input
+                          type="number"
                           className="table-input"
                           value={item.suppliedQty}
                           min="1"
@@ -380,13 +443,31 @@ const SalesOrder = () => {
                           onChange={(e) => handleItemChange(idx, 'suppliedQty', parseFloat(e.target.value) || 0)}
                         />
                       </TableCell>
-                      <TableCell className="bold-cell" style={{ color: item.pendingQty > 0 ? 'red' : 'inherit' }}>
+                      <TableCell className="bold-cell text-right" style={{ color: item.pendingQty > 0 ? 'red' : 'inherit' }}>
                         {item.pendingQty}
                       </TableCell>
-                      <TableCell>{item.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell className="bold-cell">
-                        {(item.suppliedQty * item.unitPrice).toFixed(2)}
+                      <TableCell>
+                      <input
+                          type="number"
+                          className="table-input"
+                          value={item.unitPrice}
+                          min="0"
+                          step="0.01"
+                          onChange={(e) => handleItemChange(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        />
+                    </TableCell>
+                      <TableCell className="bold-cell text-right">
+                        {(item.suppliedQty * item.unitPrice)?.toFixed(2)}
                       </TableCell>
+                      <TableCell align="center">
+                          <IconButton size="small" color="error" onClick={() => {
+                            const newItems = [...formData.items];
+                            newItems.splice(idx, 1);
+                            setFormData(prev => ({ ...prev, items: newItems }));
+                          }}>
+                            <Trash size={16} />
+                          </IconButton>
+                        </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -397,6 +478,169 @@ const SalesOrder = () => {
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
           <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+{/* EDIT SO DIALOG */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="lg" fullWidth>
+        <DialogTitle className="dialog-title">
+          Edit
+        </DialogTitle>
+        <DialogContent dividers>
+          <div className="dialog-grid">
+            <FormControl fullWidth>
+              <InputLabel>Customer</InputLabel>
+              <Select
+                value={formData.customerName}
+                label="Customer"
+                onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
+              >
+                <MenuItem value=""><em>Select Customer</em></MenuItem>
+                {customers.map(c => (
+                  <MenuItem key={c.id} value={c.name}>{c.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+
+            <TextField
+              label="Sales Order Date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Dispatch Origin (Warehouse)</InputLabel>
+              <Select
+                value={formData.warehouse}
+                label="Dispatch Origin (Warehouse)"
+                onChange={(e) => setFormData(prev => ({ ...prev, warehouse: e.target.value }))}
+              >
+                {warehouses.map(w => (
+                  <MenuItem key={w.id} value={w.name}>{w.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Expected Shipping Date"
+              type="date"
+              value={formData.deliverySchedule}
+              onChange={(e) => setFormData(prev => ({ ...prev, deliverySchedule: e.target.value }))}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+
+
+
+          {(true) && (
+            <div className="line-items-section" style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4>Dispatch Allocation & Quantity Tracking</h4>
+                <Button 
+                    size="small" 
+                    startIcon={<Plus size={16} />}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        items: [...prev.items, { itemId: '', name: '', orderedQty: 1, suppliedQty: 1, pendingQty: 0, unitPrice: 0 }]
+                      }))
+                    }}
+                  >Add Item</Button>
+              </div>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Item Name</TableCell>
+                    <TableCell className="text-right" width="120">Ordered Qty</TableCell>
+                    <TableCell className="text-right" width="120">Supply Qty</TableCell>
+                    <TableCell className="text-right" width="120">Pending Qty</TableCell>
+                    <TableCell className="text-right" width="140">Unit Value (₹)</TableCell>
+                    <TableCell className="text-right" width="140">Total Value (₹)</TableCell>
+                    <TableCell width="60">Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {formData.items.map((item, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                      <select
+                          className="table-select"
+                          style={{ width: '100%', minWidth: '180px', padding: '8px', fontSize: '14px' }}
+                          value={item.itemId}
+                          onChange={(e) => {
+                            const selectedItem = itemsMaster.find(i => i.id === e.target.value);
+                            handleItemChange(idx, 'itemId', e.target.value);
+                            if (selectedItem) {
+                              handleItemChange(idx, 'name', selectedItem.name);
+                              handleItemChange(idx, 'unitPrice', selectedItem.standardPrice);
+                            }
+                          }}
+                        >
+                          <option value="">Select Item</option>
+                          {itemsMaster.map(itm => (
+                            <option key={itm.id} value={itm.id}>{itm.name} ({itm.id})</option>
+                          ))}
+                        </select>
+                    </TableCell>
+                      <TableCell >
+                      <input
+                          type="number"
+                          className="table-input"
+                          value={item.orderedQty}
+                          min="1"
+                          onChange={(e) => handleItemChange(idx, 'orderedQty', parseFloat(e.target.value) || 0)}
+                        />
+                    </TableCell>
+                      <TableCell >
+                        <input
+                          type="number"
+                          className="table-input"
+                          value={item.suppliedQty}
+                          min="1"
+                          max={item.orderedQty}
+                          onChange={(e) => handleItemChange(idx, 'suppliedQty', parseFloat(e.target.value) || 0)}
+                        />
+                      </TableCell>
+                      <TableCell className="bold-cell text-right" style={{ color: item.pendingQty > 0 ? 'red' : 'inherit' }}>
+                        {item.pendingQty}
+                      </TableCell>
+                      <TableCell>
+                      <input
+                          type="number"
+                          className="table-input"
+                          value={item.unitPrice}
+                          min="0"
+                          step="0.01"
+                          onChange={(e) => handleItemChange(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        />
+                    </TableCell>
+                      <TableCell className="bold-cell text-right">
+                        {(item.suppliedQty * item.unitPrice)?.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="center">
+                          <IconButton size="small" color="error" onClick={() => {
+                            const newItems = [...formData.items];
+                            newItems.splice(idx, 1);
+                            setFormData(prev => ({ ...prev, items: newItems }));
+                          }}>
+                            <Trash size={16} />
+                          </IconButton>
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -419,11 +663,11 @@ const SalesOrder = () => {
                 <strong>Dispatch Origin:</strong> <span>{selectedSO.warehouse}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Delivery Status:</strong> 
+                <strong>Delivery Status:</strong>
                 <Chip label={selectedSO.deliveryStatus} color="primary" size="small" />
               </div>
               <div className="view-detail-row">
-                <strong>Invoice status:</strong> 
+                <strong>Invoice status:</strong>
                 <Chip label={selectedSO.invoiceGenerated ? 'Invoiced' : 'Pending'} color={selectedSO.invoiceGenerated ? 'success' : 'warning'} size="small" />
               </div>
 
@@ -442,10 +686,10 @@ const SalesOrder = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Ordered Qty</TableCell>
-                    <TableCell align="right">Supplied Qty</TableCell>
-                    <TableCell align="right">Pending Qty</TableCell>
-                    <TableCell align="right">Unit Price (₹)</TableCell>
+                    <TableCell className="text-right" align="right">Ordered Qty</TableCell>
+                    <TableCell className="text-right" align="right">Supplied Qty</TableCell>
+                    <TableCell className="text-right" align="right">Pending Qty</TableCell>
+                    <TableCell className="text-right" align="right">Unit Price (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
@@ -453,11 +697,11 @@ const SalesOrder = () => {
                   {selectedSO.items.map((itm, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                      <TableCell align="right">{itm.orderedQty}</TableCell>
-                      <TableCell align="right">{itm.suppliedQty}</TableCell>
-                      <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'red' : 'inherit' }}>{itm.pendingQty}</TableCell>
-                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">{(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.orderedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.suppliedQty}</TableCell>
+                      <TableCell className="text-right" align="right" style={{ color: itm.pendingQty > 0 ? 'red' : 'inherit' }}>{itm.pendingQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.suppliedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -465,9 +709,9 @@ const SalesOrder = () => {
 
               {!selectedSO.invoiceGenerated && (
                 <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                  <Button 
-                    variant="contained" 
-                    color="success" 
+                  <Button
+                    variant="contained"
+                    color="success"
                     startIcon={<Receipt size={16} />}
                     onClick={() => handleOpenInvoiceModal(selectedSO)}
                   >

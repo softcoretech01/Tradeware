@@ -5,11 +5,11 @@ const initialState = {
     {
       id: 'IPO-2026-001',
       date: '2026-04-05',
-      supplierName: 'Global Extrusions Corp',
+      supplierName: 'GLOBAL STEEL INDUSTRIES',
       currency: 'USD',
       exchangeRate: 83.5,
       items: [
-        { itemCode: 'ITM-0001', itemName: 'Aluminium Profile AS-100', qty: 2000, fcyUnitPrice: 5.2 }
+        { itemCode: 'ITM05316', itemName: 'Pin Piston Sanchin 120', qty: 2000, fcyUnitPrice: 5.2 }
       ],
       totalFCY: 10400,
       totalLCY: 868400,
@@ -19,11 +19,11 @@ const initialState = {
     {
       id: 'IPO-2026-002',
       date: '2026-05-10',
-      supplierName: 'Saint Gobain Glass',
+      supplierName: 'EUROPEAN VALVE SYSTEMS GMBH',
       currency: 'EUR',
       exchangeRate: 90.2,
       items: [
-        { itemCode: 'ITM-0002', itemName: 'Tempered Glass 10mm Clear', qty: 500, fcyUnitPrice: 12.5 }
+        { itemCode: 'ITM05315', itemName: 'Stang Piston Sanchin 120', qty: 500, fcyUnitPrice: 12.5 }
       ],
       totalFCY: 6250,
       totalLCY: 563750,
@@ -33,11 +33,11 @@ const initialState = {
     {
       id: 'IPO-2026-003',
       date: '2026-04-20',
-      supplierName: 'Aero Logistics Co',
+      supplierName: 'GLOBAL STEEL INDUSTRIES',
       currency: 'USD',
       exchangeRate: 83.5,
       items: [
-        { itemCode: 'ITM-0001', itemName: 'Aluminium Profile AS-100', qty: 1000, fcyUnitPrice: 5.0 }
+        { itemCode: 'ITM05314', itemName: 'Pin Piston Sanchin 120', qty: 1000, fcyUnitPrice: 5.0 }
       ],
       totalFCY: 5000,
       totalLCY: 417500,

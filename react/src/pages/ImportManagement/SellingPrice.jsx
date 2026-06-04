@@ -317,14 +317,16 @@ const SellingPrice = () => {
                 const isLow = b.marginPercent < MIN_MARGIN_THRESHOLD;
                 return (
                   <tr key={b.batchNo} style={{ backgroundColor: isLow ? 'rgba(239, 68, 68, 0.01)' : 'inherit' }}>
-                    <td className="bold-cell">{b.batchNo}</td>
-                    <td>{b.itemCode}</td>
-                    <td>{b.itemName}</td>
+                    <td className="bold-cell ">{b.batchNo}</td>
+                    <td >{b.itemCode}</td>
+                    <td >{b.itemName}</td>
                     <td style={{ textAlign: 'right' }}>
                       {b.landedUnitCost?.toFixed(2)}
-                      <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: '10px' }}>
-                        {b.grnReference ? 'Local' : 'Import'}
-                      </Typography>
+                      {b.grnReference && (
+                        <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: '10px' }}>
+                          Local
+                        </Typography>
+                      )}
                     </td>
                     <td className="bold-cell" style={{ textAlign: 'right' }}>{b.finalSellingPrice?.toFixed(2)}</td>
                     <td className="bold-cell" style={{ color: isLow ? RED.main : GREEN.main, textAlign: 'right' }}>

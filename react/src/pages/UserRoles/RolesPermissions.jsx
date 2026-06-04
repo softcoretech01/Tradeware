@@ -7,7 +7,7 @@ import {
 } from '../../store/erpSlice';
 import { 
   Plus, Edit2, Shield, Users, Save, Check, X,
-  UserCheck, AlertCircle, Search, FileText
+  UserCheck, AlertCircle, Search, FileText, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -22,7 +22,6 @@ const RolesPermissions = () => {
   const rolesPermissions = useSelector(state => state.erp.rolesPermissions);
 
   const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
   
   // User Modal State
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -35,7 +34,7 @@ const RolesPermissions = () => {
   const roles = Object.keys(rolesPermissions);
   const [selectedRole, setSelectedRole] = useState(roles[0] || 'Admin');
   const [tempPermissions, setTempPermissions] = useState({});
-  const [showMatrix, setShowMatrix] = useState(false);
+  const [expandedModules, setExpandedModules] = useState({});
 
   React.useEffect(() => {
     if (rolesPermissions[selectedRole]) {
@@ -76,13 +75,27 @@ const RolesPermissions = () => {
     setUserModalOpen(false);
   };
 
-  const handleTogglePermission = (moduleName, type) => {
+  const handleTogglePermission = (modName, subItems, val) => {
+    setTempPermissions(prev => {
+      const updated = { ...prev };
+      
+      // Update parent
+      updated[modName] = { ...updated[modName], read: val };
+      
+      // If it has submodules, cascade the change to all submodules
+      if (subItems && subItems.length > 0) {
+        subItems.forEach(sub => {
+          updated[sub] = { ...updated[sub], read: val };
+        });
+      }
+      return updated;
+    });
+  };
+
+  const handleToggleSubPermission = (subName, val) => {
     setTempPermissions(prev => ({
       ...prev,
-      [moduleName]: {
-        ...prev[moduleName],
-        [type]: !prev[moduleName]?.[type]
-      }
+      [subName]: { ...prev[subName], read: val }
     }));
   };
 
@@ -94,13 +107,6 @@ const RolesPermissions = () => {
     dispatch(updatePermissions(updatedMatrix));
     alert(`Permissions for ${selectedRole} updated successfully!`);
   };
-
-  // Filter users based on search
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const userColumns = [
     { field: 'id', headerName: 'User ID', width: 100 },
@@ -157,15 +163,16 @@ const RolesPermissions = () => {
   ];
 
   const modulesList = [
-    'Dashboard',
-    'Masters',
-    'Purchase Management',
-    'Import Management',
-    'Batch & Lot Management',
-    'Inventory Management',
-    'Sales & Orders',
-    'User Roles & Approval',
-    'Document Management'
+    { name: 'Dashboard' },
+    { name: 'Masters', subItems: ['Items', 'Customers', 'Suppliers', 'Location Master', 'Tax Master'] },
+    { name: 'Purchase Management', subItems: ['Purchase Requisition', 'Purchase Order', 'GRN', 'Purchase Return', 'Landed Cost Calculation'] },
+    { name: 'Import Management', subItems: ['Import Purchase Management', 'Landed Cost Calculation', 'Selling Price Finalization'] },
+    { name: 'Batch & Lot Management', subItems: ['Batch Maintenance', 'Batch Stock Inquiry', 'Batch Aging Analysis'] },
+    { name: 'Inventory Management', subItems: ['Stock Overview', 'Damages'] },
+    { name: 'Sales & Orders', subItems: ['Sales Order', 'Invoice'] },
+    { name: 'CRM Module', subItems: ['CRM Dashboard', 'Lead Management', 'Customer Management', 'Follow-up Tracking', 'Sales Enquiry', 'Existing Leads'] },
+    { name: 'User Roles & Approval', subItems: ['Roles & Permissions'] },
+    { name: 'Document Management', subItems: ['Document Management'] }
   ];
 
   return (
@@ -214,21 +221,9 @@ const RolesPermissions = () => {
       {/* Tab Content 1: User Accounts */}
       {activeTab === 0 && (
         <div className="fade-in">
-          {/* Search bar */}
-          <div style={{ display: 'flex', background: 'var(--background)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 16px', maxWidth: '350px', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <Search size={18} style={{ color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              placeholder="Search users, roles, email..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '14px', color: 'var(--text-main)' }}
-            />
-          </div>
-
           <div style={{ height: 450, width: '100%' }}>
             <DataGrid
-              rows={filteredUsers}
+              rows={users}
               columns={userColumns}
               pageSize={5}
               rowsPerPageOptions={[5, 10, 20]}
@@ -261,35 +256,13 @@ const RolesPermissions = () => {
       {activeTab === 1 && (
         <div className="fade-in">
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px', background: 'var(--background)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '15px' }}>Configure access rights for:</span>
-            <FormControl size="small" style={{ minWidth: '200px' }}>
-              <Select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                style={{ background: 'white', borderRadius: '6px' }}
-              >
-                {roles.map(role => (
-                  <MenuItem key={role} value={role}>{role}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => setShowMatrix(!showMatrix)}
-                style={{ textTransform: 'none', borderRadius: '6px' }}
-              >
-                {showMatrix ? 'Hide Matrix' : 'Show Matrix'}
-              </Button>
               <Button
                 variant="outlined"
                 color="secondary"
                 startIcon={<X size={16} />}
                 onClick={() => {
-                  if (rolesPermissions[selectedRole]) {
-                    setTempPermissions(JSON.parse(JSON.stringify(rolesPermissions[selectedRole])));
-                  }
+                  setTempPermissions({});
                 }}
                 style={{ textTransform: 'none', borderRadius: '6px' }}
               >
@@ -306,64 +279,96 @@ const RolesPermissions = () => {
             </div>
           </div>
 
-          {showMatrix && (
-            <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
-                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', width: '40%' }}>Module / Submodule</th>
-                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Read</th>
-                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Write</th>
-                    <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Approve</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {modulesList.map((modName, idx) => {
-                    const hasPerm = tempPermissions[modName] || { read: false, write: false, approve: false };
-                    return (
-                      <tr key={modName} style={{ borderBottom: idx === modulesList.length - 1 ? 'none' : '1px solid var(--border)', transition: 'background 0.2s' }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', width: '40%' }}>Module / Submodule</th>
+                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Show</th>
+                  <th style={{ padding: '16px', fontSize: '14px', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Hide</th>
+                </tr>
+              </thead>
+              <tbody>
+                {modulesList.map((mod, idx) => {
+                  const hasPerm = tempPermissions[mod.name] || { read: false };
+                  const isExpanded = expandedModules[mod.name];
+                  return (
+                    <React.Fragment key={mod.name}>
+                      <tr style={{ borderBottom: (idx === modulesList.length - 1 && !isExpanded) ? 'none' : '1px solid var(--border)', transition: 'background 0.2s', background: 'var(--surface)' }}>
                         <td style={{ padding: '16px', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <FileText size={16} style={{ color: 'var(--primary)' }} />
-                          {modName}
+                          <span 
+                            style={{ cursor: mod.subItems ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => {
+                              if (mod.subItems) setExpandedModules(p => ({...p, [mod.name]: !p[mod.name]}));
+                            }}
+                          >
+                            {mod.name}
+                            {mod.subItems && (
+                              isExpanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+                            )}
+                          </span>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'center' }}>
                           <input 
-                            type="checkbox"
-                            checked={hasPerm.read}
-                            onChange={() => handleTogglePermission(modName, 'read')}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                            type="radio"
+                            name={`perm_${mod.name}`}
+                            checked={hasPerm.read === true}
+                            onChange={() => handleTogglePermission(mod.name, mod.subItems, true)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--success)' }}
                           />
                         </td>
                         <td style={{ padding: '16px', textAlign: 'center' }}>
                           <input 
-                            type="checkbox"
-                            checked={hasPerm.write}
-                            onChange={() => handleTogglePermission(modName, 'write')}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                          />
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'center' }}>
-                          <input 
-                            type="checkbox"
-                            checked={hasPerm.approve}
-                            onChange={() => handleTogglePermission(modName, 'approve')}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                            type="radio"
+                            name={`perm_${mod.name}`}
+                            checked={!hasPerm.read}
+                            onChange={() => handleTogglePermission(mod.name, mod.subItems, false)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--danger)' }}
                           />
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      {isExpanded && mod.subItems && mod.subItems.map((sub, sIdx) => {
+                        const subPerm = tempPermissions[sub] || { read: false };
+                        return (
+                          <tr key={sub} style={{ background: 'var(--background)', borderBottom: (idx === modulesList.length - 1 && sIdx === mod.subItems.length - 1) ? 'none' : '1px solid var(--border)' }}>
+                            <td style={{ padding: '12px 16px 12px 48px', fontWeight: 500, color: '#475569', fontSize: '14px' }}>
+                              {sub}
+                            </td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              <input 
+                                type="radio"
+                                name={`perm_sub_${sub}`}
+                                checked={subPerm.read === true}
+                                onChange={() => handleToggleSubPermission(sub, true)}
+                                style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: 'var(--success)' }}
+                              />
+                            </td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              <input 
+                                type="radio"
+                                name={`perm_sub_${sub}`}
+                                checked={!subPerm.read}
+                                onChange={() => handleToggleSubPermission(sub, false)}
+                                style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: 'var(--danger)' }}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Add / Edit User Modal */}
       <Dialog open={userModalOpen} onClose={() => setUserModalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle style={{ fontWeight: 700, fontSize: '18px', borderBottom: '1px solid var(--border)' }}>
-          {isEditingUser ? 'Edit User Details' : 'Create User Account'}
+          {isEditingUser ? 'Edit' : 'Create User Account'}
         </DialogTitle>
         <DialogContent style={{ paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <TextField

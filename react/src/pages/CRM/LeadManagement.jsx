@@ -295,7 +295,7 @@ const LeadManagement = () => {
               <th>Contact Person</th>
               <th>Contact Details</th>
               <th>Source</th>
-              <th>Est. Value</th>
+              <th className="text-right">Est. Value</th>
               <th>Assigned Rep</th>
               <th>Next Follow-up</th>
               <th>Status</th>
@@ -314,15 +314,15 @@ const LeadManagement = () => {
                   const salesperson = salesTeam.find(u => u.id === l.assignedSalesperson)?.name || 'Unassigned';
                   return (
                     <tr key={l.id}>
-                      <td className="bold-cell">{l.id}</td>
-                      <td style={{ fontWeight: 600 }}>{l.name}</td>
-                      <td>{l.contactPerson}</td>
+                      <td className="bold-cell ">{l.id}</td>
+                      <td style={{ fontWeight: 600 }} >{l.name}</td>
+                      <td >{l.contactPerson}</td>
                       <td>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{l.email}</div>
                         <div style={{ fontSize: '12px' }}>{l.phone}</div>
                       </td>
-                      <td>{l.source}</td>
-                      <td style={{ fontWeight: 600, color: 'var(--accent)' }}>
+                      <td >{l.source}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--accent)' }} className="text-right">
                         ${l.opportunityValue?.toLocaleString() || '0'}
                       </td>
                       <td>{salesperson}</td>
@@ -380,7 +380,7 @@ const LeadManagement = () => {
       {/* CREATE & EDIT LEAD DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          {selectedLead ? `Edit Lead Details: ${formData.name}` : 'Log New Prospect Lead'} ({formData.id})
+          {selectedLead ? 'Edit' : 'Log New Prospect Lead'} ({formData.id})
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">

@@ -29,7 +29,7 @@ const Layout = ({ children, user, onLogout }) => {
         }
 
         .page-wrapper {
-          padding: 24px;
+          padding: 16px;
           flex: 1;
           overflow-y: auto;
         }

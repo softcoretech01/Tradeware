@@ -168,10 +168,10 @@ const Suppliers = () => {
               {paginatedSuppliers.length > 0 ? (
                 paginatedSuppliers.map(supplier => (
                   <tr key={supplier.id}>
-                    <td className="code-cell">{supplier.id}</td>
-                    <td className="bold-cell">{supplier.name}</td>
+                    <td className="code-cell ">{supplier.id}</td>
+                    <td className="bold-cell ">{supplier.name}</td>
                     <td><span className="badge badge-gray">{supplier.type}</span></td>
-                    <td className="bold-cell text-primary">{supplier.currency}</td>
+                    <td className="bold-cell text-primary ">{supplier.currency}</td>
                     <td className="lead-time-cell">{supplier.leadTime} Days</td>
                     <td>
                       <label className="switch">

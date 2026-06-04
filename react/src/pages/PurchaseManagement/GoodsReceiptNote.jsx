@@ -331,10 +331,10 @@ const GoodsReceiptNote = () => {
             ) : (
               filteredGRNs.map((grn) => (
                 <tr key={grn.id}>
-                  <td className="bold-cell">{grn.id}</td>
+                  <td className="bold-cell ">{grn.id}</td>
                   <td>{formatDate(grn.date)}</td>
-                  <td className="text-muted">{grn.poRef}</td>
-                  <td>{grn.supplierName}</td>
+                  <td className="text-muted ">{grn.poRef}</td>
+                  <td >{grn.supplierName}</td>
                   <td className="actions-cell">
                     <Tooltip title="Edit Record">
                       <IconButton size="small" color="primary" onClick={() => handleOpenEdit(grn)}>
@@ -369,7 +369,9 @@ const GoodsReceiptNote = () => {
 
       {/* CREATE GRN DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle className="dialog-title">Create Goods Receipt Note (GRN)</DialogTitle>
+        <DialogTitle className="dialog-title">
+          {grns.some(g => g.id === formData.id) ? 'Edit' : 'Create'}
+        </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
             <FormControl fullWidth>
@@ -410,16 +412,16 @@ const GoodsReceiptNote = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell width="120">PO Qty</TableCell>
-                    <TableCell width="120">Received Qty</TableCell>
+                    <TableCell className="text-right" width="120">PO Qty</TableCell>
+                    <TableCell className="text-right" width="120">Received Qty</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {formData.receivedItems.map((item, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{item.name} ({item.itemId})</TableCell>
-                      <TableCell>{item.orderedQty}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">{item.orderedQty}</TableCell>
+                      <TableCell >
                         <input 
                           type="number" 
                           className="table-input"
@@ -494,10 +496,10 @@ const GoodsReceiptNote = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Ordered Qty</TableCell>
-                    <TableCell align="right">Received Qty</TableCell>
-                    <TableCell align="right">Accepted Qty</TableCell>
-                    <TableCell align="right">Rejected Qty</TableCell>
+                    <TableCell className="text-right" align="right">Ordered Qty</TableCell>
+                    <TableCell className="text-right" align="right">Received Qty</TableCell>
+                    <TableCell className="text-right" align="right">Accepted Qty</TableCell>
+                    <TableCell className="text-right" align="right">Rejected Qty</TableCell>
                     <TableCell>QC status</TableCell>
                     <TableCell align="center">QC Action</TableCell>
                   </TableRow>
@@ -516,10 +518,10 @@ const GoodsReceiptNote = () => {
                           </div>
                         ))}
                       </TableCell>
-                      <TableCell align="right">{itm.orderedQty}</TableCell>
-                      <TableCell align="right">{itm.receivedQty}</TableCell>
-                      <TableCell align="right">{itm.acceptedQty || 0}</TableCell>
-                      <TableCell align="right" style={{ color: (itm.rejectedQty || 0) > 0 ? 'red' : 'inherit' }}>
+                      <TableCell className="text-right" align="right">{itm.orderedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.receivedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.acceptedQty || 0}</TableCell>
+                      <TableCell className="text-right" align="right" style={{ color: (itm.rejectedQty || 0) > 0 ? 'red' : 'inherit' }}>
                         {itm.rejectedQty || 0}
                       </TableCell>
                       <td>
@@ -678,7 +680,7 @@ const GoodsReceiptNote = () => {
                 <tbody>
                   {selectedGRN.receivedItems.map((itm, idx) => (
                     <tr key={idx}>
-                      <td>{itm.itemId}</td>
+                      <td >{itm.itemId}</td>
                       <td>
                         <strong>{itm.name}</strong>
                         {itm.batches && itm.batches.map(b => (
@@ -688,11 +690,11 @@ const GoodsReceiptNote = () => {
                         ))}
                       </td>
                       <td>{itm.warehouse} ({itm.rack})</td>
-                      <td className="num-col">{itm.orderedQty}</td>
-                      <td className="num-col">{itm.receivedQty}</td>
+                      <td className="num-col text-right">{itm.orderedQty}</td>
+                      <td className="num-col text-right">{itm.receivedQty}</td>
                       <td className="num-col">{itm.acceptedQty || 0}</td>
                       <td className="num-col" style={{ color: (itm.rejectedQty || 0) > 0 ? 'red' : 'inherit' }}>{itm.rejectedQty || 0}</td>
-                      <td>{itm.qcStatus}</td>
+                      <td >{itm.qcStatus}</td>
                     </tr>
                   ))}
                 </tbody>

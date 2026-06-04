@@ -360,9 +360,9 @@ const BatchStockInquiry = () => {
               <th>Item Code</th>
               <th>Item Name</th>
               <th>UOM</th>
-              <th>Available Stock</th>
-              <th>Landed Unit Cost (₹)</th>
-              <th>Selling Price (₹)</th>
+              <th className="text-right">Available Stock</th>
+              <th className="text-right">Landed Unit Cost (₹)</th>
+              <th className="text-right">Selling Price (₹)</th>
               <th>Expiry Date</th>
               <th>Days to Expire</th>
             </tr>
@@ -373,13 +373,13 @@ const BatchStockInquiry = () => {
                 const daysToExpiry = Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
                 return (
                 <tr key={b.batchNo}>
-                  <td className="bold-cell">{b.batchNo}</td>
-                  <td>{b.itemCode}</td>
-                  <td>{b.itemName}</td>
+                  <td className="bold-cell ">{b.batchNo}</td>
+                  <td >{b.itemCode}</td>
+                  <td >{b.itemName}</td>
                   <td>{items.find(i => i.id === b.itemCode)?.uom || 'Nos'}</td>
-                  <td className="bold-cell">{b.qty}</td>
-                  <td>{b.landedUnitCost?.toFixed(2)}</td>
-                  <td>{b.finalSellingPrice?.toFixed(2)}</td>
+                  <td className="bold-cell text-right">{b.qty}</td>
+                  <td className="text-right">{b.landedUnitCost?.toFixed(2)}</td>
+                  <td className="text-right">{b.finalSellingPrice?.toFixed(2)}</td>
                   <td>{formatDate(b.expiryDate)}</td>
                   <td style={{ color: daysToExpiry < 0 ? RED.main : (daysToExpiry <= 60 ? AMBER.main : 'inherit'), fontWeight: daysToExpiry <= 60 ? 700 : 400 }}>
                     {daysToExpiry < 0 ? 'Expired' : `${daysToExpiry} days`}

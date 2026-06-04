@@ -295,10 +295,10 @@ const Dashboard = () => {
               <tbody>
                 {lowStockItems.map(item => (
                   <tr key={item.id}>
-                    <td className="bold-cell">{item.itemCode}</td>
-                    <td>{item.itemName}</td>
-                    <td style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.availableStock}</td>
-                    <td>{item.minStock}</td>
+                    <td className="bold-cell ">{item.itemCode}</td>
+                    <td >{item.itemName}</td>
+                    <td style={{ color: '#ef4444', fontWeight: 'bold' }} >{item.availableStock}</td>
+                    <td >{item.minStock}</td>
                     <td>
                       <Chip
                         label={item.status}
@@ -425,7 +425,7 @@ const Dashboard = () => {
                 <TableCell><b>{detailsPopup === 'purchases' ? 'PO Number' : 'SO No'}</b></TableCell>
                 <TableCell><b>{detailsPopup === 'yetToBill' ? 'SO Date' : 'Date'}</b></TableCell>
                 <TableCell><b>{detailsPopup === 'purchases' ? 'Supplier' : 'Customer Name'}</b></TableCell>
-                <TableCell align="right"><b>Value</b></TableCell>
+                <TableCell className="text-right" align="right"><b>Value</b></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -457,7 +457,7 @@ const Dashboard = () => {
                       <TableCell>{detailsPopup === 'purchases' ? (order.poNumber || order.id) : (order.soNumber || order.id)}</TableCell>
                       <TableCell>{formatDate(order.date || order.createdAt)}</TableCell>
                       <TableCell>{detailsPopup === 'purchases' ? order.supplierName : order.customerName}</TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" className="text-right">
                         ₹{orderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>

@@ -335,7 +335,7 @@ const PurchaseOrder = () => {
               <th>Date</th>
               <th>PR Ref</th>
               <th>Supplier</th>
-              <th>Value (₹)</th>
+              <th className="text-right">Value (₹)</th>
               <th>Delivery</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -350,11 +350,11 @@ const PurchaseOrder = () => {
                 const totalValue = po.items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
                 return (
                   <tr key={po.id}>
-                    <td className="bold-cell">{po.id}</td>
+                    <td className="bold-cell ">{po.id}</td>
                     <td>{formatDate(po.date)}</td>
                     <td className="text-muted">{po.prRef || 'Direct'}</td>
-                    <td>{po.supplierName}</td>
-                    <td className="bold-cell">{totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td >{po.supplierName}</td>
+                    <td className="bold-cell text-right">{totalValue.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                     <td>
                       <Chip 
                         label={po.deliveryStatus} 
@@ -398,7 +398,7 @@ const PurchaseOrder = () => {
       {/* CREATE / EDIT DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          {purchaseOrders.some(p => p.id === formData.id) ? 'Edit Purchase Order' : 'Create Purchase Order'} ({formData.id})
+          {purchaseOrders.some(p => p.id === formData.id) ? 'Edit' : 'Create'}
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
@@ -471,9 +471,9 @@ const PurchaseOrder = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Item Name</TableCell>
-                  <TableCell width="120">Order Qty</TableCell>
-                  <TableCell width="140">Unit Cost</TableCell>
-                  <TableCell width="140">Line Total</TableCell>
+                  <TableCell className="text-right" width="120">Order Qty</TableCell>
+                  <TableCell className="text-right" width="140">Unit Cost</TableCell>
+                  <TableCell className="text-right" width="140">Line Total</TableCell>
                   {!formData.prRef && <TableCell width="80" align="center">Action</TableCell>}
                 </TableRow>
               </TableHead>
@@ -495,7 +495,7 @@ const PurchaseOrder = () => {
                         </select>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell >
                       <input 
                         type="number" 
                         className="table-input"
@@ -514,7 +514,7 @@ const PurchaseOrder = () => {
                         onChange={(e) => handleItemChange(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
                       />
                     </TableCell>
-                    <TableCell className="bold-cell">
+                    <TableCell className="bold-cell text-right">
                       {(item.orderedQty * item.unitPrice).toFixed(2)}
                     </TableCell>
                     {!formData.prRef && (
@@ -542,7 +542,7 @@ const PurchaseOrder = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Expected Delivery Date</TableCell>
-                  <TableCell width="250">Target Quantity</TableCell>
+                  <TableCell className="text-right" width="250">Target Quantity</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -557,7 +557,7 @@ const PurchaseOrder = () => {
                         onChange={(e) => handleScheduleChange(idx, 'date', e.target.value)}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell >
                       <input 
                         type="number" 
                         className="table-input"
@@ -623,10 +623,10 @@ const PurchaseOrder = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Qty Ordered</TableCell>
-                    <TableCell align="right">Qty Received</TableCell>
-                    <TableCell align="right">Qty Pending</TableCell>
-                    <TableCell align="right">Unit Cost (₹)</TableCell>
+                    <TableCell className="text-right" align="right">Qty Ordered</TableCell>
+                    <TableCell className="text-right" align="right">Qty Received</TableCell>
+                    <TableCell className="text-right" align="right">Qty Pending</TableCell>
+                    <TableCell className="text-right" align="right">Unit Cost (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
@@ -634,18 +634,18 @@ const PurchaseOrder = () => {
                   {selectedPO.items.map((itm, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                      <TableCell align="right">{itm.orderedQty}</TableCell>
-                      <TableCell align="right">{itm.receivedQty || 0}</TableCell>
-                      <TableCell align="right" style={{ color: itm.pendingQty > 0 ? 'var(--warning)' : 'inherit' }}>
+                      <TableCell className="text-right" align="right">{itm.orderedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.receivedQty || 0}</TableCell>
+                      <TableCell className="text-right" align="right" style={{ color: itm.pendingQty > 0 ? 'var(--warning)' : 'inherit' }}>
                         {itm.pendingQty}
                       </TableCell>
-                      <TableCell align="right">{itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
-                    <TableCell colSpan={5} align="right"><strong>Grand Total Value:</strong></TableCell>
-                    <TableCell align="right" className="bold-cell">
+                    <TableCell className="text-right" colSpan={5} align="right"><strong>Grand Total Value:</strong></TableCell>
+                    <TableCell align="right" className="bold-cell text-right">
                       {selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
@@ -657,14 +657,14 @@ const PurchaseOrder = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Expected Date</TableCell>
-                    <TableCell align="right">Quantity Released</TableCell>
+                    <TableCell className="text-right" align="right">Quantity Released</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {selectedPO.deliverySchedules.map((s, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{formatDate(s.date)}</TableCell>
-                      <TableCell align="right">{s.qty}</TableCell>
+                      <TableCell align="right" className="text-right">{s.qty}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -715,26 +715,26 @@ const PurchaseOrder = () => {
                   <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
-                    <th className="num-col">Qty Ordered</th>
-                    <th className="num-col">Qty Received</th>
-                    <th className="num-col">Unit Price (₹)</th>
-                    <th className="num-col">Total Cost (₹)</th>
+                    <th className="num-col text-right">Qty Ordered</th>
+                    <th className="num-col text-right">Qty Received</th>
+                    <th className="num-col text-right">Unit Price (₹)</th>
+                    <th className="num-col text-right">Total Cost (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedPO.items.map((itm, idx) => (
                     <tr key={idx}>
-                      <td>{itm.itemId}</td>
-                      <td>{itm.name}</td>
-                      <td className="num-col">{itm.orderedQty}</td>
-                      <td className="num-col">{itm.receivedQty || 0}</td>
-                      <td className="num-col">{itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
+                      <td >{itm.itemId}</td>
+                      <td >{itm.name}</td>
+                      <td className="num-col text-right">{itm.orderedQty}</td>
+                      <td className="num-col text-right">{itm.receivedQty || 0}</td>
+                      <td className="num-col text-right">{itm.unitPrice.toFixed(2)}</td>
+                      <td className="num-col text-right">{(itm.orderedQty * itm.unitPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Purchase Value Total</td>
-                    <td className="num-col">{selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedPO.items.reduce((sum, i) => sum + (i.orderedQty * i.unitPrice), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

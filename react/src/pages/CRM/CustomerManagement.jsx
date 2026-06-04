@@ -172,7 +172,7 @@ const CustomerManagement = () => {
               <th>Customer Name</th>
               <th>Category</th>
               <th>Pricing Mode</th>
-              <th>Credit Limit</th>
+              <th className="text-right">Credit Limit</th>
               <th>Terms</th>
               <th>Contact Phone</th>
               <th>Tax Status</th>
@@ -187,15 +187,15 @@ const CustomerManagement = () => {
             ) : (
               paginatedCustomers.map(c => (
                 <tr key={c.id}>
-                  <td className="bold-cell">{c.id}</td>
-                  <td style={{ fontWeight: 600 }}>{c.name}</td>
+                  <td className="bold-cell ">{c.id}</td>
+                  <td style={{ fontWeight: 600 }} >{c.name}</td>
                   <td>
                     <Chip label={c.type} variant="outlined" size="small" />
                   </td>
-                  <td>{c.priceCategory}</td>
-                  <td style={{ fontWeight: 600 }}>${c.creditLimit?.toLocaleString()}</td>
-                  <td>{c.paymentTerms}</td>
-                  <td>{c.phone}</td>
+                  <td  className="text-right">{c.priceCategory}</td>
+                  <td className="text-right" style={{ fontWeight: 600 }}>${c.creditLimit?.toLocaleString()}</td>
+                  <td >{c.paymentTerms}</td>
+                  <td >{c.phone}</td>
                   <td>
                     {c.gstDetails?.gstin ? (
                       <Chip label="GST Registered" color="success" size="small" variant="light" sx={{ height: '22px' }} />

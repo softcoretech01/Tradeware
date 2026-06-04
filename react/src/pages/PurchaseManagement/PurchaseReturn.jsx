@@ -248,7 +248,7 @@ const PurchaseReturn = () => {
               <th>GRN Ref</th>
               <th>Supplier</th>
               <th>Debit Note Status</th>
-              <th>Refund Total</th>
+              <th className="text-right">Refund Total</th>
               <th className="actions-column">Actions</th>
             </tr>
           </thead>
@@ -260,10 +260,10 @@ const PurchaseReturn = () => {
             ) : (
               filteredReturns.map((ret) => (
                 <tr key={ret.id}>
-                  <td className="bold-cell">{ret.id}</td>
+                  <td className="bold-cell ">{ret.id}</td>
                   <td>{formatDate(ret.date)}</td>
-                  <td className="text-muted">{ret.grnRef}</td>
-                  <td>{ret.supplierName}</td>
+                  <td className="text-muted ">{ret.grnRef}</td>
+                  <td >{ret.supplierName}</td>
                   <td>
                     <Chip 
                       label={ret.debitNoteGenerated ? 'Debit Note Created' : 'Pending Debit Note'} 
@@ -271,7 +271,7 @@ const PurchaseReturn = () => {
                       size="small" 
                     />
                   </td>
-                  <td className="bold-cell">
+                  <td className="bold-cell text-right">
                     {ret.debitNoteGenerated ? ret.debitNoteDetails.total.toFixed(2) : '0.00'}
                   </td>
                   <td className="actions-cell">
@@ -318,7 +318,9 @@ const PurchaseReturn = () => {
 
       {/* CREATE RETURN DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle className="dialog-title">Create Goods Return Voucher</DialogTitle>
+        <DialogTitle className="dialog-title">
+          {purchaseReturns.some(r => r.id === formData.id) ? 'Edit' : 'Create'}
+        </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
             <FormControl fullWidth>
@@ -358,8 +360,8 @@ const PurchaseReturn = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell width="120">Inwarded Qty</TableCell>
-                    <TableCell width="120">Return Qty</TableCell>
+                    <TableCell className="text-right" width="120">Inwarded Qty</TableCell>
+                    <TableCell className="text-right" width="120">Return Qty</TableCell>
                     <TableCell>Return Reason</TableCell>
                   </TableRow>
                 </TableHead>
@@ -367,7 +369,7 @@ const PurchaseReturn = () => {
                   {formData.returnedItems.map((item, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{item.name} ({item.itemId})</TableCell>
-                      <TableCell>{item.maxReturnQty}</TableCell>
+                      <TableCell className="text-right">{item.maxReturnQty}</TableCell>
                       <TableCell>
                         <input 
                           type="number" 
@@ -434,8 +436,8 @@ const PurchaseReturn = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
-                    <TableCell align="right">Qty Returned</TableCell>
-                    <TableCell align="right">Unit Cost (₹)</TableCell>
+                    <TableCell className="text-right" align="right">Qty Returned</TableCell>
+                    <TableCell className="text-right" align="right">Unit Cost (₹)</TableCell>
                     <TableCell align="right">Refund Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
@@ -446,9 +448,9 @@ const PurchaseReturn = () => {
                         {itm.name} ({itm.itemId})<br />
                         <span className="text-muted" style={{ fontSize: '11px' }}>Reason: {itm.reason}</span>
                       </TableCell>
-                      <TableCell align="right">{itm.returnedQty}</TableCell>
-                      <TableCell align="right">{(itm.unitPrice || 0).toFixed(2)}</TableCell>
-                      <TableCell align="right">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.returnedQty}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.unitPrice || 0).toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -510,35 +512,35 @@ const PurchaseReturn = () => {
                   <tr>
                     <th>Item ID</th>
                     <th>Returned Items & Specs</th>
-                    <th className="num-col">Qty Returned</th>
-                    <th className="num-col">Unit Price (₹)</th>
-                    <th className="num-col">Taxable Value (₹)</th>
+                    <th className="num-col text-right">Qty Returned</th>
+                    <th className="num-col text-right">Unit Price (₹)</th>
+                    <th className="num-col text-right">Taxable Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedReturn.returnedItems.map((itm, idx) => (
                     <tr key={idx}>
-                      <td>{itm.itemId}</td>
+                      <td >{itm.itemId}</td>
                       <td>
                         <strong>{itm.name}</strong><br />
                         <span style={{ fontSize: '11px', color: '#64748b' }}>Reason: {itm.reason}</span>
                       </td>
-                      <td className="num-col">{itm.returnedQty}</td>
-                      <td className="num-col">{(itm.unitPrice || 0).toFixed(2)}</td>
-                      <td className="num-col">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</td>
+                      <td className="num-col text-right">{itm.returnedQty}</td>
+                      <td className="num-col text-right">{(itm.unitPrice || 0).toFixed(2)}</td>
+                      <td className="num-col text-right">{(itm.returnedQty * (itm.unitPrice || 0)).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="subtotal-row">
                     <td colSpan="4">Subtotal Taxable Amount</td>
-                    <td className="num-col">{selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedReturn.debitNoteDetails.amount.toFixed(2)}</td>
                   </tr>
                   <tr className="subtotal-row">
                     <td colSpan="4">Integrated Tax Credit (18%)</td>
-                    <td className="num-col">{selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedReturn.debitNoteDetails.taxAmount.toFixed(2)}</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan="4">Total Adjusting Credit Value</td>
-                    <td className="num-col">{selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedReturn.debitNoteDetails.total.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>

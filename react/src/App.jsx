@@ -6,7 +6,6 @@ import Layout from './components/Layout';
 import Items from './pages/Masters/Items';
 import Customers from './pages/Masters/Customers';
 import Suppliers from './pages/Masters/Suppliers';
-import LocationMaster from './pages/Masters/LocationMaster';
 import InventoryMaster from './pages/Inventory/InventoryMaster';
 import DamagedStock from './pages/Inventory/DamagedStock';
 import Login from './pages/Login';
@@ -17,17 +16,12 @@ import PurchaseRequisition from './pages/PurchaseManagement/PurchaseRequisition'
 import PurchaseOrder from './pages/PurchaseManagement/PurchaseOrder';
 import GoodsReceiptNote from './pages/PurchaseManagement/GoodsReceiptNote';
 import PurchaseReturn from './pages/PurchaseManagement/PurchaseReturn';
-import QualityControl from './pages/PurchaseManagement/QualityControl';
 import LandedCostCalculation from './pages/PurchaseManagement/LandedCostCalculation';
-import SalesEnquiry from './pages/SalesManagement/SalesEnquiry';
-import QuotationManagement from './pages/SalesManagement/QuotationManagement';
-import CustomerPO from './pages/SalesManagement/CustomerPO';
 import SalesOrder from './pages/SalesManagement/SalesOrder';
 import Invoice from './pages/SalesManagement/Invoice';
 
 // Security and Doc management pages
 import RolesPermissions from './pages/UserRoles/RolesPermissions';
-import ApprovalWorkflows from './pages/UserRoles/ApprovalWorkflows';
 import DocumentManagement from './pages/Documents/DocumentManagement';
 
 // Batch & Lot Management Pages
@@ -40,11 +34,6 @@ import ImportPurchase from './pages/ImportManagement/ImportPurchase';
 // import ShipmentTracking from './pages/ImportManagement/ShipmentTracking';
 import LandedCost from './pages/ImportManagement/LandedCost';
 import SellingPrice from './pages/ImportManagement/SellingPrice';
-import ReportsDashboards from './pages/Reports/ReportsDashboards';
-import InventoryReports from './pages/Reports/InventoryReports';
-import PurchaseReports from './pages/Reports/PurchaseReports';
-import SalesReports from './pages/Reports/SalesReports';
-import ImportReports from './pages/Reports/ImportReports';
 
 // CRM Pages
 import CRMDashboard from './pages/CRM/CRMDashboard';
@@ -52,21 +41,9 @@ import LeadManagement from './pages/CRM/LeadManagement';
 import CustomerManagement from './pages/CRM/CustomerManagement';
 import FollowUpTracking from './pages/CRM/FollowUpTracking';
 import CRMSalesEnquiry from './pages/CRM/CRMSalesEnquiry';
-import OpportunityManagement from './pages/CRM/OpportunityManagement';
-import ComplaintManagement from './pages/CRM/ComplaintManagement';
-import CRMReports from './pages/CRM/CRMReports';
+import ExistingLeads from './pages/CRM/ExistingLeads';
 
 // Account Integration Pages
-import APBook from './pages/Finance/APBook';
-import ARBook from './pages/Finance/ARBook';
-import ARBookDO from './pages/Finance/ARBookDO';
-import BankBook from './pages/Finance/BankBook';
-import BankBookEntries from './pages/Finance/BankBookEntries';
-import CashBook from './pages/Finance/CashBook';
-import CashBookEntry from './pages/Finance/CashBookEntry';
-import Overdraft from './pages/Finance/Overdraft';
-import PCBook from './pages/Finance/PCBook';
-import PettyCash from './pages/Finance/PettyCash';
 
 const App = () => {
   const currentUser = useSelector(state => state.erp.currentUser);
@@ -98,7 +75,6 @@ const App = () => {
                 <Route path="/masters/items" element={<Items />} />
                 <Route path="/masters/customers" element={<Customers />} />
                 <Route path="/masters/suppliers" element={<Suppliers />} />
-                <Route path="/masters/warehouse" element={<LocationMaster />} />
                 <Route path="/masters/*" element={<div className="placeholder">Master Submodule</div>} />
 
                 {/* Inventory */}
@@ -111,7 +87,6 @@ const App = () => {
                 <Route path="/purchase-management/purchase-order" element={<PurchaseOrder />} />
                 <Route path="/purchase-management/grn" element={<GoodsReceiptNote />} />
                 <Route path="/purchase-management/purchase-return" element={<PurchaseReturn />} />
-                <Route path="/purchase-management/quality-control" element={<QualityControl />} />
                 <Route path="/purchase-management/landed-cost-calculation" element={<LandedCostCalculation />} />
 
                 {/* Sales & Orders */}
@@ -121,12 +96,10 @@ const App = () => {
                 {/* CRM Module Routes */}
                 <Route path="/crm-module/crm-dashboard" element={<CRMDashboard />} />
                 <Route path="/crm-module/lead-management" element={<LeadManagement />} />
+                <Route path="/crm-module/existing-leads" element={<ExistingLeads />} />
                 <Route path="/crm-module/customer-management" element={<CustomerManagement />} />
                 <Route path="/crm-module/follow-up-tracking" element={<FollowUpTracking />} />
                 <Route path="/crm-module/sales-enquiry" element={<CRMSalesEnquiry />} />
-                <Route path="/crm-module/opportunity-management" element={<OpportunityManagement />} />
-                <Route path="/crm-module/complaint-management" element={<ComplaintManagement />} />
-                <Route path="/crm-module/crm-reports" element={<CRMReports />} />
 
 
 
@@ -142,31 +115,14 @@ const App = () => {
                 <Route path="/import-management/selling-price-finalization" element={<SellingPrice />} />
 
                 {/* Reports & Dashboards */}
-                <Route path="/reports-dashboards" element={<ReportsDashboards />} />
-                <Route path="/reports-dashboards/overview-dashboard" element={<ReportsDashboards />} />
-                <Route path="/reports-dashboards/inventory-reports" element={<InventoryReports />} />
-                <Route path="/reports-dashboards/purchase-reports" element={<PurchaseReports />} />
-                <Route path="/reports-dashboards/sales-reports" element={<SalesReports />} />
-                <Route path="/reports-dashboards/import-reports" element={<ImportReports />} />
 
                 {/* User Roles */}
                 <Route path="/user-roles-approval/roles-permissions" element={<RolesPermissions />} />
-                <Route path="/user-roles-approval/approval-workflows" element={<ApprovalWorkflows />} />
 
                 {/* Documents */}
                 <Route path="/document-management/document-management" element={<DocumentManagement />} />
 
                 {/* Account Integration Routes */}
-                <Route path="/finance/ap-book" element={<APBook />} />
-                <Route path="/finance/ar-book" element={<ARBook />} />
-                <Route path="/finance/ar-book-do" element={<ARBookDO />} />
-                <Route path="/finance/bank-book" element={<BankBook />} />
-                <Route path="/finance/bank-book-entries" element={<BankBookEntries />} />
-                <Route path="/finance/cash-book" element={<CashBook />} />
-                <Route path="/finance/cash-book-entry" element={<CashBookEntry />} />
-                <Route path="/finance/overdraft" element={<Overdraft />} />
-                <Route path="/finance/pc-book" element={<PCBook />} />
-                <Route path="/finance/petty-cash" element={<PettyCash />} />
 
                 <Route path="*" element={<div className="placeholder">Coming Soon</div>} />
               </Routes>
