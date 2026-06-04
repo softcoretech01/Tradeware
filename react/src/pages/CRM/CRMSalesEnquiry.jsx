@@ -318,7 +318,6 @@ const CRMSalesEnquiry = () => {
               <th>Date</th>
               <th>Customer</th>
               <th>Source</th>
-              <th>Requested Items</th>
               <th className="text-right">Est. Deal Value (₹)</th>
               <th>Status</th>
               <th className="actions-column">Actions</th>
@@ -327,7 +326,7 @@ const CRMSalesEnquiry = () => {
           <tbody>
             {filteredEnquiries.length === 0 ? (
               <tr>
-                <td colSpan="8" className="table-empty">No sales enquiries logged.</td>
+                <td colSpan="7" className="table-empty">No sales enquiries logged.</td>
               </tr>
             ) : (
               filteredEnquiries.map((e) => {
@@ -338,9 +337,6 @@ const CRMSalesEnquiry = () => {
                     <td>{formatDate(e.date)}</td>
                     <td >{e.customerName}</td>
                     <td >{e.source}</td>
-                    <td>
-                      <span className="items-badge">{e.items.length} items</span>
-                    </td>
                     <td style={{ fontWeight: 600, color: 'var(--accent)' }} className="text-right">
                       {dealValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>

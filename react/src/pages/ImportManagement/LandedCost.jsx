@@ -503,11 +503,6 @@ const LandedCost = () => {
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                   Landed Cost Allocation Worksheet (₹)
                 </Typography>
-                <Chip
-                  label={`PO Rate: USD/₹ = ₹${selectedShipment.exchangeRate}`}
-                  size="small"
-                  style={{ backgroundColor: SLATE.bg, color: SLATE.main, fontWeight: 600 }}
-                />
               </Box>
               <CardContent sx={{ p: 0 }}>
                 <Box sx={{ overflowX: 'auto' }}>

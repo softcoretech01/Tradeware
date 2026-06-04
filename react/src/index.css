@@ -568,3 +568,7 @@ table {
 input[type="number"], .MuiInputBase-input[type="number"] {
   text-align: right !important;
 }
+
+.text-center {
+  text-align: center !important;
+}

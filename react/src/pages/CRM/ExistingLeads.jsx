@@ -99,7 +99,7 @@ const ExistingLeads = () => {
               <th>Email</th>
               <th>Phone No</th>
               <th>Type</th>
-              <th>Next Followup Date</th>
+              <th className="text-center">Next Followup Date</th>
               <th className="actions-column">Action</th>
             </tr>
           </thead>
@@ -120,7 +120,7 @@ const ExistingLeads = () => {
                     <td>
                       <Chip label={c.type} size="small" />
                     </td>
-                    <td className={`bold-cell ${getFollowUpClass(followup?.nextFollowUpDate)}`}>
+                    <td className={`bold-cell text-center ${getFollowUpClass(followup?.nextFollowUpDate)}`}>
                       {followup?.nextFollowUpDate ? formatDate(followup.nextFollowUpDate) : '-'}
                     </td>
                     <td className="actions-cell">
