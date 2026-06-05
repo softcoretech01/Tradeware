@@ -1,6 +1,5 @@
 import { formatDate } from '../../utils/dateUtils';
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
   Button, TextField, Select, MenuItem, FormControl, InputLabel,
@@ -8,70 +7,113 @@ import {
   Tooltip, Chip
 } from '@mui/material';
 import { 
-  Search, Plus, Eye, Check, X, Printer, Trash, Edit,
-  FileSpreadsheet, FileText, ClipboardCheck, ArrowUpRight
+  Search, Plus, Eye, Printer, Trash, Edit, FileSpreadsheet
 } from 'lucide-react';
-import { 
-  addGRN, 
-  updateGRNQC, 
-  updatePODeliveryQty,
-  deleteGRN 
-} from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api/purchase/grns';
+const PO_API_URL = 'http://127.0.0.1:8000/api/purchase/orders/dropdown/pos';
 
 const GoodsReceiptNote = () => {
-  const dispatch = useDispatch();
-
-  // Store Selectors
-  const grns = useSelector(state => state.erp.grns);
-  const purchaseOrders = useSelector(state => state.erp.purchaseOrders.filter(po => po.status === 'Approved'));
-  const warehouses = useSelector(state => state.locations.warehouses);
+  // Data States
+  const [grns, setGrns] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Component States
   const [searchTerm, setSearchTerm] = useState('');
-  const [qcStatusFilter, setQcStatusFilter] = useState('');
 
   // Dialogs
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
-  const [qcOpen, setQcOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [selectedGRN, setSelectedGRN] = useState(null);
 
   // Form Fields
   const [formData, setFormData] = useState({
-    id: '',
-    poRef: '',
+    grn_id: null,
+    id: '', // GRN Number
+    poRef: '', // PO ID
+    poNumber: '',
     date: new Date().toISOString().split('T')[0],
+    supplierId: '',
     supplierName: '',
-    receivedItems: [],
-    status: 'Pending QC'
+    receivedItems: []
   });
 
-  // QC Form Fields
-  const [qcData, setQcData] = useState({
-    grnId: '',
-    itemId: '',
-    itemName: '',
-    orderedQty: 0,
-    receivedQty: 0,
-    acceptedQty: 0,
-    rejectedQty: 0,
-    qcStatus: 'Passed', // Passed, Failed
-    qcInspector: '',
-    qcRemarks: ''
-  });
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchGrns(), fetchPOs()]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPOs = async () => {
+    const res = await fetch(PO_API_URL);
+    if(res.ok) {
+      const data = await res.json();
+      setPurchaseOrders(data);
+    }
+  };
+
+  const fetchGrns = async () => {
+    const res = await fetch(`${API_BASE_URL}/`);
+    if(res.ok) {
+      const data = await res.json();
+      const mapped = data.map(g => ({
+        grn_id: g.grn_id,
+        id: g.grn_number,
+        poRef: g.po_id,
+        poNumber: g.po_number,
+        date: g.grn_date,
+        supplierId: g.supplier_id,
+        supplierName: g.supplier_name,
+        receivedItems: g.items.map(i => ({
+          itemId: i.item_id,
+          name: i.item_name,
+          orderedQty: Number(i.po_qty),
+          receivedQty: Number(i.received_qty),
+          batches: [{
+            batchNo: i.batch_lot_number || '',
+            mfgDate: i.mfg_date || '',
+            expiryDate: i.expiry_date || '',
+            qty: i.received_qty
+          }]
+        }))
+      }));
+      setGrns(mapped);
+    }
+  };
 
   // Handlers
   const handleOpenCreate = () => {
+    let nextNum = 1;
+    if (grns.length > 0) {
+      const nums = grns.map(g => {
+        const match = g.id.match(/GRN-(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      });
+      nextNum = Math.max(...nums) + 1;
+    }
+    const nextGrnNumber = `GRN-${String(nextNum).padStart(3, '0')}`;
+
     setFormData({
-      id: `GRN-2026-${Math.floor(100 + Math.random() * 900)}`,
+      grn_id: null,
+      id: nextGrnNumber,
       poRef: '',
+      poNumber: '',
       date: new Date().toISOString().split('T')[0],
+      supplierId: '',
       supplierName: '',
-      receivedItems: [],
-      status: 'Pending QC'
+      receivedItems: []
     });
     setFormOpen(true);
   };
@@ -82,37 +124,32 @@ const GoodsReceiptNote = () => {
   };
 
   const handlePOChange = (poId) => {
-    const po = purchaseOrders.find(p => p.id === poId);
+    const po = purchaseOrders.find(p => p.po_id === poId);
     if (po) {
       const items = po.items.map(item => ({
-        itemId: item.itemId,
-        name: item.name,
-        orderedQty: item.orderedQty,
-        receivedQty: item.pendingQty, // Default received qty to PO's pending qty
-        acceptedQty: item.pendingQty,
-        rejectedQty: 0,
-        pendingQty: 0,
+        itemId: item.item_id,
+        name: item.item_name,
+        orderedQty: Number(item.quantity),
+        receivedQty: Number(item.quantity), 
         batches: [
-          { batchNo: `BAT-${item.itemId.slice(-4)}-${Math.floor(100 + Math.random() * 900)}`, mfgDate: '2026-05-01', expiryDate: '2028-05-01', qty: item.pendingQty }
-        ],
-        warehouseId: warehouses[0]?.id || '',
-        warehouse: warehouses[0]?.name || '',
-        rack: warehouses[0]?.racks[0] || 'Rack A-01',
-        qcStatus: 'Pending QC',
-        qcInspector: '',
-        qcRemarks: ''
+          { batchNo: `BAT-${item.item_id.slice(-4)}-${Math.floor(100 + Math.random() * 900)}`, mfgDate: new Date().toISOString().split('T')[0], expiryDate: '', qty: Number(item.quantity) }
+        ]
       }));
 
       setFormData(prev => ({
         ...prev,
         poRef: poId,
-        supplierName: po.supplierName,
+        poNumber: po.po_number,
+        supplierId: po.supplier_id,
+        supplierName: po.supplier_name,
         receivedItems: items
       }));
     } else {
       setFormData(prev => ({
         ...prev,
         poRef: '',
+        poNumber: '',
+        supplierId: '',
         supplierName: '',
         receivedItems: []
       }));
@@ -122,21 +159,11 @@ const GoodsReceiptNote = () => {
   const handleItemChange = (idx, field, value) => {
     const updated = [...formData.receivedItems];
     
-    if (field === 'warehouseId') {
-      const wh = warehouses.find(w => w.id === value);
-      updated[idx] = {
-        ...updated[idx],
-        warehouseId: value,
-        warehouse: wh ? wh.name : '',
-        rack: wh?.racks[0] || ''
-      };
-    } else if (field === 'receivedQty') {
+    if (field === 'receivedQty') {
       const qty = parseFloat(value) || 0;
       updated[idx] = {
         ...updated[idx],
         receivedQty: qty,
-        acceptedQty: qty,
-        rejectedQty: 0,
         batches: updated[idx].batches.map(b => ({ ...b, qty }))
       };
     } else {
@@ -160,7 +187,7 @@ const GoodsReceiptNote = () => {
     setFormData(prev => ({ ...prev, receivedItems: updated }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.poRef) {
       alert('Approved PO selection is required.');
       return;
@@ -170,77 +197,71 @@ const GoodsReceiptNote = () => {
       return;
     }
 
-    dispatch(addGRN(formData));
+    const payload = {
+      grn_number: formData.id,
+      po_id: formData.poRef,
+      supplier_id: formData.supplierId,
+      grn_date: formData.date,
+      items: formData.receivedItems.map(item => ({
+        item_id: item.itemId,
+        po_qty: item.orderedQty,
+        received_qty: item.receivedQty,
+        batch_lot_number: item.batches[0]?.batchNo || null,
+        mfg_date: item.batches[0]?.mfgDate || null,
+        expiry_date: item.batches[0]?.expiryDate || null
+      }))
+    };
 
-    // Update PO deliveries with received quantities (automatically)
-    formData.receivedItems.forEach(item => {
-      dispatch(updatePODeliveryQty({
-        poId: formData.poRef,
-        itemId: item.itemId,
-        receivedQty: item.acceptedQty // Commit accepted quantities to PO
-      }));
-    });
+    try {
+      let res;
+      if (formData.grn_id) {
+        res = await fetch(`${API_BASE_URL}/${formData.grn_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(`${API_BASE_URL}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
-    setFormOpen(false);
-  };
-
-  // QC inspection logic
-  const handleOpenQC = (grn, item) => {
-    setQcData({
-      grnId: grn.id,
-      itemId: item.itemId,
-      itemName: item.name,
-      orderedQty: item.orderedQty,
-      receivedQty: item.receivedQty,
-      acceptedQty: item.receivedQty,
-      rejectedQty: 0,
-      qcStatus: 'Passed',
-      qcInspector: 'Sam Inspector',
-      qcRemarks: ''
-    });
-    setQcOpen(true);
-  };
-
-  const handleSaveQC = () => {
-    if (!qcData.qcInspector.trim()) {
-      alert('Inspector name is required.');
-      return;
+      if (res.ok) {
+        fetchGrns();
+        setFormOpen(false);
+      } else {
+        const err = await res.json();
+        alert(`Failed to save: ${JSON.stringify(err)}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('An error occurred while saving.');
     }
-    if (qcData.acceptedQty + qcData.rejectedQty !== qcData.receivedQty) {
-      alert(`Sum of Accepted (${qcData.acceptedQty}) and Rejected (${qcData.rejectedQty}) must equal Received Qty (${qcData.receivedQty}).`);
-      return;
-    }
-
-    dispatch(updateGRNQC({
-      grnId: qcData.grnId,
-      itemId: qcData.itemId,
-      qcStatus: qcData.qcStatus,
-      acceptedQty: qcData.acceptedQty,
-      rejectedQty: qcData.rejectedQty,
-      qcInspector: qcData.qcInspector,
-      qcRemarks: qcData.qcRemarks
-    }));
-
-    setQcOpen(false);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id, grn_id) => {
     if (window.confirm(`Are you sure you want to delete GRN ${id}?`)) {
-      dispatch(deleteGRN(id));
+      try {
+        const res = await fetch(`${API_BASE_URL}/${grn_id}`, { method: 'DELETE' });
+        if (res.ok) {
+          fetchGrns();
+        } else {
+          alert("Failed to delete");
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
   // Filter
   const filteredGRNs = grns.filter(grn => {
     const matchesSearch = grn.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          grn.poRef.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (grn.poNumber && grn.poNumber.toLowerCase().includes(searchTerm.toLowerCase())) || 
                           grn.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesQC = qcStatusFilter 
-      ? grn.receivedItems.some(i => i.qcStatus === qcStatusFilter) 
-      : true;
-
-    return matchesSearch && matchesQC;
+    return matchesSearch;
   });
 
   // Export
@@ -249,17 +270,12 @@ const GoodsReceiptNote = () => {
       grn.receivedItems.map(item => ({
         'GRN Number': grn.id,
         'Date': grn.date,
-        'PO Ref': grn.poRef,
+        'PO Ref': grn.poNumber,
         'Supplier': grn.supplierName,
         'Item Name': item.name,
         'Ordered Qty': item.orderedQty,
         'Received Qty': item.receivedQty,
-        'Accepted Qty': item.acceptedQty || 0,
-        'Rejected Qty': item.rejectedQty || 0,
-        'Warehouse': item.warehouse,
-        'Rack/Bin': item.rack,
-        'QC Status': item.qcStatus,
-        'QC Inspector': item.qcInspector || 'N/A'
+        'Batch': item.batches[0]?.batchNo || 'N/A'
       }))
     );
     exportToExcel(data, 'Goods_Receipt_Notes', 'GRN_Records');
@@ -269,19 +285,19 @@ const GoodsReceiptNote = () => {
     const cols = [
       { field: 'id', headerName: 'GRN Number' },
       { field: 'date', headerName: 'Date' },
-      { field: 'poRef', headerName: 'PO Ref' },
-      { field: 'supplierName', headerName: 'Supplier' },
-      { field: 'status', headerName: 'QC Status' }
+      { field: 'poNumber', headerName: 'PO Ref' },
+      { field: 'supplierName', headerName: 'Supplier' }
     ];
     exportToPDF(cols, filteredGRNs, 'Goods_Receipt_Notes', 'Goods Receipt Notes (GRN) Report');
   };
+
+  if (loading) return <div style={{ padding: 20 }}>Loading GRNs...</div>;
 
   return (
     <div className="module-container fade-in">
       <div className="module-header">
         <div>
           <h2>Goods Receipt Note (GRN)</h2>
-
         </div>
         <div className="header-actions">
           <Button 
@@ -326,14 +342,14 @@ const GoodsReceiptNote = () => {
           <tbody>
             {filteredGRNs.length === 0 ? (
               <tr>
-                <td colSpan="7" className="table-empty">No Goods Receipt Notes found.</td>
+                <td colSpan="5" className="table-empty">No Goods Receipt Notes found.</td>
               </tr>
             ) : (
               filteredGRNs.map((grn) => (
                 <tr key={grn.id}>
                   <td className="bold-cell ">{grn.id}</td>
                   <td>{formatDate(grn.date)}</td>
-                  <td className="text-muted ">{grn.poRef}</td>
+                  <td className="text-muted ">{grn.poNumber}</td>
                   <td >{grn.supplierName}</td>
                   <td className="actions-cell">
                     <Tooltip title="Edit Record">
@@ -355,7 +371,7 @@ const GoodsReceiptNote = () => {
                     </Tooltip>
 
                     <Tooltip title="Delete GRN Record">
-                      <IconButton size="small" color="error" onClick={() => handleDelete(grn.id)}>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(grn.id, grn.grn_id)}>
                         <Trash size={16} />
                       </IconButton>
                     </Tooltip>
@@ -370,7 +386,7 @@ const GoodsReceiptNote = () => {
       {/* CREATE GRN DIALOG */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">
-          {grns.some(g => g.id === formData.id) ? 'Edit' : 'Create'}
+          {formData.grn_id ? 'Edit' : 'Create'} GRN
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
@@ -382,7 +398,7 @@ const GoodsReceiptNote = () => {
                 onChange={(e) => handlePOChange(e.target.value)}
               >
                 {purchaseOrders.map(po => (
-                  <MenuItem key={po.id} value={po.id}>{po.id} ({po.supplierName})</MenuItem>
+                  <MenuItem key={po.po_id} value={po.po_id}>{po.po_number} ({po.supplier_name})</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -474,34 +490,31 @@ const GoodsReceiptNote = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">
+            {formData.grn_id ? 'Update' : 'Save'}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* VIEW DETAILS & QC WORKFLOW DIALOG */}
+      {/* VIEW DETAILS DIALOG */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle className="dialog-title">GRN Details - {selectedGRN?.id}</DialogTitle>
         <DialogContent dividers>
           {selectedGRN && (
             <div className="view-detail-body">
               <div className="dialog-grid" style={{ marginBottom: '16px' }}>
-                <div><strong>PO Ref:</strong> {selectedGRN.poRef}</div>
+                <div><strong>PO Ref:</strong> {selectedGRN.poNumber}</div>
                 <div><strong>Inward Date:</strong> {selectedGRN.date}</div>
                 <div><strong>Supplier:</strong> {selectedGRN.supplierName}</div>
-                <div><strong>Voucher Status:</strong> <Chip label={selectedGRN.status} size="small" /></div>
               </div>
 
-              <h4>Received Items & QC Inspection Pipeline</h4>
+              <h4>Received Items</h4>
               <Table size="small" className="detail-table">
                 <TableHead>
                   <TableRow>
                     <TableCell>Item Name</TableCell>
                     <TableCell className="text-right" align="right">Ordered Qty</TableCell>
                     <TableCell className="text-right" align="right">Received Qty</TableCell>
-                    <TableCell className="text-right" align="right">Accepted Qty</TableCell>
-                    <TableCell className="text-right" align="right">Rejected Qty</TableCell>
-                    <TableCell>QC status</TableCell>
-                    <TableCell align="center">QC Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -509,9 +522,6 @@ const GoodsReceiptNote = () => {
                     <TableRow key={idx}>
                       <TableCell>
                         <strong>{itm.name}</strong><br />
-                        <span className="text-muted" style={{ fontSize: '11px' }}>
-                          Warehouse: {itm.warehouse} ({itm.rack})
-                        </span>
                         {itm.batches && itm.batches.map(b => (
                           <div key={b.batchNo} style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                             Batch: {b.batchNo} | Exp: {b.expiryDate}
@@ -520,34 +530,6 @@ const GoodsReceiptNote = () => {
                       </TableCell>
                       <TableCell className="text-right" align="right">{itm.orderedQty}</TableCell>
                       <TableCell className="text-right" align="right">{itm.receivedQty}</TableCell>
-                      <TableCell className="text-right" align="right">{itm.acceptedQty || 0}</TableCell>
-                      <TableCell className="text-right" align="right" style={{ color: (itm.rejectedQty || 0) > 0 ? 'red' : 'inherit' }}>
-                        {itm.rejectedQty || 0}
-                      </TableCell>
-                      <td>
-                        <Chip 
-                          label={itm.qcStatus} 
-                          color={itm.qcStatus === 'Passed' ? 'success' : itm.qcStatus === 'Failed' ? 'error' : 'warning'} 
-                          size="small" 
-                        />
-                      </td>
-                      <td align="center">
-                        {itm.qcStatus === 'Pending QC' && (
-                          <Button 
-                            variant="outlined" 
-                            size="small" 
-                            startIcon={<ClipboardCheck size={14} />}
-                            onClick={() => handleOpenQC(selectedGRN, itm)}
-                          >
-                            Inspect QC
-                          </Button>
-                        )}
-                        {itm.qcStatus !== 'Pending QC' && (
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            By: {itm.qcInspector}
-                          </span>
-                        )}
-                      </td>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -557,79 +539,6 @@ const GoodsReceiptNote = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewOpen(false)} color="primary">Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* QC INSPECTION MODAL */}
-      <Dialog open={qcOpen} onClose={() => setQcOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle className="dialog-title">Perform QC Check</DialogTitle>
-        <DialogContent dividers>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p><strong>Item:</strong> {qcData.itemName} ({qcData.itemId})</p>
-            <p><strong>Total Received:</strong> {qcData.receivedQty} pcs</p>
-
-            <TextField
-              label="Accepted Quantity"
-              type="number"
-              value={qcData.acceptedQty}
-              onChange={(e) => {
-                const acc = parseFloat(e.target.value) || 0;
-                setQcData(prev => ({
-                  ...prev,
-                  acceptedQty: acc,
-                  rejectedQty: Math.max(0, prev.receivedQty - acc)
-                }));
-              }}
-              fullWidth
-            />
-
-            <TextField
-              label="Rejected Quantity"
-              type="number"
-              value={qcData.rejectedQty}
-              onChange={(e) => {
-                const rej = parseFloat(e.target.value) || 0;
-                setQcData(prev => ({
-                  ...prev,
-                  rejectedQty: rej,
-                  acceptedQty: Math.max(0, prev.receivedQty - rej)
-                }));
-              }}
-              fullWidth
-            />
-
-            <FormControl fullWidth>
-              <InputLabel>QC Status</InputLabel>
-              <Select
-                value={qcData.qcStatus}
-                label="QC Status"
-                onChange={(e) => setQcData(prev => ({ ...prev, qcStatus: e.target.value }))}
-              >
-                <MenuItem value="Passed">Passed (Approved for Stock)</MenuItem>
-                <MenuItem value="Failed">Failed (Return to Supplier)</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="QC Inspector Name"
-              value={qcData.qcInspector}
-              onChange={(e) => setQcData(prev => ({ ...prev, qcInspector: e.target.value }))}
-              fullWidth
-            />
-
-            <TextField
-              label="Inspector Notes / QC Remarks"
-              value={qcData.qcRemarks}
-              onChange={(e) => setQcData(prev => ({ ...prev, qcRemarks: e.target.value }))}
-              multiline
-              rows={2}
-              fullWidth
-            />
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setQcOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSaveQC} variant="contained" color="primary">Authorize QC</Button>
         </DialogActions>
       </Dialog>
 
@@ -659,8 +568,7 @@ const GoodsReceiptNote = () => {
                   <p className="bold-cell">{selectedGRN.supplierName}</p>
                 </div>
                 <div>
-                  <p><strong>REF PO NUMBER:</strong> {selectedGRN.poRef}</p>
-                  <p><strong>GRN STATUS:</strong> {selectedGRN.status}</p>
+                  <p><strong>REF PO NUMBER:</strong> {selectedGRN.poNumber}</p>
                 </div>
               </div>
 
@@ -669,12 +577,8 @@ const GoodsReceiptNote = () => {
                   <tr>
                     <th>Item ID</th>
                     <th>Item Details</th>
-                    <th>Warehouse Location</th>
                     <th className="num-col">Ordered</th>
                     <th className="num-col">Received</th>
-                    <th className="num-col">Accepted</th>
-                    <th className="num-col">Rejected</th>
-                    <th>QC Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -689,12 +593,8 @@ const GoodsReceiptNote = () => {
                           </div>
                         ))}
                       </td>
-                      <td>{itm.warehouse} ({itm.rack})</td>
                       <td className="num-col text-right">{itm.orderedQty}</td>
                       <td className="num-col text-right">{itm.receivedQty}</td>
-                      <td className="num-col">{itm.acceptedQty || 0}</td>
-                      <td className="num-col" style={{ color: (itm.rejectedQty || 0) > 0 ? 'red' : 'inherit' }}>{itm.rejectedQty || 0}</td>
-                      <td >{itm.qcStatus}</td>
                     </tr>
                   ))}
                 </tbody>

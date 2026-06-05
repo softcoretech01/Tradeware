@@ -1,30 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Button, TextField, Card, CardContent, Grid, Typography, Box,
-  Chip, Divider, Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControl, Select, MenuItem, InputLabel, Paper, FormControlLabel, Checkbox
+  Divider, Dialog, DialogTitle, DialogContent, DialogActions,
+  FormControl, Select, MenuItem, InputLabel, Paper
 } from '@mui/material';
 import {
-  Calculator, CheckCircle, HelpCircle, FileSpreadsheet, FileText,
-  DollarSign, ArrowRight, Layers
+  Calculator, CheckCircle, HelpCircle, FileSpreadsheet
 } from 'lucide-react';
-import { addBatches } from '../../store/batchImportSlice';
 import { exportToExcel } from '../../utils/exportUtil';
 
 const BLUE = { main: '#1E3A8A', light: '#3B82F6', dark: '#172554', bg: '#EFF6FF' };
-const GREEN = { main: '#15803D', light: '#22C55E', bg: '#DCFCE7' };
-const RED = { main: '#B91C1C', light: '#EF4444', bg: '#FEE2E2' };
 const AMBER = { main: '#B45309', light: '#F59E0B', bg: '#FEF3C7' };
 const SLATE = { main: '#475569', light: '#94A3B8', bg: '#F1F5F9' };
 
-const LandedCostCalculation = () => {
-  const dispatch = useDispatch();
+const GRN_API_URL = 'http://127.0.0.1:8000/api/purchase/grns/dropdown/grns';
+const POST_API_URL = 'http://127.0.0.1:8000/api/purchase/local-landed-cost/';
 
-  // Redux Selectors
-  const grns = useSelector(state => state.erp.grns);
-  const purchaseOrders = useSelector(state => state.erp.purchaseOrders);
-  const batches = useSelector(state => state.batchImport.batches);
+const LandedCostCalculation = () => {
+  // Data States
+  const [grns, setGrns] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // States
   const [selectedGrnId, setSelectedGrnId] = useState('');
@@ -39,19 +34,31 @@ const LandedCostCalculation = () => {
   const [expiryDate, setExpiryDate] = useState(new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]); // 2 years default
   const [postModalOpen, setPostModalOpen] = useState(false);
 
+  useEffect(() => {
+    fetchGRNs();
+  }, []);
+
+  const fetchGRNs = async () => {
+    try {
+      const res = await fetch(GRN_API_URL);
+      if(res.ok) {
+        const data = await res.json();
+        setGrns(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Find selected GRN details
   const selectedGrn = useMemo(() => {
-    return grns.find(g => g.id === selectedGrnId) || null;
+    return grns.find(g => g.grn_id === selectedGrnId) || null;
   }, [grns, selectedGrnId]);
 
-  // Find related PO to get Unit Price
-  const relatedPO = useMemo(() => {
-    if (!selectedGrn) return null;
-    return purchaseOrders.find(po => po.id === selectedGrn.poRef) || null;
-  }, [selectedGrn, purchaseOrders]);
-
   // Set default costs when GRN changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedGrn) {
       setInsuranceCost('0');
       setHandlingCharges('0');
@@ -67,13 +74,9 @@ const LandedCostCalculation = () => {
     const exchangeRate = 1; // Assuming INR base currency
 
     // Calculate FOB value for each item in local currency (LCY/INR)
-    const itemsWithFobVal = selectedGrn.receivedItems.map(item => {
-      // Find unit price from PO
-      const poItem = relatedPO?.items.find(i => i.itemId === item.itemId);
-      const fcyUnitPrice = poItem ? poItem.unitPrice : 0;
-      
-      // Use acceptedQty if available, else receivedQty
-      const qty = item.acceptedQty !== undefined ? item.acceptedQty : item.receivedQty;
+    const itemsWithFobVal = selectedGrn.items.map(item => {
+      const fcyUnitPrice = Number(item.unit_price) || 0;
+      const qty = Number(item.received_qty) || 0;
       const fobValLCY = qty * fcyUnitPrice * exchangeRate;
 
       return {
@@ -106,8 +109,8 @@ const LandedCostCalculation = () => {
 
       return {
         ...item,
-        itemCode: item.itemId, // Map itemId to itemCode
-        itemName: item.name,   // Map name to itemName
+        itemCode: item.item_id, 
+        itemName: item.item_name,   
         allocatedOverhead,
         totalLandedCost,
         landedUnitCost
@@ -122,7 +125,6 @@ const LandedCostCalculation = () => {
     };
   }, [
     selectedGrn,
-    relatedPO,
     insuranceCost,
     handlingCharges,
     packingCharges,
@@ -130,41 +132,71 @@ const LandedCostCalculation = () => {
   ]);
 
   // Handle Generate & Post Batches
-  const handlePostBatches = () => {
+  const handlePostBatches = async () => {
     if (!selectedGrn || !calculations) return;
 
-    // Create Batches
+    // Create Batches Payload
     const newBatches = calculations.items.map((item, idx) => {
-      const nextBatchNo = `B2026-${String(batches.length + idx + 1).padStart(3, '0')}`;
+      const nextBatchNo = `B2026-${Math.floor(1000 + Math.random() * 9000)}-${idx}`;
       
       // Default selling price is set at a 25% margin over Landed Unit Cost
       const finalPrice = item.landedUnitCost * 1.25;
 
       return {
-        batchNo: nextBatchNo,
-        itemCode: item.itemCode,
-        itemName: item.itemName,
-        qty: item.qty,
-        initialQty: item.qty,
-        mfgDate: mfgDate,
-        expiryDate: expiryDate,
-        landedUnitCost: item.landedUnitCost,
-        finalSellingPrice: finalPrice,
-        marginPercent: 20.0, // (25% markup equals 20% margin)
-        status: 'Available',
-        warehouse: 'Main Warehouse',
-        sequence: batches.length + idx + 1,
-        poReference: selectedGrn.poRef,
-        grnReference: selectedGrn.id
+        batch_no: nextBatchNo,
+        item_id: item.itemCode,
+        current_qty: item.qty,
+        mfg_date: mfgDate,
+        expiry_date: expiryDate,
+        landed_unit_cost: item.landedUnitCost,
+        final_selling_price: finalPrice,
+        margin_percent: 20.0, // (25% markup equals 20% margin)
+        source_type: 'Local Purchase',
+        po_reference: selectedGrn.po_number || '', 
+        grn_reference: selectedGrn.grn_number
       };
     });
 
-    dispatch(addBatches(newBatches));
-    setPostModalOpen(false);
-    alert(`Success! Generated and posted ${newBatches.length} batch(es) to Main Warehouse stock registry with custom allocated unit landed costs.`);
-    
-    // Clear selection
-    setSelectedGrnId('');
+    const payload = {
+      grn_id: selectedGrn.grn_id,
+      insurance_charges: Number(insuranceCost) || 0,
+      handling_charges: Number(handlingCharges) || 0,
+      packing_charges: Number(packingCharges) || 0,
+      aging_charges: Number(agingCharges) || 0,
+      total_lcy: calculations.totalFobLCY,
+      total_overhead: calculations.totalOverhead,
+      total_landed_cost: calculations.totalLandedCostINR,
+      items: calculations.items.map(it => ({
+        item_id: it.itemCode,
+        qty: it.qty,
+        unit_price: it.fcyUnitPrice,
+        val_lcy: it.fobValLCY,
+        allocated_overhead: it.allocatedOverhead,
+        total_landed_cost: it.totalLandedCost,
+        landed_unit_cost: it.landedUnitCost
+      })),
+      batches: newBatches
+    };
+
+    try {
+      const res = await fetch(POST_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setPostModalOpen(false);
+        alert(`Success! Generated and posted ${newBatches.length} batch(es) to Inventory Batches with allocated local landed costs.`);
+        setSelectedGrnId('');
+      } else {
+        const err = await res.json();
+        alert(`Failed to post: ${err.detail}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error occurred.');
+    }
   };
 
   // Export spreadsheet of worksheet
@@ -180,8 +212,10 @@ const LandedCostCalculation = () => {
       'Total Landed Cost (₹)': it.totalLandedCost,
       'Landed Unit Cost (₹)': it.landedUnitCost
     }));
-    exportToExcel(formatted, `Landed_Cost_Allocation_${selectedGrn.id}`, 'Worksheet');
+    exportToExcel(formatted, `Landed_Cost_Allocation_${selectedGrn.grn_number}`, 'Worksheet');
   };
+
+  if(loading) return <div style={{padding: 20}}>Loading GRNs...</div>;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 0 }}>
@@ -189,7 +223,7 @@ const LandedCostCalculation = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: BLUE.main, letterSpacing: -0.5 }}>
-            Landed Cost Calculation
+            Local Landed Cost Calculation
           </Typography>
         </Box>
         {selectedGrn && (
@@ -229,8 +263,8 @@ const LandedCostCalculation = () => {
                 >
                   <MenuItem value="" disabled>Select GRN</MenuItem>
                   {grns.map(g => (
-                    <MenuItem key={g.id} value={g.id}>
-                      {g.id} - Supplier: {g.supplierName} (PO: {g.poRef})
+                    <MenuItem key={g.grn_id} value={g.grn_id}>
+                      {g.grn_number} - Supplier: {g.supplier_name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -266,9 +300,6 @@ const LandedCostCalculation = () => {
                   Configure the relevant charges and expenses below.
                 </Typography>
 
-
-
-                {/* Charges (Modified per request) */}
                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
                     Charges

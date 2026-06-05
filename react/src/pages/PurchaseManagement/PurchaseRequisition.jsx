@@ -1,6 +1,5 @@
 import { formatDate } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
@@ -12,23 +11,18 @@ import {
   Search, Plus, Eye, Edit, Trash, Check, X, Printer,
   FileSpreadsheet, FileText, Trash2, PlusCircle
 } from 'lucide-react';
-import { 
-  addRequisition, 
-  updateRequisition, 
-  approveRequisition, 
-  deleteRequisition 
-} from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api/purchase/requisitions';
 
 const PurchaseRequisition = () => {
-  const dispatch = useDispatch();
   const location = useLocation();
   
-  // Store Selectors
-  const requisitions = useSelector(state => state.erp.requisitions);
-  const itemsMaster = useSelector(state => state.items.items);
-  const inventory = useSelector(state => state.inventory?.inventory || []);
+  // Data States
+  const [requisitions, setRequisitions] = useState([]);
+  const [itemsMaster, setItemsMaster] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Component States
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,48 +38,104 @@ const PurchaseRequisition = () => {
 
   // Form Fields State
   const [formData, setFormData] = useState({
-    id: '',
-    date: new Date().toISOString().split('T')[0],
-    requester: '',
+    pr_id: null,
+    pr_number: '',
+    pr_date: new Date().toISOString().split('T')[0],
+    requested_by: '',
     department: 'Production',
     priority: 'Medium',
     items: [],
-    remarks: '',
-    status: 'Draft'
+    notes: ''
   });
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchRequisitions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/`);
+      if (res.ok) {
+        const data = await res.json();
+        setRequisitions(data);
+      }
+    } catch (error) {
+      console.error("Error fetching requisitions:", error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [reqRes, usersRes, itemsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/`),
+        fetch(`${API_BASE_URL}/dropdown/users`),
+        fetch(`${API_BASE_URL}/dropdown/items`)
+      ]);
+      
+      const reqData = await reqRes.json();
+      const usersData = await usersRes.json();
+      const itemsData = await itemsRes.json();
+
+      setRequisitions(reqData);
+      setUsers(usersData);
+      setItemsMaster(itemsData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Check if opened via quick action
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('create') === 'true') {
+    if (params.get('create') === 'true' && !loading) {
       handleOpenCreate();
     }
-  }, [location]);
+  }, [location, loading]);
 
   // Form handlers
   const handleOpenCreate = () => {
+    let nextNum = 1;
+    if (requisitions.length > 0) {
+      const nums = requisitions.map(req => {
+        const match = req.pr_number.match(/PR-(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      });
+      nextNum = Math.max(...nums) + 1;
+    }
+    const nextPrNumber = `PR-${String(nextNum).padStart(3, '0')}`;
+
     setFormData({
-      id: `PR-2026-${Math.floor(100 + Math.random() * 900)}`,
-      date: new Date().toISOString().split('T')[0],
-      requester: '',
+      pr_id: null,
+      pr_number: nextPrNumber,
+      pr_date: new Date().toISOString().split('T')[0],
+      requested_by: users.length > 0 ? users[0].id : '',
       department: 'Production',
       priority: 'Medium',
-      items: [{ itemId: itemsMaster[0]?.id || '', qty: 1, uom: 'pcs', unitPrice: 10 }],
-      remarks: '',
-      status: 'Draft'
+      items: [{ item_id: itemsMaster[0]?.id || '', requested_quantity: 1, uom: 'pcs', unit_price: itemsMaster[0]?.standardPrice || 0 }],
+      notes: ''
     });
     setFormOpen(true);
   };
 
   const handleOpenEdit = (pr) => {
-    setFormData({ ...pr });
+    setFormData({ 
+      ...pr,
+      items: pr.items.map(item => ({
+        ...item,
+        requested_quantity: Number(item.requested_quantity)
+      }))
+    });
     setFormOpen(true);
   };
 
   const handleAddLineItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { itemId: itemsMaster[0]?.id || '', qty: 1, uom: 'pcs', unitPrice: 10 }]
+      items: [...prev.items, { item_id: itemsMaster[0]?.id || '', requested_quantity: 1, uom: 'pcs', unit_price: itemsMaster[0]?.standardPrice || 0 }]
     }));
   };
 
@@ -98,12 +148,12 @@ const PurchaseRequisition = () => {
 
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
-    if (field === 'itemId') {
+    if (field === 'item_id') {
       const selectedItem = itemsMaster.find(i => i.id === value);
       updatedItems[index] = {
         ...updatedItems[index],
-        itemId: value,
-        name: selectedItem ? selectedItem.name : ''
+        item_id: value,
+        unit_price: selectedItem ? selectedItem.standardPrice : 0
       };
     } else {
       updatedItems[index] = {
@@ -114,8 +164,8 @@ const PurchaseRequisition = () => {
     setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
-  const handleSave = () => {
-    if (!formData.requester.trim()) {
+  const handleSave = async () => {
+    if (!formData.requested_by) {
       alert('Requester name is required.');
       return;
     }
@@ -124,74 +174,122 @@ const PurchaseRequisition = () => {
       return;
     }
 
-    // Attach item names
-    const enrichedItems = formData.items.map(item => {
-      const match = itemsMaster.find(i => i.id === item.itemId);
-      return {
-        ...item,
-        name: match ? match.name : 'Unknown Item'
+    try {
+      let response;
+      const payload = {
+        pr_number: formData.pr_number,
+        pr_date: formData.pr_date,
+        department: formData.department,
+        requested_by: formData.requested_by,
+        priority: formData.priority,
+        notes: formData.notes,
+        items: formData.items.map(item => ({
+          item_id: item.item_id,
+          requested_quantity: item.requested_quantity,
+          uom: item.uom,
+          unit_price: item.unit_price,
+          total_price: item.requested_quantity * (item.unit_price || 0),
+          reason_for_request: ""
+        }))
       };
-    });
 
-    const finalData = { ...formData, items: enrichedItems };
+      if (formData.pr_id) {
+        // Update existing
+        response = await fetch(`${API_BASE_URL}/${formData.pr_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Create new
+        response = await fetch(`${API_BASE_URL}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
-    const exists = requisitions.some(r => r.id === formData.id);
-    if (exists) {
-      dispatch(updateRequisition(finalData));
-    } else {
-      dispatch(addRequisition({ ...finalData, status: 'Pending Approval' }));
+      if (response.ok) {
+        fetchRequisitions(); // Reload list quietly
+        setFormOpen(false);
+      } else {
+        const err = await response.json();
+        alert(`Failed to save: ${JSON.stringify(err)}`);
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("An error occurred while saving.");
     }
-    setFormOpen(false);
   };
 
-  // Actions
-  const handleApprove = (id, status) => {
-    dispatch(approveRequisition({ id, status, approvedBy: 'John Manager' }));
+  const handleDelete = async (pr_id) => {
+    if (window.confirm(`Are you sure you want to delete this requisition?`)) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/${pr_id}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          fetchRequisitions();
+        } else {
+          alert('Failed to delete.');
+        }
+      } catch (error) {
+        console.error("Delete error:", error);
+      }
+    }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm(`Are you sure you want to delete Requisition ${id}?`)) {
-      dispatch(deleteRequisition(id));
-    }
+  // Helper to get user name
+  const getUserName = (id) => {
+    const user = users.find(u => u.id === id);
+    return user ? user.name : `User ${id}`;
+  };
+
+  // Helper to get item name
+  const getItemName = (id) => {
+    const item = itemsMaster.find(i => i.id === id);
+    return item ? item.name : id;
   };
 
   // Filters calculation
   const filteredPRs = requisitions.filter(pr => {
-    const matchesSearch = pr.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          pr.requester.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          pr.remarks.toLowerCase().includes(searchTerm.toLowerCase());
+    const userName = getUserName(pr.requested_by).toLowerCase();
+    const matchesSearch = pr.pr_number.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          userName.includes(searchTerm.toLowerCase()) || 
+                          (pr.notes && pr.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesDept = deptFilter ? pr.department === deptFilter : true;
-    const matchesStatus = statusFilter ? pr.status === statusFilter : true;
     const matchesPriority = priorityFilter ? pr.priority === priorityFilter : true;
 
-    return matchesSearch && matchesDept && matchesStatus && matchesPriority;
+    return matchesSearch && matchesDept && matchesPriority;
   });
 
   // Export handlers
   const handleExportExcel = () => {
     const data = filteredPRs.map(pr => ({
-      'Requisition ID': pr.id,
-      'Date': pr.date,
-      'Requester': pr.requester,
+      'Requisition ID': pr.pr_number,
+      'Date': pr.pr_date,
+      'Requester': getUserName(pr.requested_by),
       'Department': pr.department,
       'Priority': pr.priority,
-      'Total Items': pr.items.length,
-      'Status': pr.status,
-      'Approved By': pr.approvedBy || 'N/A'
+      'Total Items': pr.items.length
     }));
     exportToExcel(data, 'Purchase_Requisitions', 'Requisitions');
   };
 
   const handleExportPDF = () => {
     const cols = [
-      { field: 'id', headerName: 'Requisition ID' },
-      { field: 'date', headerName: 'Date' },
-      { field: 'requester', headerName: 'Requester' },
+      { field: 'pr_number', headerName: 'Requisition ID' },
+      { field: 'pr_date', headerName: 'Date' },
+      { field: 'requester_name', headerName: 'Requester' },
       { field: 'department', headerName: 'Department' },
-      { field: 'priority', headerName: 'Priority' },
-      { field: 'status', headerName: 'Status' }
+      { field: 'priority', headerName: 'Priority' }
     ];
-    exportToPDF(cols, filteredPRs, 'Purchase_Requisitions', 'Purchase Requisitions Report');
+    // Map data for PDF
+    const pdfData = filteredPRs.map(pr => ({
+      ...pr,
+      requester_name: getUserName(pr.requested_by)
+    }));
+    exportToPDF(cols, pdfData, 'Purchase_Requisitions', 'Purchase Requisitions Report');
   };
 
   const getPriorityColor = (prio) => {
@@ -206,12 +304,14 @@ const PurchaseRequisition = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Approved': return 'success';
-      case 'Pending Approval': return 'warning';
+      case 'Pending': return 'warning';
       case 'Draft': return 'default';
       case 'Rejected': return 'error';
       default: return 'default';
     }
   };
+
+  if (loading) return <div style={{ padding: 20 }}>Loading Purchase Requisitions...</div>;
 
   return (
     <div className="module-container fade-in">
@@ -241,7 +341,7 @@ const PurchaseRequisition = () => {
           <Search size={18} />
           <input 
             type="text" 
-            placeholder="Search by" 
+            placeholder="Search by ID or Requester" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -275,10 +375,10 @@ const PurchaseRequisition = () => {
               </tr>
             ) : (
               filteredPRs.map((pr) => (
-                <tr key={pr.id}>
-                  <td className="bold-cell ">{pr.id}</td>
-                  <td>{formatDate(pr.date)}</td>
-                  <td >{pr.requester}</td>
+                <tr key={pr.pr_id}>
+                  <td className="bold-cell ">{pr.pr_number}</td>
+                  <td>{formatDate(pr.pr_date)}</td>
+                  <td >{getUserName(pr.requested_by)}</td>
                   <td>
                     <Chip label={pr.priority} color={getPriorityColor(pr.priority)} size="small" variant="outlined" />
                   </td>
@@ -302,7 +402,7 @@ const PurchaseRequisition = () => {
                     </Tooltip>
 
                     <Tooltip title="Delete">
-                      <IconButton size="small" color="error" onClick={() => handleDelete(pr.id)}>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(pr.pr_id)}>
                         <Trash size={16} />
                       </IconButton>
                     </Tooltip>
@@ -315,27 +415,32 @@ const PurchaseRequisition = () => {
       </div>
 
       {/* CREATE / EDIT DIALOG */}
-      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="lg" fullWidth>
         <DialogTitle className="dialog-title">
-          {requisitions.some(r => r.id === formData.id) ? 'Edit' : 'Create'}
+          {formData.pr_id ? 'Edit' : 'Create'} Requisition
         </DialogTitle>
         <DialogContent dividers>
           <div className="dialog-grid">
             <TextField
               label="Date"
               type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              value={formData.pr_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, pr_date: e.target.value }))}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
-              label="Requester Name"
-              value={formData.requester}
-              onChange={(e) => setFormData(prev => ({ ...prev, requester: e.target.value }))}
-              fullWidth
-              placeholder="e.g. Alice Smith"
-            />
+            <FormControl fullWidth>
+              <InputLabel>Requester Name</InputLabel>
+              <Select
+                value={formData.requested_by}
+                label="Requester Name"
+                onChange={(e) => setFormData(prev => ({ ...prev, requested_by: e.target.value }))}
+              >
+                {users.map(user => (
+                  <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <FormControl fullWidth>
               <InputLabel>Priority</InputLabel>
@@ -363,9 +468,10 @@ const PurchaseRequisition = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Item Name</TableCell>
-                  <TableCell width="120">Available Stock</TableCell>
-                  <TableCell className="text-right" width="120">Qty</TableCell>
-                  <TableCell width="120">UOM</TableCell>
+                  <TableCell className="text-right" width="100">Qty</TableCell>
+                  <TableCell width="100">UOM</TableCell>
+                  <TableCell className="text-right" width="120">Unit Price</TableCell>
+                  <TableCell className="text-right" width="120">Total Price</TableCell>
                   <TableCell width="80" align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -375,24 +481,21 @@ const PurchaseRequisition = () => {
                     <TableCell>
                       <select 
                         className="table-select" 
-                        value={item.itemId}
-                        onChange={(e) => handleItemChange(idx, 'itemId', e.target.value)}
+                        value={item.item_id}
+                        onChange={(e) => handleItemChange(idx, 'item_id', e.target.value)}
                       >
                         {itemsMaster.map(itm => (
                           <option key={itm.id} value={itm.id}>{itm.name} ({itm.id})</option>
                         ))}
                       </select>
                     </TableCell>
-                    <TableCell>
-                      {inventory.find(inv => inv.itemCode === item.itemId)?.availableStock || 0}
-                    </TableCell>
                     <TableCell >
                       <input 
                         type="number" 
                         className="table-input"
-                        value={item.qty}
+                        value={item.requested_quantity}
                         min="1"
-                        onChange={(e) => handleItemChange(idx, 'qty', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(idx, 'requested_quantity', e.target.value)}
                       />
                     </TableCell>
                     <TableCell>
@@ -402,6 +505,19 @@ const PurchaseRequisition = () => {
                         value={item.uom}
                         onChange={(e) => handleItemChange(idx, 'uom', e.target.value)}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <input 
+                        type="number" 
+                        className="table-input text-right"
+                        value={item.unit_price}
+                        min="0"
+                        step="0.01"
+                        onChange={(e) => handleItemChange(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                      />
+                    </TableCell>
+                    <TableCell className="bold-cell text-right">
+                      {Number(item.requested_quantity * (item.unit_price || 0)).toFixed(2)}
                     </TableCell>
                     <TableCell align="center">
                       <IconButton size="small" color="error" onClick={() => handleRemoveLineItem(idx)}>
@@ -419,8 +535,8 @@ const PurchaseRequisition = () => {
               label="Requisition Remarks"
               multiline
               rows={3}
-              value={formData.remarks}
-              onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
+              value={formData.notes || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               fullWidth
               placeholder="Provide reason or specifications for requisition..."
             />
@@ -428,45 +544,33 @@ const PurchaseRequisition = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">
+            {formData.pr_id ? 'Update' : 'Save'}
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* VIEW DETAILS DIALOG */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle className="dialog-title">Requisition Details - {selectedPR?.id}</DialogTitle>
+        <DialogTitle className="dialog-title">Requisition Details - {selectedPR?.pr_number}</DialogTitle>
         <DialogContent dividers>
           {selectedPR && (
             <div className="view-detail-body">
               <div className="view-detail-row">
-                <strong>Requester:</strong> <span>{selectedPR.requester}</span>
+                <strong>Requester:</strong> <span>{getUserName(selectedPR.requested_by)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Department:</strong> <span>{selectedPR.department}</span>
               </div>
               <div className="view-detail-row">
-                <strong>Date:</strong> <span>{formatDate(selectedPR.date)}</span>
+                <strong>Date:</strong> <span>{formatDate(selectedPR.pr_date)}</span>
               </div>
               <div className="view-detail-row">
                 <strong>Priority:</strong> 
                 <Chip label={selectedPR.priority} color={getPriorityColor(selectedPR.priority)} size="small" />
               </div>
               <div className="view-detail-row">
-                <strong>Status:</strong> 
-                <Chip label={selectedPR.status} color={getStatusColor(selectedPR.status)} size="small" />
-              </div>
-              {selectedPR.approvedBy && (
-                <>
-                  <div className="view-detail-row">
-                    <strong>Approved By:</strong> <span>{selectedPR.approvedBy}</span>
-                  </div>
-                  <div className="view-detail-row">
-                    <strong>Approval Date:</strong> <span>{formatDate(selectedPR.approvalDate)}</span>
-                  </div>
-                </>
-              )}
-              <div className="view-detail-row">
-                <strong>Remarks:</strong> <span>{selectedPR.remarks || 'No remarks provided.'}</span>
+                <strong>Remarks:</strong> <span>{selectedPR.notes || 'No remarks provided.'}</span>
               </div>
 
               <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>Line Items Requested</h4>
@@ -476,24 +580,24 @@ const PurchaseRequisition = () => {
                     <TableCell>Item Name</TableCell>
                     <TableCell className="text-right" align="right">Qty</TableCell>
                     <TableCell>UOM</TableCell>
-                    <TableCell  align="right">Est. Unit Price (₹)</TableCell>
+                    <TableCell  align="right">Unit Price (₹)</TableCell>
                     <TableCell align="right">Subtotal (₹)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {selectedPR.items.map((itm, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{itm.name} ({itm.itemId})</TableCell>
-                      <TableCell align="right" className="text-right">{itm.qty}</TableCell>
+                      <TableCell>{getItemName(itm.item_id)}</TableCell>
+                      <TableCell align="right" className="text-right">{Number(itm.requested_quantity)}</TableCell>
                       <TableCell >{itm.uom}</TableCell>
-                      <TableCell className="text-right" align="right">{itm.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell className="text-right" align="right">{(itm.qty * itm.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell className="text-right" align="right">{itm.unit_price}</TableCell>
+                      <TableCell className="text-right" align="right">{(itm.requested_quantity * (itm.unit_price || 0)).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow>
                     <TableCell className="text-right" colSpan={4} align="right"><strong>Estimated Total Value:</strong></TableCell>
                     <TableCell align="right" className="bold-cell text-right">
-                      {selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}
+                      {selectedPR.items.reduce((sum, i) => sum + (i.requested_quantity * (i.unit_price || 0)), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -520,8 +624,8 @@ const PurchaseRequisition = () => {
                 </div>
                 <div className="voucher-title-block">
                   <h2>PURCHASE REQUISITION</h2>
-                  <p><strong>VOUCHER ID:</strong> {selectedPR.id}</p>
-                  <p><strong>DATE:</strong> {selectedPR.date}</p>
+                  <p><strong>VOUCHER ID:</strong> {selectedPR.pr_number}</p>
+                  <p><strong>DATE:</strong> {selectedPR.pr_date}</p>
                 </div>
               </div>
 
@@ -529,7 +633,7 @@ const PurchaseRequisition = () => {
 
               <div className="print-metadata-grid">
                 <div>
-                  <p><strong>REQUESTED BY:</strong> {selectedPR.requester}</p>
+                  <p><strong>REQUESTED BY:</strong> {getUserName(selectedPR.requested_by)}</p>
                   <p><strong>DEPARTMENT:</strong> {selectedPR.department}</p>
                 </div>
                 <div>
@@ -545,31 +649,31 @@ const PurchaseRequisition = () => {
                     <th>Item Name</th>
                     <th className="num-col text-right">Qty</th>
                     <th>UOM</th>
-                    <th className="num-col text-right">Est. Unit Price (₹)</th>
+                    <th className="num-col text-right">Unit Price (₹)</th>
                     <th className="num-col text-right">Total Est. Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedPR.items.map((itm, idx) => (
                     <tr key={idx}>
-                      <td >{itm.itemId}</td>
-                      <td >{itm.name}</td>
-                      <td className="num-col text-right">{itm.qty}</td>
+                      <td >{itm.item_id}</td>
+                      <td >{getItemName(itm.item_id)}</td>
+                      <td className="num-col text-right">{Number(itm.requested_quantity)}</td>
                       <td >{itm.uom}</td>
-                      <td className="num-col text-right">{itm.unitPrice.toFixed(2)}</td>
-                      <td className="num-col text-right">{(itm.qty * itm.unitPrice).toFixed(2)}</td>
+                      <td className="num-col text-right">{itm.unit_price}</td>
+                      <td className="num-col text-right">{(itm.requested_quantity * (itm.unit_price || 0)).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="total-row">
                     <td colSpan="5">Estimated Grand Total</td>
-                    <td className="num-col text-right">{selectedPR.items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0).toFixed(2)}</td>
+                    <td className="num-col text-right">{selectedPR.items.reduce((sum, i) => sum + (i.requested_quantity * (i.unit_price || 0)), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="print-remarks">
                 <p><strong>REQUISITION REMARKS:</strong></p>
-                <p>{selectedPR.remarks || 'No specific remarks attached.'}</p>
+                <p>{selectedPR.notes || 'No specific remarks attached.'}</p>
               </div>
 
               <div className="print-signatures">
@@ -578,7 +682,7 @@ const PurchaseRequisition = () => {
                   <p>Prepared By (Requester)</p>
                 </div>
                 <div className="sig-line">
-                  <div className="sig-space">{selectedPR.approvedBy ? selectedPR.approvedBy : ''}</div>
+                  <div className="sig-space"></div>
                   <p>Authorized Signature (Manager)</p>
                 </div>
               </div>
