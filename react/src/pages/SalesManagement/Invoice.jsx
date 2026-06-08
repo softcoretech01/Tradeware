@@ -1,6 +1,5 @@
 import { formatDate } from '../../utils/dateUtils';
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
   Button, TextField, Select, MenuItem, FormControl, InputLabel,
@@ -10,19 +9,37 @@ import {
 import { 
   Search, Plus, Eye, Printer, FileSpreadsheet, FileText, Trash, Edit
 } from 'lucide-react';
-import { 
-  generateInvoice, updateInvoice 
-} from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
 
 const Invoice = () => {
-  const dispatch = useDispatch();
+  const [invoices, setInvoices] = useState([]);
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
-  // Store Selectors
-  const invoices = useSelector(state => state.erp.invoices);
-  const salesOrders = useSelector(state => state.erp.salesOrders);
-  const customers = useSelector(state => state.customers.customers);
+  const INVOICE_API = 'http://127.0.0.1:8000/api/sales/invoices';
+  const SO_API = 'http://127.0.0.1:8000/api/sales/orders';
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [invRes, soRes, custRes] = await Promise.all([
+        fetch(INVOICE_API).then(r => r.json()),
+        fetch(SO_API).then(r => r.json()),
+        fetch(`${SO_API}/masters/customers`).then(r => r.json())
+      ]);
+      setInvoices(invRes);
+      // Filter out SOs that already have invoices generated
+      setSalesOrders(soRes.filter(so => !so.invoiceGenerated));
+      setCustomers(custRes);
+    } catch (err) {
+      console.error('API Error:', err);
+      alert('Failed to load data from backend.');
+    }
+  };
 
   // States
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,43 +119,74 @@ const Invoice = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.soId) {
       alert('Sales Order reference is required.');
       return;
     }
 
-    dispatch(generateInvoice(formData));
-    setFormOpen(false);
+    try {
+      const res = await fetch(INVOICE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (!res.ok) throw new Error('Failed');
+      setFormOpen(false);
+      fetchData();
+    } catch (err) {
+      alert('Failed to create Invoice');
+    }
   };
 
-const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (!formData.soId) {
       alert('Sales Order reference is required.');
       return;
     }
 
-    dispatch(updateInvoice(formData));
-    setEditOpen(false);
+    try {
+      const res = await fetch(`${INVOICE_API}/${formData.invoiceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (!res.ok) throw new Error('Failed');
+      setEditOpen(false);
+      fetchData();
+    } catch (err) {
+      alert('Failed to update Invoice');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm(`Are you sure you want to delete Invoice ${id}?`)) {
+      try {
+        const res = await fetch(`${INVOICE_API}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+        fetchData();
+      } catch (err) {
+        alert('Failed to delete Invoice');
+      }
+    }
   };
 
   // Filter
   const filteredInvoices = invoices.filter(inv => {
-    return inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    return inv.invoiceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
            inv.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           inv.soRef.toLowerCase().includes(searchTerm.toLowerCase());
+           inv.soId.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   // Export
   const handleExportExcel = () => {
     const data = filteredInvoices.map(inv => ({
-      'Invoice No': inv.id,
-      'SO Ref': inv.soRef,
+      'Invoice No': inv.invoiceId,
+      'SO Ref': inv.soId,
       'Customer': inv.customerName,
-      'Date': inv.date,
       'Tax Type': inv.taxType,
       'Tax Amount': inv.taxAmount,
-      'Grand Total': inv.grandTotal
+      'Grand Total': inv.total
     }));
     exportToExcel(data, 'Invoices', 'Invoices');
   };
@@ -211,9 +259,9 @@ const handleEditSave = () => {
               </tr>
             ) : (
               filteredInvoices.map((inv) => (
-                <tr key={inv.id}>
-                  <td className="bold-cell ">{inv.id}</td>
-                  <td className="text-muted ">{inv.soRef}</td>
+                <tr key={inv.invoiceId}>
+                  <td className="bold-cell ">{inv.invoiceId}</td>
+                  <td className="text-muted ">{inv.soId}</td>
                   <td >{inv.customerName}</td>
                   <td>{formatDate(inv.date)}</td>
                   <td >
@@ -224,7 +272,7 @@ const handleEditSave = () => {
                     />
                   </td>
                   <td className="num-col text-right">{inv.taxAmount?.toFixed(2)}</td>
-                  <td className="num-col bold-cell text-right">{inv.grandTotal?.toFixed(2)}</td>
+                  <td className="num-col bold-cell text-right">{inv.total?.toFixed(2)}</td>
                   <td className="actions-cell ">
                     <Tooltip title="View Invoice Details">
                       <IconButton size="small" onClick={() => { setSelectedInvoice(inv); setViewOpen(true); }}>
@@ -235,14 +283,14 @@ const handleEditSave = () => {
                       <IconButton size="small" color="primary" onClick={() => { 
                         setSelectedInvoice(inv); 
                         setFormData({
-                          invoiceId: inv.id,
-                          soId: inv.soRef,
+                          invoiceId: inv.invoiceId,
+                          soId: inv.soId,
                           cpoRef: inv.cpoRef,
                           customerName: inv.customerName,
-                          amount: inv.subTotal || inv.amount || 0,
+                          amount: inv.amount || 0,
                           taxAmount: inv.taxAmount || 0,
                           taxType: inv.taxType || 'IGST',
-                          total: inv.grandTotal || inv.total || 0,
+                          total: inv.total || 0,
                           items: inv.items || []
                         }); 
                         setEditOpen(true); 

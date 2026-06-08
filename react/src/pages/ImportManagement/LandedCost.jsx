@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Button, TextField, Card, CardContent, Grid, Typography, Box,
@@ -18,6 +18,8 @@ const RED = { main: '#B91C1C', light: '#EF4444', bg: '#FEE2E2' };
 const AMBER = { main: '#B45309', light: '#F59E0B', bg: '#FEF3C7' };
 const SLATE = { main: '#475569', light: '#94A3B8', bg: '#F1F5F9' };
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api/import';
+
 const LandedCost = () => {
   const dispatch = useDispatch();
 
@@ -26,7 +28,12 @@ const LandedCost = () => {
   const batches = useSelector(state => state.batchImport.batches);
 
   // States
+  
+  const [importPOs, setImportPOs] = useState([]);
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
+  const [isPosted, setIsPosted] = useState(false);
   
   // Advanced India Customs & Freight Costing Inputs
   const [dutyPercent, setDutyPercent] = useState('15');
@@ -47,27 +54,76 @@ const LandedCost = () => {
   const [expiryDate, setExpiryDate] = useState(new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]); // 2 years default
   const [postModalOpen, setPostModalOpen] = useState(false);
 
+  React.useEffect(() => {
+    const fetchPOs = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/orders`);
+        if (res.ok) {
+          const data = await res.json();
+          const mappedPOs = data.map(po => ({
+            id: po.import_po_number,
+            db_id: po.import_po_id,
+            date: po.po_date,
+            supplierId: po.supplier_id,
+            supplierName: po.supplier_name,
+            currency: po.currency,
+            currency_id: po.currency_id,
+            exchangeRate: Number(po.exchange_rate),
+            paymentTerms: po.payment_terms,
+            totalFCY: Number(po.total_fcy),
+            totalLCY: Number(po.total_lcy),
+            status: po.status,
+            items: po.items.map(it => ({
+              itemCode: it.item_id,
+              itemName: it.item_name,
+              qty: Number(it.qty),
+              fcyUnitPrice: Number(it.fcy_unit_price),
+              totalFCY: Number(it.total_fcy)
+            }))
+          }));
+          setImportPOs(mappedPOs);
+        }
+      } catch (e) {
+        console.error('Failed to fetch POs', e);
+      }
+    };
+    fetchPOs();
+  }, []);
+
+
   // Find selected shipment details
   const selectedShipment = useMemo(() => {
-    return shipments.find(s => s.id === selectedShipmentId) || null;
-  }, [shipments, selectedShipmentId]);
+    return importPOs.find(s => s.id === selectedShipmentId || s.db_id === selectedShipmentId) || null;
+  }, [importPOs, selectedShipmentId]);
 
   // Set default costs when shipment changes
   React.useEffect(() => {
-    if (selectedShipment) {
-      setSeaFreight(String(selectedShipment.seaFreight || selectedShipment.freightCharges || 0));
-      setRoadFreight(String(selectedShipment.roadFreight || 0));
-      setLocalTransport(String(selectedShipment.localTransport || 0));
-      setLinerCharges(String(selectedShipment.linerCharges || selectedShipment.handlingCharges || 0));
-      setInsuranceCost(String(selectedShipment.insuranceCost || 0));
-      setHandlingCharges(String(selectedShipment.additionalHandlingCharges || 0));
-      setPackingCharges(String(selectedShipment.packingCharges || 0));
-      setAgingCharges(String(selectedShipment.agingCharges || 0));
+    if (selectedShipment && selectedShipment.db_id) {
+      setIsPosted(false);
+      // First reset all values to default 0
+      setSeaFreight('0'); setRoadFreight('0'); setLocalTransport('0'); setLinerCharges('0');
+      setInsuranceCost('0'); setHandlingCharges('0'); setPackingCharges('0'); setAgingCharges('0');
+      setDutyPercent('0'); setCessPercent('0'); setGstPercent('0'); setIncludeGST(false);
       
-      setDutyPercent(String(selectedShipment.dutyPercent || 15));
-      setCessPercent(String(selectedShipment.cessPercent || 10));
-      setGstPercent(String(selectedShipment.gstPercent || 18));
-      setIncludeGST(!!selectedShipment.includeGST);
+      fetch(`${API_BASE_URL}/landed-cost/${selectedShipment.db_id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.import_landed_cost_id) {
+            setIsPosted(data.is_posted === 1);
+            setDutyPercent(String(data.duty_percent));
+            setCessPercent(String(data.cess_percent));
+            setGstPercent(String(data.gst_percent));
+            setIncludeGST(data.include_gst);
+            setSeaFreight(String(data.sea_freight));
+            setRoadFreight(String(data.road_freight));
+            setLocalTransport(String(data.local_transport));
+            setLinerCharges(String(data.liner_charges));
+            setInsuranceCost(String(data.insurance_cost));
+            setHandlingCharges(String(data.handling_charges));
+            setPackingCharges(String(data.packing_charges));
+            setAgingCharges(String(data.aging_charges));
+          }
+        }).catch(err => console.error(err));
     }
   }, [selectedShipment]);
 
@@ -79,7 +135,9 @@ const LandedCost = () => {
 
     // Calculate FOB value for each item in local currency (LCY/₹)
     const itemsWithFobVal = selectedShipment.items.map(item => {
-      const fobValLCY = item.qty * item.fcyUnitPrice * exchangeRate;
+      const fcyUnit = Number(item.fcyUnitPrice || item.fcy_unit_price || 0);
+      const qty = Number(item.qty || 0);
+      const fobValLCY = qty * fcyUnit * Number(exchangeRate || 1);
       return {
         ...item,
         fobValLCY
@@ -208,17 +266,85 @@ const LandedCost = () => {
         status: 'Available',
         warehouse: 'Main Warehouse',
         sequence: batches.length + idx + 1,
-        poReference: selectedShipment.poNo,
+        poReference: selectedShipment.id || selectedShipment.poNo,
         shipmentRef: selectedShipment.id
       };
     });
 
     dispatch(addBatches(newBatches));
     setPostModalOpen(false);
-    alert(`Success! Generated and posted ${newBatches.length} batch(es) to Main Warehouse stock registry with custom allocated unit landed costs.`);
     
-    // Clear selection
-    setSelectedShipmentId('');
+    // Save to DB
+    if (selectedShipment) {
+      const payload = {
+        import_po_id: selectedShipment.db_id,
+        duty_percent: Number(dutyPercent),
+        cess_percent: Number(cessPercent),
+        gst_percent: Number(gstPercent),
+        include_gst: includeGST,
+        sea_freight: Number(seaFreight),
+        road_freight: Number(roadFreight),
+        local_transport: Number(localTransport),
+        liner_charges: Number(linerCharges),
+        insurance_cost: Number(insuranceCost),
+        handling_charges: Number(handlingCharges),
+        packing_charges: Number(packingCharges),
+        aging_charges: Number(agingCharges),
+        total_customs_duty: calculations.totalCustomsDuty || 0,
+        total_freight: (Number(seaFreight) || 0) + (Number(roadFreight) || 0),
+        total_port_charges: (Number(localTransport) || 0) + (Number(linerCharges) || 0) + (Number(handlingCharges) || 0) + (Number(packingCharges) || 0) + (Number(agingCharges) || 0),
+        total_overhead: calculations.totalOverhead || 0,
+        total_landed_cost: (calculations.totalOverhead || 0) + (calculations.totalFobLCY || 0),
+        details: calculations.items.map(item => ({
+          item_id: item.itemCode || item.id,
+          qty: item.qty,
+          fob_val_lcy: item.fobValLCY,
+          allocated_overhead: item.allocatedOverhead || 0,
+          total_landed_cost: item.totalLandedCost || 0,
+          landed_unit_cost: item.landedUnitCost || 0
+        }))
+      };
+      
+      // Set is_posted to 1 when posting and generating batches
+      payload.is_posted = 1;
+
+      fetch(`${API_BASE_URL}/landed-cost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).then(res => {
+        
+        const dbBatches = newBatches.map(b => ({
+          batch_no: b.batchNo,
+          item_id: b.itemCode,
+          current_qty: b.qty,
+          mfg_date: b.mfgDate,
+          expiry_date: b.expiryDate,
+          landed_unit_cost: b.landedUnitCost,
+          final_selling_price: b.finalSellingPrice,
+          margin_percent: b.marginPercent,
+          status: b.status,
+          source_type: 'Import Purchase',
+          po_reference: null,
+          grn_reference: null,
+          IPO_reference: b.poReference
+        }));
+
+        return fetch('http://127.0.0.1:8000/api/purchase/batches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dbBatches)
+        });
+      }).then(r => r.json()).then(bRes => {
+        setIsPosted(true);
+        alert(`Success! Saved landed cost allocations to DB and generated ${newBatches.length} batch(es) to Main Warehouse stock registry.`);
+      }).catch(err => {
+        console.error('Failed to save to db:', err);
+        alert('Failed to save landed cost to database');
+      });
+    } else {
+      setSelectedShipmentId('');
+    }
   };
 
   // Export spreadsheet of worksheet
@@ -247,7 +373,7 @@ const LandedCost = () => {
           </Typography>
         </Box>
         {selectedShipment && (
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="outlined"
               onClick={handleExportExcel}
@@ -256,14 +382,29 @@ const LandedCost = () => {
             >
               Export excel
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => setPostModalOpen(true)}
-              startIcon={<CheckCircle size={18} />}
-              sx={{ textTransform: 'none', fontWeight: 600, backgroundColor: BLUE.main }}
-            >
-              Post & Generate Batches
-            </Button>
+            {selectedShipment && (
+              <Box>
+                {isPosted ? (
+                  <Button
+                    variant="contained"
+                    disabled
+                    startIcon={<CheckCircle size={18} />}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                  >
+                    Already Posted
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={() => setPostModalOpen(true)}
+                    startIcon={<CheckCircle size={18} />}
+                    sx={{ textTransform: 'none', fontWeight: 600, backgroundColor: BLUE.main }}
+                  >
+                    Post & Generate Batches
+                  </Button>
+                )}
+              </Box>
+            )}
           </Box>
         )}
       </Box>
@@ -282,9 +423,9 @@ const LandedCost = () => {
                   onChange={(e) => setSelectedShipmentId(e.target.value)}
                 >
                   <MenuItem value="" disabled>Select Shipment</MenuItem>
-                  {shipments.filter(s => s.status === 'Customs Clearance' || s.status === 'Cleared').map(sh => (
+                  {importPOs.map(sh => (
                     <MenuItem key={sh.id} value={sh.id}>
-                      {sh.id} - Container: {sh.containerNo} (PO: {sh.poNo}, Supplier: {sh.supplierName})
+                      {sh.id} - Supplier: {sh.supplierName} (Total FOB: {sh.totalFCY} {sh.currency})
                     </MenuItem>
                   ))}
                 </Select>
@@ -321,11 +462,11 @@ const LandedCost = () => {
                 </Typography>
 
                 {/* Customs Duties Section */}
-                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, fontSize: '13px' }}>
                     Customs Duty & Cess
                   </Typography>
-                  <Grid container spacing={1.5} alignItems="center">
+                  <Grid container spacing={1} alignItems="center">
                     <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
@@ -334,6 +475,7 @@ const LandedCost = () => {
                         type="number"
                         value={dutyPercent}
                         onChange={(e) => setDutyPercent(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -344,6 +486,7 @@ const LandedCost = () => {
                         type="number"
                         value={cessPercent}
                         onChange={(e) => setCessPercent(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -354,6 +497,7 @@ const LandedCost = () => {
                         type="number"
                         value={gstPercent}
                         onChange={(e) => setGstPercent(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -363,6 +507,7 @@ const LandedCost = () => {
                             size="small"
                             checked={includeGST}
                             onChange={(e) => setIncludeGST(e.target.checked)}
+                            disabled={isPosted}
                           />
                         }
                         label={<span style={{ fontSize: '11px' }}>Add GST to Landed Cost (Non-Creditable)</span>}
@@ -371,16 +516,16 @@ const LandedCost = () => {
                   </Grid>
 
                   <Box sx={{ mt: 1.5, p: 1, backgroundColor: '#f8fafc', borderRadius: 1, fontSize: '11px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span>Basic Customs Duty:</span>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '3px' }}>
+                      <span>Basic Customs Duty :</span>
                       <strong>₹{calculations.calculatedBCD?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span>Social Welfare Cess:</span>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '3px' }}>
+                      <span>Social Welfare Cess :</span>
                       <strong>₹{calculations.calculatedCess?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>IGST (GST Amount):</span>
+                    </div> 
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <span>IGST (GST Amount) :</span>
                       <span style={{ color: includeGST ? 'inherit' : '#94a3b8' }}>
                         ₹{calculations.calculatedGST?.toLocaleString(undefined, { maximumFractionDigits: 0 })} {!includeGST && '(ITC Claimed)'}
                       </span>
@@ -389,11 +534,11 @@ const LandedCost = () => {
                 </Box>
 
                 {/* Freight Section */}
-                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, fontSize: '13px' }}>
                     Freight & Transportation
                   </Typography>
-                  <Grid container spacing={1.5}>
+                  <Grid container spacing={1}>
                     <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
@@ -402,6 +547,7 @@ const LandedCost = () => {
                         type="number"
                         value={seaFreight}
                         onChange={(e) => setSeaFreight(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={4}>
@@ -412,6 +558,7 @@ const LandedCost = () => {
                         type="number"
                         value={roadFreight}
                         onChange={(e) => setRoadFreight(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={4}>
@@ -422,18 +569,19 @@ const LandedCost = () => {
                         type="number"
                         value={localTransport}
                         onChange={(e) => setLocalTransport(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                   </Grid>
                 </Box>
 
                 {/* Port & Liner Charges */}
-                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1.5, backgroundColor: '#ffffff' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, fontSize: '13px' }}>
+                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 1, p: 1, backgroundColor: '#ffffff' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, fontSize: '13px' }}>
                     Port & Other Charges
                   </Typography>
-                  <Grid container spacing={1.5}>
-                    <Grid item xs={12} sm={6} md={2}>
+                  <Grid container spacing={1}>
+                    <Grid item xs={12} sm={6} md>
                       <TextField
                         fullWidth
                         size="small"
@@ -441,9 +589,10 @@ const LandedCost = () => {
                         type="number"
                         value={linerCharges}
                         onChange={(e) => setLinerCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
+                    <Grid item xs={12} sm={6} md>
                       <TextField
                         fullWidth
                         size="small"
@@ -451,9 +600,10 @@ const LandedCost = () => {
                         type="number"
                         value={insuranceCost}
                         onChange={(e) => setInsuranceCost(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={4} md={2}>
+                    <Grid item xs={12} sm={4} md>
                       <TextField
                         fullWidth
                         size="small"
@@ -461,9 +611,10 @@ const LandedCost = () => {
                         type="number"
                         value={handlingCharges}
                         onChange={(e) => setHandlingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={4} md={3}>
+                    <Grid item xs={12} sm={4} md>
                       <TextField
                         fullWidth
                         size="small"
@@ -471,9 +622,10 @@ const LandedCost = () => {
                         type="number"
                         value={packingCharges}
                         onChange={(e) => setPackingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={4} md={3}>
+                    <Grid item xs={12} sm={4} md>
                       <TextField
                         fullWidth
                         size="small"
@@ -481,6 +633,7 @@ const LandedCost = () => {
                         type="number"
                         value={agingCharges}
                         onChange={(e) => setAgingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                   </Grid>
@@ -488,7 +641,7 @@ const LandedCost = () => {
 
                 <Divider />
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, px: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, px: 0.5 }}>
                   <Typography variant="body2">Total Overhead Expenses:</Typography>
                   <Typography variant="body2" color="primary.main">₹{calculations.totalOverhead?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                 </Box>
@@ -545,7 +698,7 @@ const LandedCost = () => {
                 
                 {/* Costing Summary Footprint */}
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0' }}>
-                  <Box sx={{ width: '360px', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box sx={{ width: '360px', display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                       <Typography color="text.secondary">Total Goods Value:</Typography>
                       <Typography sx={{ fontWeight: 600 }}>₹{calculations.totalFobLCY?.toLocaleString()}</Typography>
@@ -607,7 +760,7 @@ const LandedCost = () => {
                   Verification of Batches to Generate:
                 </Typography>
                 {calculations.items.map((it, idx) => (
-                  <Paper key={idx} variant="outlined" sx={{ p: 1.5, mb: 1, backgroundColor: SLATE.bg }}>
+                  <Paper key={idx} variant="outlined" sx={{ p: 1, mb: 1, backgroundColor: SLATE.bg }}>
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
                       {it.itemName} ({it.itemCode})
                     </Typography>

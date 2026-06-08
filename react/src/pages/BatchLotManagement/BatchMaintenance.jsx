@@ -26,11 +26,12 @@ const BatchMaintenance = () => {
   const dispatch = useDispatch();
 
   // Redux Selectors
-  const batches = useSelector(state => state.batchImport.batches);
   const shipments = useSelector(state => state.batchImport.shipments);
   const importPOs = useSelector(state => state.batchImport.importPOs);
 
   // States
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [warehouseFilter, setWarehouseFilter] = useState('All');
@@ -41,6 +42,23 @@ const BatchMaintenance = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [timelineModalOpen, setTimelineModalOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
+
+  React.useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/purchase/batches/');
+        if (res.ok) {
+          const data = await res.json();
+          setBatches(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch batches", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBatches();
+  }, []);
 
   // Edit Fields
   const [editStatus, setEditStatus] = useState('');
@@ -243,7 +261,7 @@ const BatchMaintenance = () => {
                     </td>
                     <td >{batch.itemCode}</td>
                     <td >{batch.itemName}</td>
-                    <td className="bold-cell  text-right">{batch.qty}</td>
+                    <td className="bold-cell  text-right">{Number(batch.qty)}</td>
                     <td>{formatDate(batch.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -253,7 +271,7 @@ const BatchMaintenance = () => {
                         </span>
                       </Box>
                     </td>
-                    <td className="text-right">{batch.landedUnitCost?.toFixed(2)}</td>
+                    <td className="text-right">{Number(batch.landedUnitCost || 0).toFixed(2)}</td>
                     <td>{getStatusBadge(batch.status)}</td>
                   </tr>
                 );

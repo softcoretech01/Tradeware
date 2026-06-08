@@ -1,6 +1,5 @@
 import { formatDate } from '../../utils/dateUtils';
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Select, MenuItem, FormControl, InputLabel,
@@ -11,26 +10,35 @@ import {
   Search, Plus, Eye, Edit, Trash, Check, X, Printer,
   FileSpreadsheet, FileText, Receipt, PackageCheck
 } from 'lucide-react';
-import {
-  addSalesOrder,
-  updateSalesOrder,
-  updateSODeliveryQty,
-  generateInvoice,
-  deleteSalesOrder
-} from '../../store/erpSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
 
 const SalesOrder = () => {
-  const dispatch = useDispatch();
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [itemsMaster, setItemsMaster] = useState([]);
 
-  // Store Selectors
-  const salesOrders = useSelector(state => state.erp.salesOrders);
-  const customerPOs = useSelector(state => state.erp.customerPOs);
-  const customers = useSelector(state => state.customers.customers);
-  const itemsMaster = useSelector(state => state.items.items);
-  const quotations = useSelector(state => state.erp.quotations);
-  const warehouses = useSelector(state => state.locations.warehouses);
+  const API_BASE = 'http://127.0.0.1:8000/api/sales/orders';
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [soRes, custRes, itemsRes] = await Promise.all([
+        fetch(API_BASE).then(r => r.json()),
+        fetch(`${API_BASE}/masters/customers`).then(r => r.json()),
+        fetch(`${API_BASE}/masters/items`).then(r => r.json())
+      ]);
+      setSalesOrders(soRes);
+      setCustomers(custRes);
+      setItemsMaster(itemsRes);
+    } catch (err) {
+      console.error('API Error:', err);
+      alert('Failed to load Sales Orders from backend.');
+    }
+  };
 
   // States
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,8 +59,6 @@ const SalesOrder = () => {
     customerName: '',
     date: new Date().toISOString().split('T')[0],
     items: [],
-    warehouse: 'WH-MAIN-RACK2',
-    deliveryStatus: 'Pending',
     deliverySchedule: '',
     invoiceGenerated: false,
     invoiceDetails: null
@@ -65,43 +71,11 @@ const SalesOrder = () => {
       customerName: '',
       date: new Date().toISOString().split('T')[0],
       items: [{ itemId: '', name: '', orderedQty: 1, suppliedQty: 1, pendingQty: 0, unitPrice: 0 }],
-      warehouse: warehouses[0]?.name || 'SINGAPORE CENTRAL WAREHOUSE',
-      deliveryStatus: 'Pending',
       deliverySchedule: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString().split('T')[0],
       invoiceGenerated: false,
       invoiceDetails: null
     });
     setFormOpen(true);
-  };
-
-  const handleCPOChange = (cpoId) => {
-    const cpo = customerPOs.find(c => c.id === cpoId);
-    if (cpo) {
-      // Trace back to quotation items
-      const quote = quotations.find(q => q.id === cpo.qtRef);
-      const items = quote ? quote.items.map(itm => ({
-        itemId: itm.itemId,
-        name: itm.name,
-        orderedQty: itm.qty,
-        suppliedQty: itm.qty, // Default to full delivery
-        pendingQty: 0,
-        unitPrice: itm.unitPrice
-      })) : [];
-
-      setFormData(prev => ({
-        ...prev,
-        cpoRef: cpoId,
-        customerName: cpo.customerName,
-        items
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        cpoRef: '',
-        customerName: '',
-        items: []
-      }));
-    }
   };
 
   const handleItemChange = (idx, field, value) => {
@@ -131,7 +105,7 @@ const SalesOrder = () => {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.customerName) {
       alert('Client Name is required.');
       return;
@@ -141,11 +115,21 @@ const SalesOrder = () => {
       return;
     }
 
-    dispatch(addSalesOrder(formData));
-    setFormOpen(false);
+    try {
+      const res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (!res.ok) throw new Error('Failed');
+      setFormOpen(false);
+      fetchData();
+    } catch (err) {
+      alert('Failed to create Sales Order');
+    }
   };
 
-const handleEditSave = () => {
+const handleEditSave = async () => {
     if (!formData.customerName) {
       alert('Client Name is required.');
       return;
@@ -155,17 +139,33 @@ const handleEditSave = () => {
       return;
     }
 
-    dispatch(updateSalesOrder(formData));
-    setEditOpen(false);
+    try {
+      const res = await fetch(`${API_BASE}/${formData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (!res.ok) throw new Error('Failed');
+      setEditOpen(false);
+      fetchData();
+    } catch (err) {
+      alert('Failed to update Sales Order');
+    }
   };
 
   const handleOpenInvoiceModal = (so) => {
     alert('Invoice generation has been moved to the dedicated Invoice module. Please go to Sales & Orders -> Invoice to generate a tax invoice.');
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm(`Are you sure you want to delete Sales Order ${id}?`)) {
-      dispatch(deleteSalesOrder(id));
+      try {
+        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+        fetchData();
+      } catch (err) {
+        alert('Failed to delete Sales Order');
+      }
     }
   };
 
@@ -200,7 +200,6 @@ const handleEditSave = () => {
       { field: 'id', headerName: 'Sales Order No' },
       { field: 'cpoRef', headerName: 'CPO Ref' },
       { field: 'customerName', headerName: 'Customer' },
-      { field: 'deliveryStatus', headerName: 'Delivery' },
       { field: 'deliverySchedule', headerName: 'Schedule' }
     ];
     exportToPDF(cols, filteredSOs, 'Sales_Orders', 'Sales Orders Dispatch Registry');
@@ -241,12 +240,6 @@ const handleEditSave = () => {
           />
         </div>
         <div className="filter-selects">
-          <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value)}>
-            <option value="">All Delivery Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Partially Shipped">Partially Shipped</option>
-            <option value="Fully Shipped">Fully Shipped</option>
-          </select>
         </div>
       </div>
 
@@ -259,8 +252,6 @@ const handleEditSave = () => {
               
               <th>Customer</th>
               <th>Date</th>
-              <th>Warehouse Origin</th>
-              <th>Delivery Status</th>
               <th>Invoice Status</th>
               <th className="actions-column">Actions</th>
             </tr>
@@ -277,14 +268,6 @@ const handleEditSave = () => {
                   
                   <td >{so.customerName}</td>
                   <td>{formatDate(so.date)}</td>
-                  <td >{so.warehouse}</td>
-                  <td>
-                    <Chip
-                      label={so.deliveryStatus}
-                      color={so.deliveryStatus === 'Fully Shipped' ? 'success' : so.deliveryStatus === 'Partially Shipped' ? 'primary' : 'default'}
-                      size="small"
-                    />
-                  </td>
                   <td>
                     <Chip
                       label={so.invoiceGenerated ? 'Invoice Generated' : 'Pending Invoice'}
@@ -348,19 +331,6 @@ const handleEditSave = () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-
-            <FormControl fullWidth>
-              <InputLabel>Dispatch Origin (Warehouse)</InputLabel>
-              <Select
-                value={formData.warehouse}
-                label="Dispatch Origin (Warehouse)"
-                onChange={(e) => setFormData(prev => ({ ...prev, warehouse: e.target.value }))}
-              >
-                {warehouses.map(w => (
-                  <MenuItem key={w.id} value={w.name}>{w.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
 
             <TextField
               label="Expected Shipping Date"
@@ -512,19 +482,6 @@ const handleEditSave = () => {
               InputLabelProps={{ shrink: true }}
             />
 
-            <FormControl fullWidth>
-              <InputLabel>Dispatch Origin (Warehouse)</InputLabel>
-              <Select
-                value={formData.warehouse}
-                label="Dispatch Origin (Warehouse)"
-                onChange={(e) => setFormData(prev => ({ ...prev, warehouse: e.target.value }))}
-              >
-                {warehouses.map(w => (
-                  <MenuItem key={w.id} value={w.name}>{w.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
             <TextField
               label="Expected Shipping Date"
               type="date"
@@ -640,7 +597,7 @@ const handleEditSave = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Update</Button>
         </DialogActions>
       </Dialog>
 
@@ -658,13 +615,6 @@ const handleEditSave = () => {
               </div>
               <div className="view-detail-row">
                 <strong>Order Date:</strong> <span>{formatDate(selectedSO.date)}</span>
-              </div>
-              <div className="view-detail-row">
-                <strong>Dispatch Origin:</strong> <span>{selectedSO.warehouse}</span>
-              </div>
-              <div className="view-detail-row">
-                <strong>Delivery Status:</strong>
-                <Chip label={selectedSO.deliveryStatus} color="primary" size="small" />
               </div>
               <div className="view-detail-row">
                 <strong>Invoice status:</strong>

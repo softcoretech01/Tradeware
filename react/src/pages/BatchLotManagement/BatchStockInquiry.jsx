@@ -20,10 +20,11 @@ const AMBER = { main: '#B45309', light: '#F59E0B', bg: '#FEF3C7' };
 const SLATE = { main: '#475569', light: '#94A3B8', bg: '#F1F5F9' };
 
 const BatchStockInquiry = () => {
-  const batches = useSelector(state => state.batchImport.batches);
   const items = useSelector(state => state.items?.items || []);
 
   // States
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,6 +52,23 @@ const BatchStockInquiry = () => {
       setFifoItemCode(uniqueItems[0].code);
     }
   }, [uniqueItems, fifoItemCode]);
+
+  React.useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/purchase/batches/');
+        if (res.ok) {
+          const data = await res.json();
+          setBatches(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch batches", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBatches();
+  }, []);
 
   // Filtering for grid
   const filteredBatches = useMemo(() => {
@@ -133,8 +151,8 @@ const BatchStockInquiry = () => {
       'Item Code': b.itemCode,
       'Item Name': b.itemName,
       'Stock Qty': b.qty,
-      'Landed Unit Cost (INR)': b.landedUnitCost,
-      'Selling Price': b.finalSellingPrice,
+      'Landed Unit Cost (INR)': Number(b.landedUnitCost || 0).toFixed(2),
+      'Selling Price': Number(b.finalSellingPrice || 0).toFixed(2),
       'Mfg Date': b.mfgDate,
       'Expiry Date': b.expiryDate,
       'Days to Expire': Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24)),
@@ -377,9 +395,9 @@ const BatchStockInquiry = () => {
                   <td >{b.itemCode}</td>
                   <td >{b.itemName}</td>
                   <td>{items.find(i => i.id === b.itemCode)?.uom || 'Nos'}</td>
-                  <td className="bold-cell text-right">{b.qty}</td>
-                  <td className="text-right">{b.landedUnitCost?.toFixed(2)}</td>
-                  <td className="text-right">{b.finalSellingPrice?.toFixed(2)}</td>
+                  <td className="bold-cell text-right">{Number(b.qty)}</td>
+                  <td className="text-right">{Number(b.landedUnitCost || 0).toFixed(2)}</td>
+                  <td className="text-right">{Number(b.finalSellingPrice || 0).toFixed(2)}</td>
                   <td>{formatDate(b.expiryDate)}</td>
                   <td style={{ color: daysToExpiry < 0 ? RED.main : (daysToExpiry <= 60 ? AMBER.main : 'inherit'), fontWeight: daysToExpiry <= 60 ? 700 : 400 }}>
                     {daysToExpiry < 0 ? 'Expired' : `${daysToExpiry} days`}

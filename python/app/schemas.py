@@ -305,5 +305,6 @@ class LocalLandedCostCreateRequest(BaseModel):
     total_lcy: Decimal
     total_overhead: Decimal
     total_landed_cost: Decimal
+    is_posted: Optional[int] = 0
     items: List[LocalLandedCostDetailCreate]
     batches: List[InventoryBatchCreate]

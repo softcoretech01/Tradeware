@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Button, TextField, Card, CardContent, Grid, Typography, Box,
   Divider, Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControl, Select, MenuItem, InputLabel, Paper
+  FormControl, Select, MenuItem, InputLabel, Paper, Snackbar, Alert
 } from '@mui/material';
 import {
   Calculator, CheckCircle, HelpCircle, FileSpreadsheet
@@ -23,6 +23,7 @@ const LandedCostCalculation = () => {
 
   // States
   const [selectedGrnId, setSelectedGrnId] = useState('');
+  const [isPosted, setIsPosted] = useState(false);
   
   const [insuranceCost, setInsuranceCost] = useState('0');
   const [handlingCharges, setHandlingCharges] = useState('0');
@@ -33,6 +34,7 @@ const LandedCostCalculation = () => {
   const [mfgDate, setMfgDate] = useState(new Date().toISOString().split('T')[0]);
   const [expiryDate, setExpiryDate] = useState(new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]); // 2 years default
   const [postModalOpen, setPostModalOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     fetchGRNs();
@@ -59,13 +61,38 @@ const LandedCostCalculation = () => {
 
   // Set default costs when GRN changes
   useEffect(() => {
+    const fetchExistingLandedCost = async () => {
+      if (!selectedGrnId) return;
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/purchase/local-landed-cost/by-grn/${selectedGrnId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setInsuranceCost(data.insurance_charges?.toString() || '0');
+          setHandlingCharges(data.handling_charges?.toString() || '0');
+          setPackingCharges(data.packing_charges?.toString() || '0');
+          setAgingCharges(data.aging_charges?.toString() || '0');
+          setIsPosted(data.is_posted === true || data.is_posted === 1);
+        } else {
+          setInsuranceCost('0');
+          setHandlingCharges('0');
+          setPackingCharges('0');
+          setAgingCharges('0');
+          setIsPosted(false);
+        }
+      } catch (e) {
+        console.error(e);
+        setInsuranceCost('0');
+        setHandlingCharges('0');
+        setPackingCharges('0');
+        setAgingCharges('0');
+        setIsPosted(false);
+      }
+    };
+
     if (selectedGrn) {
-      setInsuranceCost('0');
-      setHandlingCharges('0');
-      setPackingCharges('0');
-      setAgingCharges('0');
+      fetchExistingLandedCost();
     }
-  }, [selectedGrn]);
+  }, [selectedGrn, selectedGrnId]);
 
   // Landed Cost Allocations calculation
   const calculations = useMemo(() => {
@@ -175,7 +202,8 @@ const LandedCostCalculation = () => {
         total_landed_cost: it.totalLandedCost,
         landed_unit_cost: it.landedUnitCost
       })),
-      batches: newBatches
+      batches: newBatches,
+      is_posted: 1
     };
 
     try {
@@ -187,15 +215,15 @@ const LandedCostCalculation = () => {
 
       if (res.ok) {
         setPostModalOpen(false);
-        alert(`Success! Generated and posted ${newBatches.length} batch(es) to Inventory Batches with allocated local landed costs.`);
-        setSelectedGrnId('');
+        setIsPosted(true);
+        setToast({ open: true, message: `Posted successfully! Generated ${newBatches.length} batch(es) to Inventory.`, severity: 'success' });
       } else {
         const err = await res.json();
-        alert(`Failed to post: ${err.detail}`);
+        setToast({ open: true, message: `Failed to post: ${err.detail}`, severity: 'error' });
       }
     } catch (e) {
       console.error(e);
-      alert('Network error occurred.');
+      setToast({ open: true, message: 'Network error occurred.', severity: 'error' });
     }
   };
 
@@ -240,9 +268,10 @@ const LandedCostCalculation = () => {
               variant="contained"
               onClick={() => setPostModalOpen(true)}
               startIcon={<CheckCircle size={18} />}
-              sx={{ textTransform: 'none', fontWeight: 600, backgroundColor: BLUE.main }}
+              disabled={isPosted}
+              sx={{ textTransform: 'none', fontWeight: 600, backgroundColor: isPosted ? 'grey.400' : BLUE.main }}
             >
-              Post & Generate Batches
+              {isPosted ? 'Already Posted' : 'Post & Generate Batches'}
             </Button>
           </Box>
         )}
@@ -313,6 +342,7 @@ const LandedCostCalculation = () => {
                         type="number"
                         value={insuranceCost}
                         onChange={(e) => setInsuranceCost(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -323,6 +353,7 @@ const LandedCostCalculation = () => {
                         type="number"
                         value={handlingCharges}
                         onChange={(e) => setHandlingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -333,6 +364,7 @@ const LandedCostCalculation = () => {
                         type="number"
                         value={packingCharges}
                         onChange={(e) => setPackingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -343,6 +375,7 @@ const LandedCostCalculation = () => {
                         type="number"
                         value={agingCharges}
                         onChange={(e) => setAgingCharges(e.target.value)}
+                        disabled={isPosted}
                       />
                     </Grid>
                   </Grid>
@@ -350,7 +383,7 @@ const LandedCostCalculation = () => {
 
                 <Divider />
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, px: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, px: 0.5 }}>
                   <Typography variant="body2">Total Overhead Expenses:</Typography>
                   <Typography variant="body2" color="primary.main">₹{calculations.totalOverhead?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                 </Box>
@@ -492,6 +525,18 @@ const LandedCostCalculation = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* SUCCESS / ERROR TOAST POPUP */}
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={6000} 
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setToast({ ...toast, open: false })} severity={toast.severity} sx={{ width: '100%' }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

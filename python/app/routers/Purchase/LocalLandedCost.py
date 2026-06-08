@@ -30,7 +30,8 @@ def post_local_landed_cost(data: LocalLandedCostCreateRequest, db: Session = Dep
             aging_charges=data.aging_charges,
             total_lcy=data.total_lcy,
             total_overhead=data.total_overhead,
-            total_landed_cost=data.total_landed_cost
+            total_landed_cost=data.total_landed_cost,
+            is_posted=data.is_posted
         )
         db.add(header)
         db.flush() # get landed_cost_id
@@ -71,3 +72,21 @@ def post_local_landed_cost(data: LocalLandedCostCreateRequest, db: Session = Dep
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/by-grn/{grn_id}")
+def get_local_landed_cost_by_grn(grn_id: str, db: Session = Depends(get_db)):
+    existing = db.query(LocalLandedCostHeader).filter(LocalLandedCostHeader.grn_id == grn_id).first()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Landed Cost for this GRN not found")
+    
+    return {
+        "grn_id": existing.grn_id,
+        "insurance_charges": existing.insurance_charges,
+        "handling_charges": existing.handling_charges,
+        "packing_charges": existing.packing_charges,
+        "aging_charges": existing.aging_charges,
+        "total_lcy": existing.total_lcy,
+        "total_overhead": existing.total_overhead,
+        "total_landed_cost": existing.total_landed_cost,
+        "is_posted": existing.is_posted
+    }

@@ -19,7 +19,8 @@ const AMBER = { main: '#B45309', light: '#F59E0B', bg: '#FEF3C7' };
 const SLATE = { main: '#475569', light: '#94A3B8', bg: '#F1F5F9' };
 
 const BatchAgingAnalysis = () => {
-  const batches = useSelector(state => state.batchImport.batches);
+  const [batchAgingDetails, setBatchAgingDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // States
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,36 +28,23 @@ const BatchAgingAnalysis = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
-  // Stable Anchor Date for Calculations
-  const ANCHOR_DATE = useMemo(() => new Date('2026-05-21'), []);
-
-  // Compute aging details for each batch
-  const batchAgingDetails = useMemo(() => {
-    return batches.map(batch => {
-      const mfg = new Date(batch.mfgDate);
-      const exp = new Date(batch.expiryDate);
-      
-      // Calculate age (days since manufacturing)
-      const ageDiff = ANCHOR_DATE - mfg;
-      const ageDays = Math.max(0, Math.floor(ageDiff / (1000 * 60 * 60 * 24)));
-      
-      // Calculate days to expiry
-      const expDiff = exp - ANCHOR_DATE;
-      const daysToExpiry = Math.floor(expDiff / (1000 * 60 * 60 * 24));
-
-      let ageBucket = '91+ Days';
-      if (ageDays <= 30) ageBucket = '0-30 Days';
-      else if (ageDays <= 60) ageBucket = '31-60 Days';
-      else if (ageDays <= 90) ageBucket = '61-90 Days';
-
-      return {
-        ...batch,
-        ageDays,
-        daysToExpiry,
-        ageBucket
-      };
-    });
-  }, [batches, ANCHOR_DATE]);
+  React.useEffect(() => {
+    const fetchAging = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/purchase/batches/aging');
+        if (res.ok) {
+          const data = await res.json();
+          // The backend gives us: ageDays, daysToExpiry, ageBucket natively
+          setBatchAgingDetails(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch aging data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAging();
+  }, []);
 
   // Aggregate stats
   const statistics = useMemo(() => {
@@ -69,11 +57,12 @@ const BatchAgingAnalysis = () => {
     const nearExpiry = [];
 
     batchAgingDetails.forEach(b => {
-      totalQty += b.qty;
-      if (b.ageBucket === '0-30 Days') b1 += b.qty;
-      else if (b.ageBucket === '31-60 Days') b2 += b.qty;
-      else if (b.ageBucket === '61-90 Days') b3 += b.qty;
-      else b4 += b.qty;
+      let qty = Number(b.qty);
+      totalQty += qty;
+      if (b.ageBucket === '0-30 Days') b1 += qty;
+      else if (b.ageBucket === '31-60 Days') b2 += qty;
+      else if (b.ageBucket === '61-90 Days') b3 += qty;
+      else b4 += qty;
 
       // Expiry danger tracking (less than 60 days to expiry, and not already expired/on hold)
       if (b.daysToExpiry <= 60 && b.status === 'Available' && b.qty > 0) {
@@ -134,7 +123,7 @@ const BatchAgingAnalysis = () => {
       'Batch No': b.batchNo,
       'Item Code': b.itemCode,
       'Item Name': b.itemName,
-      'Available Qty': b.qty,
+      'Available Qty': Number(b.qty),
       'Mfg Date': b.mfgDate,
       'Age (Days)': b.ageDays,
       'Age Bucket': b.ageBucket,
@@ -318,7 +307,7 @@ const BatchAgingAnalysis = () => {
                     <td className="bold-cell ">{b.batchNo}</td>
                     <td >{b.itemCode}</td>
                     <td >{b.itemName}</td>
-                    <td className="bold-cell text-right">{b.qty} units</td>
+                    <td className="bold-cell text-right">{Number(b.qty)} units</td>
                     <td>{formatDate(b.mfgDate)}</td>
                     <td>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

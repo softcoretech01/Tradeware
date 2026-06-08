@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -29,7 +29,9 @@ const SellingPrice = () => {
   const dispatch = useDispatch();
 
   // Redux Selectors
-  const batches = useSelector(state => state.batchImport.batches);
+  // State for live batches from DB
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
   const marginApprovals = useSelector(state => state.batchImport.marginApprovals);
   const customers = useSelector(state => state.customers.customers);
 
@@ -56,6 +58,25 @@ const SellingPrice = () => {
     const m = Number(inputMargin);
     return isNaN(m) ? 0 : m;
   }, [inputMargin]);
+
+  const fetchBatches = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://127.0.0.1:8000/api/purchase/batches/');
+      if (res.ok) {
+        const data = await res.json();
+        setBatches(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch batches:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
 
   const handlePriceChange = (val) => {
     setInputPrice(val);
@@ -89,8 +110,9 @@ const SellingPrice = () => {
     let activeApprovals = 0;
 
     batches.forEach(b => {
-      totalMarginSum += b.marginPercent;
-      if (b.marginPercent < MIN_MARGIN_THRESHOLD) {
+      const margin = Number(b.marginPercent || 0);
+      totalMarginSum += margin;
+      if (margin < MIN_MARGIN_THRESHOLD) {
         lowMarginCount++;
       }
     });
@@ -114,7 +136,7 @@ const SellingPrice = () => {
         b.itemCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.itemName.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const isLow = b.marginPercent < MIN_MARGIN_THRESHOLD;
+      const isLow = Number(b.marginPercent || 0) < MIN_MARGIN_THRESHOLD;
       const matchMargin =
         marginFilter === 'All' ||
         (marginFilter === 'Low' && isLow) ||
@@ -142,27 +164,39 @@ const SellingPrice = () => {
   // Handlers
   const handleOpenEditPrice = (batch) => {
     setSelectedBatch(batch);
-    setInputPrice(String(batch.finalSellingPrice));
-    const cost = batch.landedUnitCost;
-    const price = batch.finalSellingPrice;
+    setInputPrice(String(batch.finalSellingPrice || 0));
+    const cost = Number(batch.landedUnitCost || 0);
+    const price = Number(batch.finalSellingPrice || 0);
     const margin = price > 0 ? ((price - cost) / price) * 100 : 0;
     setInputMargin(margin.toFixed(2));
     setEditPriceModalOpen(true);
   };
 
-  const handleSavePriceDirectly = () => {
+  const handleSavePriceDirectly = async () => {
     if (!selectedBatch || !inputPrice) return;
     const price = Number(inputPrice);
     
-    // Save to Redux
-    dispatch(updateBatchPricing({
-      batchNo: selectedBatch.batchNo,
-      finalSellingPrice: price,
-      marginPercent: inputMarginNumeric
-    }));
-    
-    setEditPriceModalOpen(false);
-    setSelectedBatch(null);
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/purchase/batches/${selectedBatch.batchNo}/pricing`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          final_selling_price: price,
+          margin_percent: inputMarginNumeric
+        })
+      });
+      
+      if (res.ok) {
+        setEditPriceModalOpen(false);
+        setSelectedBatch(null);
+        fetchBatches(); // Refresh table
+      } else {
+        alert('Failed to update price');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error updating price');
+    }
   };
 
   const handleOpenApprovalDialog = () => {
@@ -215,15 +249,18 @@ const SellingPrice = () => {
 
   // Export handlers
   const handleExportExcel = () => {
-    const data = filteredBatches.map(b => ({
-      'Batch No': b.batchNo,
-      'Item Code': b.itemCode,
-      'Item Name': b.itemName,
-      'Landed Unit Cost (INR)': b.landedUnitCost,
-      'Final Selling Price (INR)': b.finalSellingPrice,
-      'Margin Percent (%)': b.marginPercent,
-      'Status': b.marginPercent < MIN_MARGIN_THRESHOLD ? 'LOW MARGIN' : 'OK'
-    }));
+    const data = filteredBatches.map(b => {
+      const margin = Number(b.marginPercent || 0);
+      return {
+        'Batch No': b.batchNo,
+        'Item Code': b.itemCode,
+        'Item Name': b.itemName,
+        'Landed Unit Cost (INR)': Number(b.landedUnitCost || 0),
+        'Final Selling Price (INR)': Number(b.finalSellingPrice || 0),
+        'Margin Percent (%)': margin,
+        'Status': margin < MIN_MARGIN_THRESHOLD ? 'LOW MARGIN' : 'OK'
+      };
+    });
     exportToExcel(data, `Selling_Prices_${new Date().toISOString().split('T')[0]}`, 'Price Sheet');
   };
 
@@ -314,23 +351,24 @@ const SellingPrice = () => {
           <tbody>
             {paginatedBatches.length > 0 ? (
               paginatedBatches.map(b => {
-                const isLow = b.marginPercent < MIN_MARGIN_THRESHOLD;
+                const margin = Number(b.marginPercent || 0);
+                const isLow = margin < MIN_MARGIN_THRESHOLD;
                 return (
                   <tr key={b.batchNo} style={{ backgroundColor: isLow ? 'rgba(239, 68, 68, 0.01)' : 'inherit' }}>
                     <td className="bold-cell ">{b.batchNo}</td>
                     <td >{b.itemCode}</td>
                     <td >{b.itemName}</td>
                     <td style={{ textAlign: 'right' }}>
-                      {b.landedUnitCost?.toFixed(2)}
+                      {Number(b.landedUnitCost || 0).toFixed(2)}
                       {b.grnReference && (
                         <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: '10px' }}>
-                          Local
+                         
                         </Typography>
                       )}
                     </td>
-                    <td className="bold-cell" style={{ textAlign: 'right' }}>{b.finalSellingPrice?.toFixed(2)}</td>
+                    <td className="bold-cell" style={{ textAlign: 'right' }}>{Number(b.finalSellingPrice || 0).toFixed(2)}</td>
                     <td className="bold-cell" style={{ color: isLow ? RED.main : GREEN.main, textAlign: 'right' }}>
-                      {b.marginPercent?.toFixed(1)}%
+                      {margin.toFixed(1)}%
                     </td>
                     <td className="actions-cell">
                       <Tooltip title="Update Selling Price">
@@ -399,7 +437,7 @@ const SellingPrice = () => {
             <Paper variant="outlined" sx={{ p: 1.5, backgroundColor: SLATE.bg }}>
               <Typography variant="caption" color="text.secondary">Landed Cost Price (INR):</Typography>
               <Typography variant="body2" sx={{ fontWeight: 700, color: BLUE.dark }}>
-                ₹{selectedBatch?.landedUnitCost?.toFixed(2)}
+                ₹{Number(selectedBatch?.landedUnitCost || 0).toFixed(2)}
               </Typography>
             </Paper>
 
@@ -483,7 +521,7 @@ const SellingPrice = () => {
               <Grid item xs={6}>
                 <Paper variant="outlined" sx={{ p: 1.5, backgroundColor: SLATE.bg }}>
                   <Typography variant="caption" color="text.secondary">Landed Cost:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>₹{selectedBatch?.landedUnitCost?.toFixed(2)}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>₹{Number(selectedBatch?.landedUnitCost || 0).toFixed(2)}</Typography>
                 </Paper>
               </Grid>
               <Grid item xs={6}>

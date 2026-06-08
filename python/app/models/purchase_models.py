@@ -220,6 +220,7 @@ class LocalLandedCostHeader(Base):
     total_lcy = Column(Numeric(15, 2), nullable=False)
     total_overhead = Column(Numeric(15, 2), nullable=False)
     total_landed_cost = Column(Numeric(15, 2), nullable=False)
+    is_posted = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

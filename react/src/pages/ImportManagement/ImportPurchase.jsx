@@ -1,6 +1,5 @@
 import { formatDate } from '../../utils/dateUtils';
-import React, { useState, useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Select, MenuItem, FormControl, InputLabel,
@@ -12,7 +11,6 @@ import {
   Search, Plus, Eye, FileSpreadsheet, FileText, Globe, DollarSign,
   PlusCircle, Trash2, ArrowRight, Edit
 } from 'lucide-react';
-import { addImportPO, updateImportPO, deleteImportPO } from '../../store/batchImportSlice';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtil';
 
 
@@ -31,15 +29,19 @@ const DEFAULT_RATES = {
   JPY: 0.55
 };
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api/import';
+
 const ImportPurchase = () => {
-  const dispatch = useDispatch();
 
-  // Redux Selectors
-  const importPOs = useSelector(state => state.batchImport.importPOs);
-  const suppliers = useSelector(state => state.suppliers.suppliers);
-  const items = useSelector(state => state.items.items);
+  // Data States
+  const [importPOs, setImportPOs] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [items, setItems] = useState([]);
+  const [paymentTermsList, setPaymentTermsList] = useState([]);
+  const [currenciesList, setCurrenciesList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // States
+  // Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +55,7 @@ const ImportPurchase = () => {
 
   // Form Fields
   const [formSupplierId, setFormSupplierId] = useState('');
-  const [formCurrency, setFormCurrency] = useState('USD');
+  const [formCurrency, setFormCurrency] = useState('');
   const [formExchangeRate, setFormExchangeRate] = useState(83.5);
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
   const [formItems, setFormItems] = useState([
@@ -61,22 +63,73 @@ const ImportPurchase = () => {
   ]);
   const [formPaymentTerms, setFormPaymentTerms] = useState('Net 30');
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [posRes, supRes, itemRes, ptRes, curRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/orders`),
+        fetch(`${API_BASE_URL}/dropdown/overseas-suppliers`),
+        fetch(`${API_BASE_URL}/dropdown/items`),
+        fetch(`${API_BASE_URL}/dropdown/payment-terms`),
+        fetch(`${API_BASE_URL}/dropdown/currencies`)
+      ]);
+
+      if (posRes.ok) {
+        const posData = await posRes.json();
+        // Map backend keys to frontend keys
+        const mappedPOs = posData.map(po => ({
+          id: po.import_po_number,
+          db_id: po.import_po_id,
+          date: po.po_date,
+          supplierId: po.supplier_id,
+          supplierName: po.supplier_name,
+          currency: po.currency,
+          currency_id: po.currency_id,
+          exchangeRate: Number(po.exchange_rate),
+          paymentTerms: po.payment_terms,
+          totalFCY: Number(po.total_fcy),
+          totalLCY: Number(po.total_lcy),
+          status: po.status,
+          items: po.items.map(it => ({
+            itemCode: it.item_id,
+            itemName: it.item_name,
+            qty: Number(it.qty),
+            fcyUnitPrice: Number(it.fcy_unit_price),
+            totalFCY: Number(it.total_fcy)
+          }))
+        }));
+        setImportPOs(mappedPOs);
+      }
+      if (supRes.ok) setSuppliers(await supRes.json());
+      if (itemRes.ok) setItems(await itemRes.json());
+      if (ptRes.ok) setPaymentTermsList(await ptRes.json());
+      if (curRes.ok) setCurrenciesList(await curRes.json());
+    } catch (e) {
+      console.error('Error fetching data:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenCreate = () => {
     setEditingPOId(null);
     setFormSupplierId('');
-    setFormCurrency('USD');
+    setFormCurrency('');
     setFormExchangeRate(83.5);
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormItems([{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
-    setFormPaymentTerms('Net 30');
+    setFormPaymentTerms('');
     setCreateModalOpen(true);
   };
 
   const handleOpenEdit = (po) => {
-    const sup = suppliers.find(s => s.name === po.supplierName);
-    setEditingPOId(po.id);
-    setFormSupplierId(sup ? sup.id : '');
-    setFormCurrency(po.currency || 'USD');
+    setEditingPOId(po.db_id);
+    setFormSupplierId(po.supplierId);
+    setFormCurrency(po.currency_id || '');
     setFormExchangeRate(po.exchangeRate || 83.5);
     setFormDate(po.date || new Date().toISOString().split('T')[0]);
     setFormItems(po.items.length > 0 ? po.items : [{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
@@ -84,27 +137,39 @@ const ImportPurchase = () => {
     setCreateModalOpen(true);
   };
 
-  const handleDeletePO = (id) => {
+  const handleDeletePO = async (po) => {
     if (window.confirm('Are you sure you want to delete this order?')) {
-      dispatch(deleteImportPO(id));
+      try {
+        const res = await fetch(`${API_BASE_URL}/orders/${po.db_id}`, { method: 'DELETE' });
+        if (res.ok) {
+          fetchData();
+        } else {
+          alert('Failed to delete PO');
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
   // Update default rate when currency changes
-  const handleCurrencyChange = (currency) => {
-    setFormCurrency(currency);
-    setFormExchangeRate(DEFAULT_RATES[currency] || 83.5);
+  const handleCurrencyChange = (currency_id) => {
+    setFormCurrency(currency_id);
+    const curr = currenciesList.find(c => c.id === currency_id);
+    if (curr) {
+      setFormExchangeRate(DEFAULT_RATES[curr.code] || 83.5);
+    }
   };
 
   const handleSupplierChange = (supId) => {
     setFormSupplierId(supId);
     const sup = suppliers.find(s => s.id === supId);
     if (sup) {
-      if (sup.paymentTerms) {
+      if (sup.paymentTerms && !formPaymentTerms) {
         setFormPaymentTerms(sup.paymentTerms);
       }
-      if (sup.currency) {
-        handleCurrencyChange(sup.currency);
+      if (sup.currency_id && !formCurrency) {
+        handleCurrencyChange(sup.currency_id);
       }
     }
   };
@@ -132,9 +197,9 @@ const ImportPurchase = () => {
   const filteredPOs = useMemo(() => {
     return importPOs.filter(po => {
       const matchSearch =
-        po.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        po.currency.toLowerCase().includes(searchTerm.toLowerCase());
+        po.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        po.supplierName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        po.currency?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchStatus = statusFilter === 'All' || po.status === statusFilter;
 
@@ -171,10 +236,14 @@ const ImportPurchase = () => {
     setFormItems(newItems);
   };
 
-  const handleSavePO = () => {
+  const handleSavePO = async () => {
     // Basic validation
     if (!formSupplierId) {
       alert('Please select a supplier.');
+      return;
+    }
+    if (!formCurrency) {
+      alert('Please select a currency.');
       return;
     }
     const invalidItems = formItems.some(i => !i.itemCode || i.qty <= 0 || i.fcyUnitPrice <= 0);
@@ -184,21 +253,22 @@ const ImportPurchase = () => {
     }
 
     const supplierObj = suppliers.find(s => s.id === formSupplierId);
-    const supplierName = supplierObj ? supplierObj.name : 'Unknown Supplier';
+    const supplierName = supplierObj ? supplierObj.id : formSupplierId; // Use ID for DB
 
     // Calculate totals
     const totalFCY = formItems.reduce((acc, i) => acc + (Number(i.qty) * Number(i.fcyUnitPrice)), 0);
     const totalLCY = totalFCY * Number(formExchangeRate);
 
-    const newPO = {
-      id: editingPOId || `IPO-2026-${String(importPOs.length + 1).padStart(3, '0')}`,
-      date: formDate,
-      supplierName,
-      currency: formCurrency,
+    const payload = {
+      id: editingPOId ? null : `IPO-2026-${String(importPOs.length + 1).padStart(3, '0')}`,
+      po_date: formDate,
+      supplierName: supplierName,
+      currency_id: formCurrency,
       exchangeRate: Number(formExchangeRate),
       items: formItems.map(i => ({
         itemCode: i.itemCode,
         itemName: i.itemName,
+        currency_id: formCurrency,
         qty: Number(i.qty),
         fcyUnitPrice: Number(i.fcyUnitPrice)
       })),
@@ -208,20 +278,34 @@ const ImportPurchase = () => {
       paymentTerms: formPaymentTerms
     };
 
-    if (editingPOId) {
-      dispatch(updateImportPO(newPO));
-    } else {
-      dispatch(addImportPO(newPO));
-    }
-    setCreateModalOpen(false);
-    setEditingPOId(null);
+    try {
+      let res;
+      if (editingPOId) {
+        res = await fetch(`${API_BASE_URL}/orders/${editingPOId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(`${API_BASE_URL}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
-    // Reset Form
-    setFormSupplierId('');
-    setFormCurrency('USD');
-    setFormExchangeRate(83.5);
-    setFormItems([{ itemCode: '', itemName: '', qty: 1, fcyUnitPrice: 0 }]);
-    setFormPaymentTerms('Net 30');
+      if (res.ok) {
+        setCreateModalOpen(false);
+        setEditingPOId(null);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(`Failed to save: ${err.detail || 'Unknown error'}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error while saving PO');
+    }
   };
 
   const handleOpenDetails = (po) => {
@@ -273,6 +357,8 @@ const ImportPurchase = () => {
     exportToPDF(cols, filteredPOs, `Import_Purchase_Orders_${new Date().toISOString().split('T')[0]}`, 'Import Purchase Orders List');
   };
 
+  if (loading) return <div style={{padding: 20}}>Loading...</div>;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 0 }}>
       {/* HEADER SECTION */}
@@ -296,8 +382,6 @@ const ImportPurchase = () => {
           </button>
         </Box>
       </Box>
-
-
 
       {/* FILTERS PANEL */}
       <div className="filter-panel">
@@ -362,7 +446,7 @@ const ImportPurchase = () => {
                     <Tooltip title="Delete Order">
                       <IconButton
                         color="error"
-                        onClick={() => handleDeletePO(po.id)}
+                        onClick={() => handleDeletePO(po)}
                         sx={{ p: 1 }}
                       >
                         <Trash2 size={20} />
@@ -429,7 +513,7 @@ const ImportPurchase = () => {
                     label="Overseas Supplier"
                     onChange={(e) => handleSupplierChange(e.target.value)}
                   >
-                    {suppliers.filter(s => s.type !== 'Local suppliers').map(s => (
+                    {suppliers.map(s => (
                       <MenuItem key={s.id} value={s.id}>{s.name} ({s.currency})</MenuItem>
                     ))}
                   </Select>
@@ -445,11 +529,9 @@ const ImportPurchase = () => {
                     label="FCY Currency"
                     onChange={(e) => handleCurrencyChange(e.target.value)}
                   >
-                    <MenuItem value="USD">USD ($)</MenuItem>
-                    <MenuItem value="EUR">EUR (€)</MenuItem>
-                    <MenuItem value="SGD">SGD (S$)</MenuItem>
-                    <MenuItem value="GBP">GBP (£)</MenuItem>
-                    <MenuItem value="JPY">JPY (¥)</MenuItem>
+                    {currenciesList.map(c => (
+                      <MenuItem key={c.id} value={c.id}>{c.code}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -474,12 +556,9 @@ const ImportPurchase = () => {
                     label="Payment Terms"
                     onChange={(e) => setFormPaymentTerms(e.target.value)}
                   >
-                    <MenuItem value="COD">COD (Cash on Delivery)</MenuItem>
-                    <MenuItem value="Cash">Cash</MenuItem>
-                    <MenuItem value="Net 15">Net 15 Days</MenuItem>
-                    <MenuItem value="Net 30">Net 30 Days</MenuItem>
-                    <MenuItem value="Net 60">Net 60 Days</MenuItem>
-                    <MenuItem value="Net 90">Net 90 Days</MenuItem>
+                    {paymentTermsList.map(pt => (
+                      <MenuItem key={pt.id} value={pt.name}>{pt.name}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -603,7 +682,7 @@ const ImportPurchase = () => {
             Cancel
           </Button>
           <Button onClick={handleSavePO} variant="contained" sx={{ backgroundColor: BLUE.main }}>
-            Save
+            {editingPOId ? 'Update' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
